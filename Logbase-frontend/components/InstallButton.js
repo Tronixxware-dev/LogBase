@@ -33,31 +33,54 @@ const STYLES = {
   menu: 'flex w-full items-center gap-2 rounded-lg px-3 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100',
 };
 
+// Opens the iPhone's own share menu straight away, where "Add to Home Screen" is one of the choices.
+// (A website cannot add itself to the home screen: the person always taps "Add to Home Screen" themselves.)
+async function openShareMenu() {
+  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return false;
+  try {
+    await navigator.share({ title: 'LogBase', url: window.location.href });
+    return true;
+  } catch {
+    return false; // closed without choosing, which is fine
+  }
+}
+
 function IosSteps({ onClose }) {
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center" role="dialog" aria-modal="true" aria-label="Install LogBase" onClick={onClose}>
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-gray-900">Install LogBase on your iPhone</h2>
-        <p className="mt-1 text-sm text-gray-500">It takes three taps and gives you an icon on your home screen.</p>
+        <h2 className="text-lg font-semibold text-gray-900">Put LogBase on your home screen</h2>
+        <p className="mt-1 text-sm text-gray-500">It takes three taps and gives you an app icon.</p>
         <ol className="mt-5 space-y-4 text-sm text-gray-700">
           <li className="flex gap-3">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">1</span>
-            <span className="flex flex-wrap items-center gap-1.5">
-              Tap the Share button <ShareIcon className="h-5 w-5 text-teal-700" /> in Safari (at the bottom or top of the screen).
+            <span className="flex-1">
+              {canShare ? 'Tap this button to open your share menu:' : <>Tap the Share button <ShareIcon className="inline h-4 w-4 text-teal-700" /> in Safari.</>}
+              {canShare && (
+                <button
+                  type="button"
+                  onClick={openShareMenu}
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-dark active:scale-[0.98]"
+                >
+                  <ShareIcon className="h-5 w-5" />
+                  Open share menu
+                </button>
+              )}
             </span>
           </li>
           <li className="flex gap-3">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">2</span>
-            <span>Scroll down and tap <strong>Add to Home Screen</strong>.</span>
+            <span>In the menu, scroll down and tap <strong>Add to Home Screen</strong>.</span>
           </li>
           <li className="flex gap-3">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">3</span>
             <span>Tap <strong>Add</strong>. LogBase now opens like an app.</span>
           </li>
         </ol>
-        <p className="mt-4 text-xs text-gray-400">Not seeing Share? Open this page in Safari first.</p>
-        <button type="button" onClick={onClose} className="mt-5 w-full rounded-lg bg-primary px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-dark">
-          Got it
+        <p className="mt-4 text-xs text-gray-400">If you do not see Add to Home Screen, open this page in Safari first.</p>
+        <button type="button" onClick={onClose} className="mt-5 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+          Close
         </button>
       </div>
     </div>,
