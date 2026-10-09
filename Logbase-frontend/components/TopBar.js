@@ -7,6 +7,7 @@ import { Icon } from '@/components/Icons';
 import { BrandMark } from '@/components/Navbar';
 import { ThemeIconButton } from '@/components/ThemeToggle';
 import CommandPalette from '@/components/CommandPalette';
+import InstallButton from '@/components/InstallButton';
 import { pageTitleFor } from '@/lib/nav';
 
 const openMenu = () => window.dispatchEvent(new Event('logbase:open-menu'));
@@ -62,6 +63,7 @@ export default function TopBar() {
           >
             <Icon name="search" className="h-5 w-5" />
           </button>
+          <InstallButton variant="pill" className="hidden sm:inline-flex" />
           <ThemeIconButton />
         </div>
       </div>

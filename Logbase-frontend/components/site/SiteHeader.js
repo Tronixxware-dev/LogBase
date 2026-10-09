@@ -6,6 +6,7 @@ import { getToken } from '@/lib/api';
 import { BrandMark } from '@/components/Navbar';
 import { ThemeIconButton } from '@/components/ThemeToggle';
 import { Icon } from '@/components/Icons';
+import InstallButton from '@/components/InstallButton';
 
 const LINKS = [
   { href: '/#features', label: 'Features' },
@@ -40,6 +41,7 @@ export default function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <InstallButton variant="pill" className="hidden sm:inline-flex" />
           <ThemeIconButton />
           {signedIn ? (
             <Link href="/dashboard" className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark">
@@ -80,6 +82,7 @@ export default function SiteHeader() {
               Log in
             </Link>
           )}
+          <InstallButton variant="menu" onDone={() => setOpen(false)} />
         </nav>
       )}
     </header>

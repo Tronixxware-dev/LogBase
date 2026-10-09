@@ -3,6 +3,7 @@ import SiteHeader from '@/components/site/SiteHeader';
 import SiteFooter from '@/components/site/SiteFooter';
 import PricingSection from '@/components/site/PricingSection';
 import { Icon } from '@/components/Icons';
+import InstallButton from '@/components/InstallButton';
 import { SITE } from '@/lib/site';
 
 export const metadata = {
@@ -82,6 +83,7 @@ function Hero() {
             <a href="#pricing" className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-6 py-3.5 text-base font-medium text-gray-800 shadow-xs transition hover:bg-gray-50">
               See pricing
             </a>
+            <InstallButton variant="solid" label="Install the app" />
           </div>
           <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
             <span className="inline-flex items-center gap-1.5"><Icon name="check" className="h-4 w-4 text-primary" />{SITE.trialDays}-day free trial</span>

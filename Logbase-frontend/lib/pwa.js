@@ -107,12 +107,24 @@ export function isStandalone() {
 
 export function isIos() {
   if (typeof navigator === 'undefined') return false;
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) return true;
+  // newer iPads say they are a Mac, but a Mac has no touch screen
+  return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
 }
 
 // What the install card should do: 'prompt' (a button that installs), 'ios' (explain Share > Add to Home Screen) or null.
 export function installMode() {
   if (isStandalone() || storageGet(DISMISS_KEY) === '1') return null;
+  if (deferredPrompt) return 'prompt';
+  if (isIos()) return 'ios';
+  return null;
+}
+
+// For the always-visible "Install app" buttons: like installMode, but "Not now" on the strip does not hide them.
+// Returns 'prompt' (one tap installs), 'ios' (show the Share > Add to Home Screen steps) or null (installed already,
+// or this browser cannot install the app).
+export function installKind() {
+  if (isStandalone()) return null;
   if (deferredPrompt) return 'prompt';
   if (isIos()) return 'ios';
   return null;
