@@ -9,16 +9,18 @@ import { Icon } from '@/components/Icons';
 import { ThemeSwitchRow } from '@/components/ThemeToggle';
 import { dataLink, billingLink, teamLink, isActive, labelFor, visibleLinks } from '@/lib/nav';
 
-// The LogBase mark: a rounded square with a gradient and a stacked "L".
+// The LogBase mark: three stacked teal layers on a deep green tile.
+// The size comes from className (for example "h-9 w-9").
 export function BrandMark({ className = 'h-9 w-9' }) {
   return (
-    <span className={`brand-gradient relative flex shrink-0 items-center justify-center rounded-xl shadow-md ${className}`}>
-      <span className="absolute inset-0 rounded-xl bg-linear-to-b from-white/25 to-transparent" aria-hidden="true" />
-      <svg viewBox="0 0 24 24" fill="none" className="relative h-[55%] w-[55%]" aria-hidden="true">
-        <path d="M7 4.5v11.2a2 2 0 0 0 2 2H18" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M11.5 12h4.5" stroke="#fff" strokeOpacity="0.7" strokeWidth="2.6" strokeLinecap="round" />
-      </svg>
-    </span>
+    <svg viewBox="4 4 56 56" className={`shrink-0 ${className}`} role="img" aria-label="LogBase logo">
+      <rect x="4" y="4" width="56" height="56" rx="14" fill="#134e4a" />
+      <g transform="translate(32 33) scale(1.15) translate(-32 -33)" strokeWidth="2.5" strokeLinejoin="round">
+        <path d="M32 33 51 42 32 51 13 42Z" fill="#0d9488" stroke="#0d9488" />
+        <path d="M32 24 51 33 32 42 13 33Z" fill="#14b8a6" stroke="#14b8a6" />
+        <path d="M32 15 51 24 32 33 13 24Z" fill="#2dd4bf" stroke="#2dd4bf" />
+      </g>
+    </svg>
   );
 }
 

@@ -68,12 +68,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
         <div className="pointer-events-none absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-emerald-300/20 blur-3xl" aria-hidden="true" />
 
         <div className="relative flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30 backdrop-blur">
-            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-              <path d="M7 4.5v11.2a2 2 0 0 0 2 2H18" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M11.5 12h4.5" stroke="#fff" strokeOpacity="0.7" strokeWidth="2.6" strokeLinecap="round" />
-            </svg>
-          </span>
+          <BrandMark className="h-10 w-10 rounded-xl ring-1 ring-white/40" />
           <span className="text-xl font-semibold tracking-tight">LogBase</span>
         </div>
 
