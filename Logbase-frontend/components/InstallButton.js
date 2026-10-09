@@ -33,57 +33,50 @@ const STYLES = {
   menu: 'flex w-full items-center gap-2 rounded-lg px-3 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100',
 };
 
-// Opens the iPhone's own share menu straight away, where "Add to Home Screen" is one of the choices.
-// (A website cannot add itself to the home screen: the person always taps "Add to Home Screen" themselves.)
-async function openShareMenu() {
-  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return 'unsupported';
-  try {
-    await navigator.share({ title: 'LogBase', url: window.location.href });
-    return 'opened';
-  } catch (err) {
-    return err && err.name === 'AbortError' ? 'closed' : 'unsupported'; // closed without choosing is fine
-  }
+function DotsIcon({ className = 'h-5 w-5' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <circle cx="5" cy="12" r="1.8" />
+      <circle cx="12" cy="12" r="1.8" />
+      <circle cx="19" cy="12" r="1.8" />
+    </svg>
+  );
 }
 
+function Step({ n, children }) {
+  return (
+    <li className="flex gap-3">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">{n}</span>
+      <span className="flex-1 leading-relaxed">{children}</span>
+    </li>
+  );
+}
+
+// The iPhone steps. A website cannot add itself to the home screen on iPhone (Apple does not allow it), and the share
+// menu a website can open does not include "Add to Home Screen". It is only in Safari's own menu, so we show the way there.
 function IosSteps({ onClose }) {
-  const [note, setNote] = useState('');
-  async function onShare() {
-    const result = await openShareMenu();
-    setNote(result === 'unsupported' ? 'This browser cannot open the share menu from here. On your iPhone, open this page in Safari and tap the Share icon instead.' : '');
-  }
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center" role="dialog" aria-modal="true" aria-label="Install LogBase" onClick={onClose}>
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold text-gray-900">Put LogBase on your home screen</h2>
-        <p className="mt-1 text-sm text-gray-500">It takes three taps and gives you an app icon.</p>
+        <p className="mt-1 text-sm text-gray-500">Do this in Safari. It takes a few taps and gives you an app icon.</p>
         <ol className="mt-5 space-y-4 text-sm text-gray-700">
-          <li className="flex gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">1</span>
-            <span className="flex-1">
-              Tap this button to open your share menu:
-              <button
-                type="button"
-                onClick={onShare}
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-dark active:scale-[0.98]"
-              >
-                <ShareIcon className="h-5 w-5" />
-                Open share menu
-              </button>
-              {note && <span className="mt-2 block text-xs text-amber-700">{note}</span>}
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">2</span>
-            <span>In the menu, scroll down and tap <strong>Add to Home Screen</strong>.</span>
-          </li>
-          <li className="flex gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">3</span>
-            <span>Tap <strong>Add</strong>. LogBase now opens like an app.</span>
-          </li>
+          <Step n="1">
+            Tap the <strong>three dots</strong> <DotsIcon className="inline h-5 w-5 align-text-bottom text-teal-700" /> at the bottom right of Safari, then tap <strong>Share</strong> <ShareIcon className="inline h-4 w-4 align-text-bottom text-teal-700" />.
+            <span className="mt-1 block text-xs text-gray-400">On an older iPhone, tap the Share button <ShareIcon className="inline h-3.5 w-3.5 align-text-bottom" /> in the bottom bar instead.</span>
+          </Step>
+          <Step n="2">
+            Scroll down the list and tap <strong>Add to Home Screen</strong>.
+          </Step>
+          <Step n="3">
+            Keep <strong>Open as Web App</strong> switched on, then tap <strong>Add</strong>. LogBase now opens like an app.
+          </Step>
         </ol>
-        <p className="mt-4 text-xs text-gray-400">If you do not see Add to Home Screen, open this page in Safari first.</p>
-        <button type="button" onClick={onClose} className="mt-5 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-          Close
+        <p className="mt-4 rounded-lg bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
+          Opened this link from WhatsApp, Instagram or Chrome? Those do not have Add to Home Screen. Open <strong>mylogbase.com</strong> in Safari first.
+        </p>
+        <button type="button" onClick={onClose} className="mt-5 w-full rounded-lg bg-primary px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-dark">
+          Got it
         </button>
       </div>
     </div>,

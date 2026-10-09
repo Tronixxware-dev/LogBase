@@ -7,6 +7,7 @@ import { getConnection, subscribeConnection } from '@/lib/connection';
 import { pingServer } from '@/lib/api';
 import { OUTBOX_EVENT } from '@/lib/offline';
 import { SYNCED_EVENT, queueCounts, syncOutbox } from '@/lib/outbox';
+import InstallButton from '@/components/InstallButton';
 import { dismissInstall, installMode, promptInstall, subscribeInstall, warmUp } from '@/lib/pwa';
 
 export const SYNC_NOW_EVENT = 'logbase:sync-now';
@@ -203,10 +204,13 @@ export default function OfflineStatus() {
       )}
       {install === 'ios' && (
         <Strip tone="info">
-          <span>To install LogBase on your iPhone: tap the Share button in Safari, then “Add to Home Screen”.</span>
-          <button type="button" onClick={dismissInstall} className="text-teal-800/70 hover:text-teal-900">
-            Got it
-          </button>
+          <span>Add LogBase to your iPhone home screen to open it like an app.</span>
+          <span className="flex items-center gap-3">
+            <InstallButton variant="link" label="Show me how" />
+            <button type="button" onClick={dismissInstall} className="text-teal-800/70 hover:text-teal-900">
+              Not now
+            </button>
+          </span>
         </Strip>
       )}
     </div>
