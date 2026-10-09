@@ -36,17 +36,21 @@ const STYLES = {
 // Opens the iPhone's own share menu straight away, where "Add to Home Screen" is one of the choices.
 // (A website cannot add itself to the home screen: the person always taps "Add to Home Screen" themselves.)
 async function openShareMenu() {
-  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return false;
+  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return 'unsupported';
   try {
     await navigator.share({ title: 'LogBase', url: window.location.href });
-    return true;
-  } catch {
-    return false; // closed without choosing, which is fine
+    return 'opened';
+  } catch (err) {
+    return err && err.name === 'AbortError' ? 'closed' : 'unsupported'; // closed without choosing is fine
   }
 }
 
 function IosSteps({ onClose }) {
-  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const [note, setNote] = useState('');
+  async function onShare() {
+    const result = await openShareMenu();
+    setNote(result === 'unsupported' ? 'This browser cannot open the share menu from here. On your iPhone, open this page in Safari and tap the Share icon instead.' : '');
+  }
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center" role="dialog" aria-modal="true" aria-label="Install LogBase" onClick={onClose}>
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -56,17 +60,16 @@ function IosSteps({ onClose }) {
           <li className="flex gap-3">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">1</span>
             <span className="flex-1">
-              {canShare ? 'Tap this button to open your share menu:' : <>Tap the Share button <ShareIcon className="inline h-4 w-4 text-teal-700" /> in Safari.</>}
-              {canShare && (
-                <button
-                  type="button"
-                  onClick={openShareMenu}
-                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-dark active:scale-[0.98]"
-                >
-                  <ShareIcon className="h-5 w-5" />
-                  Open share menu
-                </button>
-              )}
+              Tap this button to open your share menu:
+              <button
+                type="button"
+                onClick={onShare}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-dark active:scale-[0.98]"
+              >
+                <ShareIcon className="h-5 w-5" />
+                Open share menu
+              </button>
+              {note && <span className="mt-2 block text-xs text-amber-700">{note}</span>}
             </span>
           </li>
           <li className="flex gap-3">
