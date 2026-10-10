@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { listProducts, createStockAdjustment, listStockAdjustments } from '@/lib/api';
@@ -84,6 +85,7 @@ export default function AdjustStockPage() {
       const a = data.adjustment;
       const label = a.variantLabel ? `${a.productName} (${a.variantLabel})` : a.productName;
       setSuccess(`Saved: ${label} went from ${a.before} to ${a.after}.`);
+      notifySuccess('Stock adjusted', `${label}: ${a.before} to ${a.after}`);
       setQuantity('');
       setNote('');
       await load();

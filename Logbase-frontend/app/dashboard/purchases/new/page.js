@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -231,6 +232,7 @@ export default function NewPurchasePage() {
         photos
       );
 
+      notifySuccess('Purchase recorded', 'Your stock has been updated');
       router.push('/dashboard/purchases');
     } catch (err) {
       setError(err.message);

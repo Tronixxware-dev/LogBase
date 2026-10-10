@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createCustomer } from '@/lib/api';
@@ -34,7 +35,8 @@ export default function NewCustomerPage() {
     setSaving(true);
     try {
       const data = await createCustomer({ ...form, phone: parsed.valid ? parsed.e164 : undefined });
-      router.push(`/dashboard/customers/${data.customer._id}`);
+      notifySuccess('Customer added', data.customer.name || form.name);
+      router.push('/dashboard/customers');
     } catch (err) {
       setError(err.message);
     } finally {

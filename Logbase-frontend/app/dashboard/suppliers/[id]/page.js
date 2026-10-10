@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -88,6 +89,7 @@ export default function SupplierDetailPage() {
     setSaving(true);
     try {
       await recordSupplierPayment(id, { amount: value, note: note.trim() || undefined });
+      notifySuccess('Payment recorded', formatMoney(value));
       setAmount('');
       setNote('');
       await load();

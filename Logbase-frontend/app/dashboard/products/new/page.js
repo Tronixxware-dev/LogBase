@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -88,7 +89,8 @@ export default function NewProductPage() {
           return;
         }
       }
-      router.push(`/dashboard/products/${productId}`);
+      notifySuccess('Product added', form.name.trim() || 'Your product is saved');
+      router.push('/dashboard/products');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -229,7 +231,7 @@ export default function NewProductPage() {
           disabled={saving || Boolean(savedProductId)}
           className={`${primaryButtonClass} w-full py-2.5`}
         >
-          {saving ? 'Saving…' : 'Save and continue'}
+          {saving ? 'Saving…' : 'Save product'}
         </button>
 
         {savedProductId && (

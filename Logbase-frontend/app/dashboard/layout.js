@@ -5,6 +5,7 @@ import RoleGuard from '@/components/RoleGuard';
 import BillingBanner from '@/components/BillingBanner';
 import OfflineStatus from '@/components/OfflineStatus';
 import PageTransition from '@/components/PageTransition';
+import SuccessPopup from '@/components/SuccessPopup';
 
 // Wraps EVERY page under /dashboard: login check + left sidebar + top bar + page container.
 // RoleGuard keeps staffs on the few pages they are allowed to use.
@@ -13,6 +14,7 @@ export default function DashboardLayout({ children }) {
   return (
     <UserProvider>
       <div className="min-h-screen print:bg-white">
+        <SuccessPopup />
         <Navbar />
         <div className="lg:pl-64 print:pl-0">
           <TopBar />

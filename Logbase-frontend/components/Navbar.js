@@ -121,6 +121,13 @@ function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
           </div>
         )}
 
+        {user?.isSuperAdmin && (
+          <div className="space-y-0.5 pt-4">
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">LogBase owner</p>
+            <NavItem link={{ href: '/admin', label: 'Admin panel', icon: 'shield' }} pathname={pathname} onNavigate={onNavigate} />
+          </div>
+        )}
+
         {isOwner && (
           <div className="space-y-0.5 pt-4">
             <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Business</p>

@@ -25,8 +25,8 @@ const LIGHT = {
 };
 
 const SALES = [
-  { who: 'Adaeze O.', what: 'Samsung A15', amount: 210000 },
-  { who: 'Walk-in', what: 'Phone charger x3', amount: 13500 },
+  { who: 'Adaeze O.', what: 'Office printer', amount: 210000 },
+  { who: 'Walk-in', what: 'Notebooks x3', amount: 13500 },
   { who: 'Chuka M.', what: 'Laptop bag', amount: 25000 },
 ];
 

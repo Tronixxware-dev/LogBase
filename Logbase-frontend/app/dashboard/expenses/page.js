@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createExpense, deleteExpense, listExpenses } from '@/lib/api';
 import { formatDate, formatMoney } from '@/lib/format';
@@ -69,6 +70,7 @@ export default function ExpensesPage() {
         paymentMethod: method,
       });
       setSuccess(`Saved: ${formatMoney(amount)} for ${categoryLabel(category)}.`);
+      notifySuccess('Expense saved', `${formatMoney(amount)} for ${categoryLabel(category)}`);
       setAmount('');
       setDescription('');
       await load();
@@ -146,7 +148,7 @@ export default function ExpensesPage() {
               onChange={(e) => setDescription(e.target.value)}
               className={inputClass}
               aria-label="Note"
-              placeholder="e.g. October shop rent"
+              placeholder="e.g. October rent"
             />
           </Field>
           <div className="grid grid-cols-2 gap-4">

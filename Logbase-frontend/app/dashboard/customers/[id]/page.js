@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -79,6 +80,7 @@ export default function CustomerDetailPage() {
     setSaving(true);
     try {
       await recordCustomerPayment(id, { amount: Number(amount), note });
+      notifySuccess('Payment recorded', formatMoney(Number(amount)));
       setAmount('');
       setNote('');
       await load();

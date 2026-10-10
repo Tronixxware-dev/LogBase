@@ -16,7 +16,7 @@ export default function RefundPolicy() {
     >
       <Section title="Try it first">
         <p>
-          Every new business has a {SITE.trialDays}-day free trial of the Business plan. You do not need to enter a card. Use that time to check that {SITE.name} works for your shop. You are only charged if you choose a paid plan and pay for it.
+          Every new business has a {SITE.trialDays}-day free trial of the Business plan. You do not need to enter a card. Use that time to check that {SITE.name} works for your business. You are only charged if you choose a paid plan and pay for it.
         </p>
       </Section>
 

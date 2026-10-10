@@ -15,7 +15,7 @@ export const metadata = {
   alternates: { canonical: '/' },
 };
 
-const BUILT_FOR = ['Phone and gadget shops', 'Provision stores', 'Pharmacies and chemists', 'Building materials', 'Fashion and boutiques', 'Wholesalers and distributors'];
+const BUILT_FOR = ['Provision stores and supermarkets', 'Phone and gadget sellers', 'Pharmacies and chemists', 'Building materials', 'Fashion and boutiques', 'Wholesalers and distributors', 'Salons, restaurants and services'];
 
 const PAINS = [
   {
@@ -101,7 +101,7 @@ function Hero() {
             <h1 className="text-[2.35rem] font-semibold leading-[1.06] tracking-tight text-white sm:text-5xl lg:text-[3.6rem]">
               The{' '}
               <span className="bg-gradient-to-r from-[#5eead4] to-[#bbf7d0] bg-clip-text text-transparent">digital log book</span>{' '}
-              for your shop, even when the network is down.
+              for your business, even when the network is down.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-[#a9cdc7] sm:text-lg">
               Every sale, purchase and stock change gets written down in LogBase, even with no signal, and sent to your account the moment you are back online. Your stock, debts and profit always add up.
@@ -166,7 +166,7 @@ function Problems() {
     <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
       <Reveal className="mx-auto max-w-2xl text-center">
         <h2 className="text-balance text-[1.7rem] font-semibold leading-tight tracking-tight text-gray-900 sm:text-4xl">Sound familiar?</h2>
-        <p className="mt-4 text-gray-600">The everyday trouble of running a shop, and what LogBase does about it.</p>
+        <p className="mt-4 text-gray-600">The everyday trouble of running a business, and what LogBase does about it.</p>
       </Reveal>
       <div className="mt-10 grid gap-4 sm:mt-12 md:grid-cols-3 md:gap-5">
         {PAINS.map((p, i) => (
@@ -242,7 +242,7 @@ function Features() {
   return (
     <section id="features" className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 pb-16 sm:px-6 sm:pb-24">
       <Reveal className="mx-auto max-w-2xl text-center">
-        <h2 className="text-balance text-[1.7rem] font-semibold leading-tight tracking-tight text-gray-900 sm:text-4xl">Everything a shop needs, nothing it does not</h2>
+        <h2 className="text-balance text-[1.7rem] font-semibold leading-tight tracking-tight text-gray-900 sm:text-4xl">Everything a business needs, nothing it does not</h2>
         <p className="mt-4 text-gray-600">Simple enough for a busy counter, complete enough to run the books.</p>
       </Reveal>
 
@@ -272,7 +272,7 @@ function Features() {
             text="Pick the products, take the payment, share the receipt. Part payments and credit sales are built in."
           >
             <div className="space-y-2 rounded-2xl border border-gray-200 bg-gray-50 p-3.5 text-sm">
-              <div className="flex justify-between text-gray-700"><span>Samsung A15</span><span className="tabular font-medium">₦210,000</span></div>
+              <div className="flex justify-between text-gray-700"><span>Office printer</span><span className="tabular font-medium">₦210,000</span></div>
               <div className="flex justify-between text-gray-500"><span>Paid now</span><span className="tabular">₦150,000</span></div>
               <div className="flex items-center justify-between border-t border-gray-200 pt-2 text-gray-900">
                 <span className="font-medium">Balance</span>
@@ -446,7 +446,7 @@ function ClosingCta() {
                 'radial-gradient(40rem 22rem at 50% -10%, rgba(45,212,191,0.32), transparent 65%), radial-gradient(30rem 20rem at 100% 100%, rgba(13,148,136,0.35), transparent 65%)',
             }}
           />
-          <h2 className="mx-auto max-w-2xl text-balance text-[1.8rem] font-semibold leading-tight tracking-tight text-white sm:text-5xl">Give your shop a proper record</h2>
+          <h2 className="mx-auto max-w-2xl text-balance text-[1.8rem] font-semibold leading-tight tracking-tight text-white sm:text-5xl">Give your business a proper record</h2>
           <p className="mx-auto mt-4 max-w-xl text-[#a9cdc7]">Try LogBase free for {SITE.trialDays} days. No card, no commitment.</p>
           <Link
             href="/signup"

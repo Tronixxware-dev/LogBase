@@ -4,9 +4,9 @@
 export const SITE = {
   name: 'LogBase',
   company: 'Tronixxware',
-  tagline: 'Inventory and sales management for shops',
+  tagline: 'Inventory and sales management for any business',
   description:
-    'LogBase helps shops track stock, record sales and know who owes them, even without internet. Free 14-day trial.',
+    'LogBase helps any business track stock, record sales and know who owes them, even without internet. Free 14-day trial.',
   email: 'tronixxware01@gmail.com',
   // the public web address, used for the sitemap and link previews (set NEXT_PUBLIC_SITE_URL in the frontend .env when you deploy)
   url: (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/+$/, ''),
@@ -20,7 +20,7 @@ export const PLANS = [
   {
     key: 'free',
     name: 'Free',
-    tagline: 'To try LogBase with a small shop',
+    tagline: 'To try LogBase with a small business',
     monthly: 0,
     yearly: 0,
     features: ['Up to 50 stocks', 'Owner account only (no staff accounts)'],
@@ -28,7 +28,7 @@ export const PLANS = [
   {
     key: 'starter',
     name: 'Starter',
-    tagline: 'For a shop with a few helpers',
+    tagline: 'For a business with a few helpers',
     monthly: 2000,
     yearly: 20000,
     features: ['Up to 300 stocks', 'Up to 3 staff accounts with their own permissions'],

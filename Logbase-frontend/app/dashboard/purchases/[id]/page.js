@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -58,6 +59,7 @@ function AddSupplier({ id, total, onDone }) {
     setSaving(true);
     try {
       await assignPurchaseSupplier(id, { supplier: supplierId, ...(paidInFull ? {} : { amountPaid: paid }) });
+      notifySuccess('Supplier saved', 'The purchase is updated');
       await onDone();
     } catch (err) {
       setError(err.message);

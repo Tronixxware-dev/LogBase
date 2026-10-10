@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   listStaff,
@@ -139,7 +140,7 @@ function RoleForm({ initialName = '', initialPermissions = [], submitLabel = 'Sa
 
   return (
     <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-      <Field label="Role name" hint="For example Cashier, Shop assistant, Night shift.">
+      <Field label="Role name" hint="For example Cashier, Sales assistant, Night shift.">
         <input
           type="text"
           value={name}
@@ -291,6 +292,7 @@ function RolesCard({ roles, onChanged, onError }) {
     onError('');
     if (role) await updateRole(role._id, { name, permissions });
     else await createRole({ name, permissions });
+    notifySuccess(role ? 'Role updated' : 'Role added', name);
     await onChanged();
     setEditing(null);
   }
@@ -736,6 +738,7 @@ export default function StaffsPage() {
         permissions,
       });
       setCreated({ name: data.user.name, email: data.user.email, password: form.password });
+      notifySuccess('Staff added', `${data.user.name} can now sign in`);
       setForm({ name: '', email: '', password: '', jobTitle: '' });
       setPermissions([...DEFAULT_STAFF_PERMISSIONS]);
       setShowAdd(false);

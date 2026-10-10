@@ -68,10 +68,11 @@ export function receiptText(receipt, businessName) {
   const lines = [];
   lines.push(`*${businessName || 'Receipt'}*`);
   lines.push(`Receipt #${receipt.number}`);
-  if (receipt.date) lines.push(new Date(receipt.date).toLocaleDateString());
+  if (receipt.date) lines.push(receiptDateTime(receipt.date));
+  if (receipt.customerName) lines.push(`Customer: ${receipt.customerName}`);
   lines.push('');
   for (const item of receipt.items) {
-    lines.push(`${item.quantity} x ${item.name} - ${formatMoney(item.amount)}`);
+    lines.push(`${item.quantity} x ${item.name} @ ${formatMoney(item.unitPrice)} = ${formatMoney(item.amount)}`);
     if (item.serials.length > 0) lines.push(`   IMEI / serial: ${item.serials.join(', ')}`);
     if (item.warrantyEndsAt) lines.push(`   Warranty until ${new Date(item.warrantyEndsAt).toLocaleDateString()}`);
     if (item.returnedQuantity > 0) {
@@ -79,13 +80,20 @@ export function receiptText(receipt, businessName) {
     }
   }
   lines.push('');
-  lines.push(`Total: ${formatMoney(receipt.total)}`);
-  lines.push(`Paid: ${formatMoney(receipt.paid)}`);
-  if (receipt.balance > 0) lines.push(`Still owed: ${formatMoney(receipt.balance)}`);
+  lines.push(`*Total: ${formatMoney(receipt.total)}*`);
+  lines.push(`Paid: ${formatMoney(receipt.paid)}${receipt.paymentMethod ? ` (${receipt.paymentMethod})` : ''}`);
+  if (receipt.balance > 0) lines.push(`*Still owed: ${formatMoney(receipt.balance)}*`);
   lines.push('');
   if (receipt.hasWarranty) lines.push('Keep this receipt: it is your proof of purchase for the warranty.');
   lines.push('Thank you for your business!');
   return lines.join('\n');
+}
+
+// "10/10/2026, 6:48 PM"
+export function receiptDateTime(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  return `${d.toLocaleDateString()}, ${d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
 }
 
 // A statement as plain text.
@@ -109,10 +117,11 @@ export function statementText(statement, businessName) {
   return lines.join('\n');
 }
 
-// A wa.me link that opens WhatsApp with the text ready to send. With no valid phone number it
-// opens WhatsApp's own chooser instead.
+// A link that opens WhatsApp (the app on a phone, WhatsApp Web on a computer) with the text already typed in.
+// With no valid phone number it opens WhatsApp's own chooser instead.
+// (api.whatsapp.com/send is the address wa.me itself forwards to; going there directly keeps the text on phones.)
 export function whatsappLink(phone, text) {
   const digits = phoneKey(phone);
-  const base = digits ? `https://wa.me/${digits}` : 'https://wa.me/';
-  return `${base}?text=${encodeURIComponent(text)}`;
+  const query = `${digits ? `phone=${digits}&` : ''}text=${encodeURIComponent(text)}&type=phone_number&app_absent=0`;
+  return `https://api.whatsapp.com/send?${query}`;
 }

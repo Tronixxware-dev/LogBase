@@ -591,4 +591,82 @@ export async function createPurchase(payload, files = []) {
   return data;
 }
 
+/* ------------------------------------------------------------------ */
+/* Admin panel (the LogBase super admin only; the server checks it)    */
+/* ------------------------------------------------------------------ */
+
+function query(params) {
+  const search = new URLSearchParams();
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') search.set(key, value);
+  });
+  const text = search.toString();
+  return text ? `?${text}` : '';
+}
+
+export function adminOverview() {
+  return apiRequest('/admin/overview', { auth: true });
+}
+
+// params: { search, state, sort, page }
+export function adminBusinesses(params) {
+  return apiRequest(`/admin/businesses${query(params)}`, { auth: true });
+}
+
+export function adminBusiness(id) {
+  return apiRequest(`/admin/businesses/${id}`, { auth: true });
+}
+
+// kind: sales | products | customers | expenses | purchases   (read-only)
+export function adminBusinessData(id, kind, page = 1) {
+  return apiRequest(`/admin/businesses/${id}/data/${kind}${query({ page })}`, { auth: true });
+}
+
+export function adminSetSuspended(id, suspended, reason = '') {
+  return apiRequest(`/admin/businesses/${id}/suspend`, { method: 'POST', body: { suspended, reason }, auth: true });
+}
+
+export function adminExtendTrial(id, days) {
+  return apiRequest(`/admin/businesses/${id}/extend-trial`, { method: 'POST', body: { days }, auth: true });
+}
+
+export function adminGrantPlan(id, payload) {
+  return apiRequest(`/admin/businesses/${id}/grant-plan`, { method: 'POST', body: payload, auth: true });
+}
+
+export function adminEndPlan(id) {
+  return apiRequest(`/admin/businesses/${id}/end-plan`, { method: 'POST', body: {}, auth: true });
+}
+
+export function adminSendReset(userId) {
+  return apiRequest(`/admin/users/${userId}/send-reset`, { method: 'POST', body: {}, auth: true });
+}
+
+export function adminSetUserActive(userId, isActive) {
+  return apiRequest(`/admin/users/${userId}`, { method: 'PATCH', body: { isActive }, auth: true });
+}
+
+// params: { status, search, page }
+export function adminPayments(params) {
+  return apiRequest(`/admin/payments${query(params)}`, { auth: true });
+}
+
+// params: { search, business, before }
+export function adminActivity(params) {
+  return apiRequest(`/admin/activity${query(params)}`, { auth: true });
+}
+
+export function adminLog(params) {
+  return apiRequest(`/admin/log${query(params)}`, { auth: true });
+}
+
+export function adminEmailAudiences() {
+  return apiRequest('/admin/email/audiences', { auth: true });
+}
+
+// payload: { audience, businessId, subject, message, dryRun }
+export function adminSendEmail(payload) {
+  return apiRequest('/admin/email', { method: 'POST', body: payload, auth: true, timeoutMs: 60000 });
+}
+
 export { getToken, setToken, clearToken };

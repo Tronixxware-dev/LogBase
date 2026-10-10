@@ -77,7 +77,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
             Know what you sold, what is left, and who owes you.
           </h2>
           <p className="mt-4 max-w-md text-base text-teal-50/85">
-            One simple place to run your shop&apos;s stock, sales and customers, from your phone or your counter.
+            One simple place to run your business&apos;s stock, sales and customers, from your phone or your counter.
           </p>
 
           <ul className="mt-8 max-w-md space-y-4">

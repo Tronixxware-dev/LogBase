@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupplier } from '@/lib/api';
@@ -41,7 +42,8 @@ export default function NewSupplierPage() {
         phone: parsed.valid ? parsed.e164 : undefined,
         ...(isOwner && openingBalance !== '' ? { openingBalance: Number(openingBalance) } : {}),
       });
-      router.push(`/dashboard/suppliers/${data.supplier._id}`);
+      notifySuccess('Supplier added', (data.supplier && data.supplier.name) || details.name);
+      router.push('/dashboard/suppliers');
     } catch (err) {
       setError(err.message);
     } finally {

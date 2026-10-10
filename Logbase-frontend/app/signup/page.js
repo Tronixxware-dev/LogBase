@@ -60,7 +60,7 @@ export default function SignupPage() {
             value={form.businessName}
             onChange={handleChange}
             required
-            placeholder="Tronixxware Gadgets"
+            placeholder="e.g. Adeyemi & Sons"
           />
           <AuthField
             label="Business email"
@@ -70,7 +70,7 @@ export default function SignupPage() {
             value={form.businessEmail}
             onChange={handleChange}
             required
-            placeholder="shop@example.com"
+            placeholder="business@example.com"
           />
         </div>
 

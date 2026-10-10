@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useMemo, useState } from 'react';
 import { createReturn } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
@@ -94,6 +95,7 @@ export default function ReturnPanel({ lines, hasCustomer, onDone }) {
         preview.refund > 0 ? ` (${formatMoney(preview.refund)} to give back to the customer)` : ''
       }.`;
       setDone(message);
+      notifySuccess('Return saved', `${formatMoney(preview.value)} taken back`);
       setOpen(false);
       setWanted({});
       setPicked({});

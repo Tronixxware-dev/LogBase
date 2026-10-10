@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -235,6 +236,7 @@ export default function NewSalePage() {
         photos
       );
 
+      notifySuccess('Sale recorded', customer && customer.name ? `Sold to ${customer.name}` : 'Your sale is saved');
       router.push('/dashboard/sales');
     } catch (err) {
       if (err.offline) {
@@ -255,6 +257,7 @@ export default function NewSalePage() {
           applyLocalStock(items);
           setProducts((prev) => takeOffStock(prev, items));
           setSavedOffline({ customerName: summary.customerName, total: summary.total });
+          notifySuccess('Saved on this phone', 'It will be sent when you are back online');
           resetForm();
           // the confirmation is at the top of the page; the person is looking at the Record button at the bottom
           try {

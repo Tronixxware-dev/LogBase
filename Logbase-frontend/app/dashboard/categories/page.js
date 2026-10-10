@@ -1,5 +1,6 @@
 'use client';
 
+import { notifySuccess } from '@/lib/feedback';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createCategory, deleteCategory, listCategories, renameCategory } from '@/lib/api';
@@ -153,6 +154,7 @@ export default function CategoriesPage() {
           [...prev, { ...data.category, productCount: 0 }].sort((a, b) => a.name.localeCompare(b.name))
         );
         setNewName('');
+        notifySuccess('Category added', data.category.name);
       }
     } catch (err) {
       setError(err.message);
