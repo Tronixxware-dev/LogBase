@@ -30,8 +30,8 @@ const COLUMNS = [
 export default function SiteFooter() {
   return (
     <footer className="border-t border-gray-200 bg-white">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_repeat(3,1fr)]">
-        <div>
+      <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-4 py-10 sm:px-6 sm:py-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+        <div className="col-span-2 md:col-span-1">
           <Link href="/" className="flex items-center gap-2.5">
             <BrandMark className="h-9 w-9" />
             <span className="text-lg font-semibold tracking-tight text-gray-900">LogBase</span>

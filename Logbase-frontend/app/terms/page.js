@@ -42,7 +42,7 @@ export default function Terms() {
           New businesses get a {SITE.trialDays}-day free trial of the Business plan, with no card needed. When the trial or a paid period ends, the business moves to the Free plan.
         </p>
         <p>
-          The plans are Free, Starter ({naira(starter.monthly)} a month or {naira(starter.yearly)} a year) and Business ({naira(business.monthly)} a month or {naira(business.yearly)} a year). Each plan has limits, for example on the number of products and staff accounts, which are shown on our <Link href="/#pricing" className="font-medium text-primary hover:underline">pricing section</Link> and in the app. Limits only stop you adding new items beyond the allowance. We do not delete or hide data you have already entered because of a plan change.
+          The plans are Free, Starter ({naira(starter.monthly)} a month or {naira(starter.yearly)} a year) and Business ({naira(business.monthly)} a month or {naira(business.yearly)} a year). Each plan has limits, for example on the number of stocks and staff accounts, which are shown on our <Link href="/#pricing" className="font-medium text-primary hover:underline">pricing section</Link> and in the app. Limits only stop you adding new items beyond the allowance. We do not delete or hide data you have already entered because of a plan change.
         </p>
         <p>We may change our prices or plans. A change to the price you pay will not affect a period you have already paid for, and we will tell you before it applies to your next payment.</p>
       </Section>

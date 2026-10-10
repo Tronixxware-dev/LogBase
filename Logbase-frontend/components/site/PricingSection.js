@@ -10,7 +10,7 @@ export default function PricingSection() {
   const [yearly, setYearly] = useState(false);
 
   return (
-    <section id="pricing" className="scroll-mt-20 px-4 py-20 sm:px-6">
+    <section id="pricing" className="scroll-mt-20 px-4 py-14 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">Pricing</p>
@@ -39,13 +39,13 @@ export default function PricingSection() {
           </div>
         </div>
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-3">
+        <div className="mt-9 grid gap-6 sm:mt-12 lg:grid-cols-3">
           {PLANS.map((plan) => {
             const price = yearly ? plan.yearly : plan.monthly;
             return (
               <div
                 key={plan.key}
-                className={`relative flex flex-col rounded-3xl border bg-white p-7 shadow-sm ${
+                className={`relative flex flex-col rounded-3xl border bg-white p-6 shadow-sm sm:p-7 ${
                   plan.popular ? 'border-primary shadow-lg ring-1 ring-primary/30' : 'border-gray-200'
                 }`}
               >

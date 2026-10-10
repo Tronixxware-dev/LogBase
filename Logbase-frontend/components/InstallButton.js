@@ -28,7 +28,11 @@ const STYLES = {
   // small button for the top bars
   pill: 'h-10 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-700 shadow-xs transition hover:bg-gray-50 active:scale-95',
   // big button that sits next to the main buttons on the home page
-  solid: 'items-center gap-2 rounded-lg border border-gray-200 bg-white px-6 py-3.5 text-base font-medium text-gray-800 shadow-xs transition hover:bg-gray-50',
+  solid: 'items-center gap-2 whitespace-nowrap rounded-lg border border-gray-200 bg-white px-4 py-3.5 text-base sm:px-6 font-medium text-gray-800 shadow-xs transition hover:bg-gray-50',
+  // for the dark top of the home page
+  ghost: 'items-center gap-2 whitespace-nowrap rounded-lg border border-white/20 bg-white/10 px-4 py-3.5 text-base font-medium text-white backdrop-blur transition hover:bg-white/15 sm:px-6',
+  // plain underlined text, for use inside a notice strip
+  link: 'font-medium underline underline-offset-2',
   // a full-width row in a menu
   menu: 'flex w-full items-center gap-2 rounded-lg px-3 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100',
 };
@@ -117,8 +121,8 @@ export default function InstallButton({ variant = 'pill', className, label = 'In
 
   return (
     <>
-      <button type="button" onClick={onClick} className={`${STYLES[variant] || STYLES.pill} ${className || (variant === 'menu' ? '' : 'inline-flex')}`} data-install-button>
-        <DownloadIcon className={variant === 'solid' ? 'h-5 w-5' : 'h-4 w-4'} />
+      <button type="button" onClick={onClick} className={`${STYLES[variant] || STYLES.pill} ${className || (variant === 'menu' || variant === 'link' ? '' : 'inline-flex')}`} data-install-button>
+        {variant !== 'link' && <DownloadIcon className={variant === 'solid' || variant === 'ghost' ? 'h-5 w-5' : 'h-4 w-4'} />}
         {label}
       </button>
       {help && <IosSteps onClose={() => { setHelp(false); if (onDone) onDone(); }} />}

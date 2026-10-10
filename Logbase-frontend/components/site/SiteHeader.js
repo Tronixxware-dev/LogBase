@@ -44,16 +44,17 @@ export default function SiteHeader() {
           <InstallButton variant="pill" className="hidden sm:inline-flex" />
           <ThemeIconButton />
           {signedIn ? (
-            <Link href="/dashboard" className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark">
-              Open dashboard
-              <Icon name="arrowRight" className="h-4 w-4" />
+            <Link href="/dashboard" className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark sm:px-4">
+              <span className="sm:hidden">Dashboard</span>
+              <span className="hidden sm:inline">Open dashboard</span>
+              <Icon name="arrowRight" className="hidden h-4 w-4 sm:block" />
             </Link>
           ) : (
             <>
               <Link href="/login" className="hidden rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 sm:block">
                 Log in
               </Link>
-              <Link href="/signup" className="inline-flex items-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark">
+              <Link href="/signup" className="inline-flex items-center whitespace-nowrap rounded-lg bg-primary px-3.5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark sm:px-4">
                 Start free
               </Link>
             </>

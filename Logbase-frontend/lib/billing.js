@@ -106,7 +106,7 @@ export function planLines(plan) {
   ];
 }
 
-// "₦50,000 a year, ₦10,000 less than paying monthly"
+// "₦10,000 a year, ₦2,000 less than paying monthly"
 export function yearlySaving(plan) {
   return Math.max(0, plan.monthly * 12 - plan.yearly);
 }
