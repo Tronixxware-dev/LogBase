@@ -1,6 +1,6 @@
 // Receipts and customer statements: the numbers and the text sent on WhatsApp. Pure functions, no React.
 
-import { formatMoney } from '@/lib/format';
+import { formatMoney, formatDate, formatDateTime } from '@/lib/format';
 import { phoneKey } from '@/lib/phone';
 
 function num(value) {
@@ -74,7 +74,7 @@ export function receiptText(receipt, businessName) {
   for (const item of receipt.items) {
     lines.push(`${item.quantity} x ${item.name} @ ${formatMoney(item.unitPrice)} = ${formatMoney(item.amount)}`);
     if (item.serials.length > 0) lines.push(`   IMEI / serial: ${item.serials.join(', ')}`);
-    if (item.warrantyEndsAt) lines.push(`   Warranty until ${new Date(item.warrantyEndsAt).toLocaleDateString()}`);
+    if (item.warrantyEndsAt) lines.push(`   Warranty until ${formatDate(item.warrantyEndsAt)}`);
     if (item.returnedQuantity > 0) {
       lines.push(`   returned ${item.returnedQuantity}: -${formatMoney(item.returnedAmount)}`);
     }
@@ -89,11 +89,10 @@ export function receiptText(receipt, businessName) {
   return lines.join('\n');
 }
 
-// "10/10/2026, 6:48 PM"
+// "10 Oct 2026, 6:48 PM"
 export function receiptDateTime(value) {
   if (!value) return '';
-  const d = new Date(value);
-  return `${d.toLocaleDateString()}, ${d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
+  return formatDateTime(value);
 }
 
 // A statement as plain text.
@@ -101,12 +100,12 @@ export function statementText(statement, businessName) {
   const lines = [];
   lines.push(`*${businessName || 'Statement'}*`);
   lines.push(`Account statement for ${statement.customer.name}`);
-  lines.push(new Date().toLocaleDateString());
+  lines.push(formatDate(new Date()));
   lines.push('');
   const recent = statement.entries.slice(-8);
   if (statement.entries.length > recent.length) lines.push('(latest entries)');
   for (const e of recent) {
-    const when = e.date ? new Date(e.date).toLocaleDateString() : '';
+    const when = e.date ? formatDate(e.date) : '';
     const amount = e.debit > 0 && e.credit > 0 ? `${formatMoney(e.debit)} / ${formatMoney(e.credit)}` : formatMoney(e.debit || e.credit);
     lines.push(`${when} ${e.description} (${amount})`.trim());
   }

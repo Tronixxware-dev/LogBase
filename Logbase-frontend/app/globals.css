@@ -376,3 +376,34 @@ button.bg-primary:disabled {
 }
 .animate-grow-x { transform-origin: left center; animation: grow-x 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .animate-pulse-ring { animation: pulse-ring 1.8s ease-out infinite; }
+
+/* ------------------------------------------------------------------ */
+/* Logo loader: the three layers drop onto the stack, rest, then lift  */
+/* ------------------------------------------------------------------ */
+.lb-loader .lb-layer {
+  animation: lb-stack 2.1s cubic-bezier(0.3, 0.7, 0.3, 1) infinite;
+}
+.lb-loader .lb-layer-2 { animation-name: lb-stack-2; }
+.lb-loader .lb-layer-3 { animation-name: lb-stack-3; }
+
+@keyframes lb-stack {
+  0% { opacity: 0; transform: translateY(-16px); }
+  11% { opacity: 1; transform: translateY(1.6px); }
+  16% { transform: translateY(0); }
+  74% { opacity: 1; transform: translateY(0); }
+  88%, 100% { opacity: 0; transform: translateY(4px); }
+}
+@keyframes lb-stack-2 {
+  0%, 11% { opacity: 0; transform: translateY(-16px); }
+  23% { opacity: 1; transform: translateY(1.6px); }
+  28% { transform: translateY(0); }
+  74% { opacity: 1; transform: translateY(0); }
+  88%, 100% { opacity: 0; transform: translateY(4px); }
+}
+@keyframes lb-stack-3 {
+  0%, 23% { opacity: 0; transform: translateY(-16px); }
+  35% { opacity: 1; transform: translateY(1.6px); }
+  40% { transform: translateY(0); }
+  74% { opacity: 1; transform: translateY(0); }
+  88%, 100% { opacity: 0; transform: translateY(4px); }
+}

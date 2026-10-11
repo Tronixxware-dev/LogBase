@@ -6,6 +6,7 @@ import { lookupSerial } from '@/lib/api';
 import { formatDate, formatDateTime, formatMoney } from '@/lib/format';
 import { warrantyLabel, warrantyStatus, SERIAL_STATUS, EVENT_LABEL } from '@/lib/serials';
 import PageHeader from '@/components/PageHeader';
+import { ScanButton } from '@/components/BarcodeScanner';
 import { useUser } from '@/components/UserProvider';
 import { ErrorBanner, LoadingState, cardClass, inputClass, primaryButtonClass } from '@/components/ui';
 
@@ -145,6 +146,12 @@ export default function SerialLookupPage() {
           className={inputClass}
           aria-label="IMEI / serial number"
           autoFocus
+        />
+        <ScanButton
+          onScan={(serial) => {
+            setText(serial);
+            search(serial);
+          }}
         />
         <button type="submit" disabled={loading} className={`${primaryButtonClass} shrink-0`}>
           {loading ? 'Looking…' : 'Look up'}

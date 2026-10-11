@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getMe, getToken, clearToken } from '@/lib/api';
 import { queueCounts } from '@/lib/outbox';
 import { userCan } from '@/lib/permissions';
+import { LogoLoader } from '@/components/LogoLoader';
 
 const UserContext = createContext(null);
 
@@ -90,9 +91,7 @@ export function UserProvider({ children }) {
         </div>
       );
     }
-    return (
-      <div className="flex min-h-screen items-center justify-center text-gray-500">Loading…</div>
-    );
+    return <LogoLoader fullscreen label="Opening LogBase…" />;
   }
 
   // can('recordSales', ...) is true when the person has at least one of those permissions (the owner has all).

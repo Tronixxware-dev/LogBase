@@ -222,6 +222,15 @@ const icons = {
     </>
   ),
   filter: <path d="M3 5h18l-7 8.5V20l-4-2v-4.5L3 5z" />,
+  scan: (
+    <>
+      <path d="M4 8V6a2 2 0 0 1 2-2h2" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v2" />
+      <path d="M20 16v2a2 2 0 0 1-2 2h-2" />
+      <path d="M8 20H6a2 2 0 0 1-2-2v-2" />
+      <path d="M7 8v8M10.5 8v8M13.5 8v8M17 8v8" />
+    </>
+  ),
   command: (
     <path d="M9 9V6.5A2.5 2.5 0 1 0 6.5 9H9zm0 0h6m-6 0v6m6-6V6.5A2.5 2.5 0 1 1 17.5 9H15zm0 0v6m0 0h2.5a2.5 2.5 0 1 1-2.5 2.5V15zm0 0H9m0 0H6.5A2.5 2.5 0 1 0 9 17.5V15z" />
   ),

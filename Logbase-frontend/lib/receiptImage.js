@@ -1,7 +1,7 @@
 // Draws a receipt as a picture (PNG), in the same paper-receipt style as the receipt page,
 // so it can be sent on WhatsApp or saved. Runs in the browser only (it uses a <canvas>).
 
-import { formatMoney } from '@/lib/format';
+import { formatMoney, formatDate } from '@/lib/format';
 import { describePhone } from '@/lib/phone';
 import { receiptDateTime } from '@/lib/receipt';
 
@@ -138,7 +138,7 @@ function paint(ctx, receipt, businessName, dry, height) {
     }
     if (item.warrantyEndsAt) {
       set(17, 400, MUTED);
-      text(`WARRANTY UNTIL ${new Date(item.warrantyEndsAt).toLocaleDateString()}`, left);
+      text(`WARRANTY UNTIL ${formatDate(item.warrantyEndsAt)}`, left);
       y += 24;
     }
     if (item.returnedQuantity > 0) {

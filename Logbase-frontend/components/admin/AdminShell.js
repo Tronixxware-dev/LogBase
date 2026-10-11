@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/components/UserProvider';
 import { Icon } from '@/components/Icons';
+import { LogoLoader } from '@/components/LogoLoader';
 import { BrandMark } from '@/components/Navbar';
 import { ThemeIconButton } from '@/components/ThemeToggle';
 import Avatar from '@/components/Avatar';
@@ -36,7 +37,7 @@ export default function AdminShell({ children }) {
   }, [user, router]);
 
   if (!allowed) {
-    return <div className="flex min-h-screen items-center justify-center text-gray-500">Loading…</div>;
+    return <LogoLoader fullscreen label="Loading…" />;
   }
 
   return (

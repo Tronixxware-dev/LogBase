@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { listProducts, listSales, listPurchases, listReturns, listStockAdjustments, listExpenses, listSuppliers } from '@/lib/api';
 import { useUser } from '@/components/UserProvider';
-import { formatMoney } from '@/lib/format';
+import { formatMoney, formatLongDate, formatTime, greetingFor } from '@/lib/format';
 import { buildAnalytics, STOCK_STATUS } from '@/lib/analytics';
 import { categoryLabel, periodQuery } from '@/lib/expenses';
 import { suppliersOwed, totalOwed } from '@/lib/payables';
@@ -129,11 +129,25 @@ function HeroLink({ href, solid, icon, children }) {
   );
 }
 
-function greeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+// The current time, refreshed every time the minute changes, so the greeting, emoji and clock never go stale on a screen left open.
+function useNow() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    let timer;
+    const tick = () => {
+      const d = new Date();
+      setNow(d);
+      timer = setTimeout(tick, (60 - d.getSeconds()) * 1000 - d.getMilliseconds() + 50);
+    };
+    timer = setTimeout(tick, 0);
+    const onVisible = () => document.visibilityState === 'visible' && setNow(new Date());
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
+  return now;
 }
 
 function plural(n, word) {
@@ -148,6 +162,8 @@ export default function DashboardPage() {
 
 function OwnerOverview() {
   const { user, can, isOwner } = useUser();
+  const now = useNow();
+  const greet = greetingFor(now);
   // Profit, what stock cost, delivery fees and cost values are for the owner only.
   // pages this person may open (a link is only shown when they can)
   // products and stock are one page now
@@ -224,8 +240,7 @@ function OwnerOverview() {
         <div className="relative flex flex-wrap items-end justify-between gap-5">
           <div className="min-w-0">
             <p className="text-sm font-medium text-teal-50/85">
-              {greeting()} ·{' '}
-              {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+              <span aria-hidden="true">{greet.emoji}</span> {greet.text} · {formatLongDate(now)} · <span className="tabular">{formatTime(now)}</span>
             </p>
             <h1 className="mt-1.5 text-2xl font-semibold tracking-tight sm:text-3xl">{`Welcome back, ${user.name}`}</h1>
             <p className="mt-1.5 text-sm text-teal-50/85">Here&apos;s what&apos;s happening with your business.</p>

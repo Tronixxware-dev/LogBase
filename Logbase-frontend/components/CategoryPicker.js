@@ -62,13 +62,13 @@ export default function CategoryPicker({ value, onChange }) {
       <button
         type="button"
         onClick={() => setAdding((v) => !v)}
-        className="mt-1 text-xs text-primary hover:text-primary-dark"
+        className="mt-1.5 text-xs font-medium text-primary hover:text-primary-dark hover:underline"
       >
         {adding ? 'Cancel' : '+ New category'}
       </button>
 
       {adding && (
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex items-stretch gap-2">
           <input
             type="text"
             value={newName}
@@ -88,7 +88,7 @@ export default function CategoryPicker({ value, onChange }) {
             type="button"
             onClick={handleAdd}
             disabled={busy || !newName.trim()}
-            className="rounded-lg bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white shadow-xs transition hover:bg-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? '…' : 'Add'}
           </button>

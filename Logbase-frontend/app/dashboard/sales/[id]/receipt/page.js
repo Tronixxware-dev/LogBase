@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getSale } from '@/lib/api';
-import { formatMoney } from '@/lib/format';
+import { formatMoney, formatDate } from '@/lib/format';
 import { describePhone } from '@/lib/phone';
 import { buildReceipt, receiptDateTime, receiptText, whatsappLink } from '@/lib/receipt';
 import { receiptToPng } from '@/lib/receiptImage';
@@ -250,7 +250,7 @@ export default function ReceiptPage() {
                   <p className="mt-0.5 break-all text-xs uppercase text-gray-500">IMEI / serial: {item.serials.join(', ')}</p>
                 )}
                 {item.warrantyEndsAt && (
-                  <p className="mt-0.5 text-xs uppercase text-gray-500">Warranty until {new Date(item.warrantyEndsAt).toLocaleDateString()}</p>
+                  <p className="mt-0.5 text-xs uppercase text-gray-500">Warranty until {formatDate(item.warrantyEndsAt)}</p>
                 )}
                 {item.returnedQuantity > 0 && (
                   <p className="mt-0.5 text-xs uppercase text-gray-500">

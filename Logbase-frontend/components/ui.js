@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Icon } from '@/components/Icons';
+import { LogoLoader } from '@/components/LogoLoader';
 
 /* Class names reused across forms and buttons */
 export const inputClass =
@@ -62,23 +63,9 @@ export function Skeleton({ className = '' }) {
   return <div className={`skeleton rounded-lg ${className}`} aria-hidden="true" />;
 }
 
+// The LogBase logo animates while a page loads (the words stay for screen readers).
 export function LoadingState({ label = 'Loading…' }) {
-  return (
-    <div role="status" className="space-y-3 py-2">
-      <span className="sr-only">{label}</span>
-      <div className={`${cardClass} p-5`}>
-        <Skeleton className="h-4 w-1/3" />
-        <Skeleton className="mt-4 h-3 w-full" />
-        <Skeleton className="mt-2 h-3 w-5/6" />
-        <Skeleton className="mt-2 h-3 w-2/3" />
-      </div>
-      <div className={`${cardClass} p-5`}>
-        <Skeleton className="h-4 w-1/4" />
-        <Skeleton className="mt-4 h-3 w-full" />
-        <Skeleton className="mt-2 h-3 w-4/5" />
-      </div>
-    </div>
-  );
+  return <LogoLoader label={label} size={64} />;
 }
 
 // "Total: 12 sales" shown above a list. `count` is how many rows the list has right now.

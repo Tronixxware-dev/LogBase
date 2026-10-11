@@ -1,8 +1,9 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { addSerials } from '@/lib/serials';
 import { inputClass } from '@/components/ui';
+import { ScanButton } from '@/components/BarcodeScanner';
 
 // Enter IMEI / serial numbers one by one (a scanner types a number and presses Enter) or paste a whole list.
 // `expected` is how many are needed (a sale needs one per unit); leave it out when any number is fine.
@@ -10,11 +11,17 @@ export default function SerialsInput({ value, onChange, expected, suggestions = 
   const [text, setText] = useState('');
   const [notice, setNotice] = useState('');
   const listId = useId();
+  // the camera can add several numbers before the page redraws, so keep the latest list here
+  const latest = useRef(value);
+  latest.current = value;
 
   function commit(raw) {
     if (!raw || !raw.trim()) return;
-    const { list, rejected } = addSerials(value, raw);
-    if (list.length !== value.length) onChange(list);
+    const { list, rejected } = addSerials(latest.current, raw);
+    if (list.length !== latest.current.length) {
+      latest.current = list;
+      onChange(list);
+    }
     setText('');
     setNotice(
       rejected.length === 0
@@ -27,7 +34,9 @@ export default function SerialsInput({ value, onChange, expected, suggestions = 
   }
 
   function remove(serial) {
-    onChange(value.filter((s) => s !== serial));
+    const next = latest.current.filter((s) => s !== serial);
+    latest.current = next;
+    onChange(next);
     setNotice('');
   }
 
@@ -68,6 +77,7 @@ export default function SerialsInput({ value, onChange, expected, suggestions = 
           className={inputClass}
           aria-label={label}
         />
+        <ScanButton continuous disabled={disabled} onScan={commit} />
         <button
           type="button"
           disabled={disabled || !text.trim()}

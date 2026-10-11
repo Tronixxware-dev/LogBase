@@ -8,7 +8,7 @@
  *
  * Change VERSION to throw away everything this worker saved.
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const STATIC = `logbase-static-${VERSION}`;
 const PAGES = `logbase-pages-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
