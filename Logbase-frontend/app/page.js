@@ -7,13 +7,64 @@ import Reveal from '@/components/site/Reveal';
 import { Icon } from '@/components/Icons';
 import InstallButton from '@/components/InstallButton';
 import { BrandMark } from '@/components/Navbar';
-import { SITE } from '@/lib/site';
+import JsonLd from '@/components/site/JsonLd';
+import { SITE, PLANS } from '@/lib/site';
 
 export const metadata = {
-  title: { absolute: `${SITE.name} | ${SITE.tagline}` },
-  description: SITE.description,
+  title: { absolute: SITE.seoTitle },
+  description: SITE.seoDescription,
   alternates: { canonical: '/' },
+  openGraph: { title: SITE.seoTitle, description: SITE.seoDescription, url: '/' },
 };
+
+// Tells Google, in a form it can read, that LogBase is a software product made by Tronixxware, what it does and what it costs.
+function structuredData() {
+  const org = {
+    '@type': 'Organization',
+    '@id': `${SITE.url}/#organization`,
+    name: SITE.company,
+    url: SITE.url,
+    logo: `${SITE.url}/icons/icon-512.png`,
+    email: SITE.email,
+  };
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      org,
+      {
+        '@type': 'WebSite',
+        '@id': `${SITE.url}/#website`,
+        url: `${SITE.url}/`,
+        name: SITE.name,
+        alternateName: ['LogBase app', 'LogBase inventory app', 'mylogbase.com'],
+        description: SITE.seoDescription,
+        inLanguage: 'en-NG',
+        publisher: { '@id': `${SITE.url}/#organization` },
+      },
+      {
+        '@type': 'SoftwareApplication',
+        '@id': `${SITE.url}/#app`,
+        name: SITE.name,
+        alternateName: 'LogBase inventory and sales app',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web',
+        url: `${SITE.url}/`,
+        image: `${SITE.url}/icons/icon-512.png`,
+        description: SITE.description,
+        inLanguage: 'en-NG',
+        publisher: { '@id': `${SITE.url}/#organization` },
+        offers: PLANS.map((p) => ({
+          '@type': 'Offer',
+          name: `${p.name} plan`,
+          price: String(p.monthly),
+          priceCurrency: 'NGN',
+          description: p.tagline,
+          url: `${SITE.url}/#pricing`,
+        })),
+      },
+    ],
+  };
+}
 
 const BUILT_FOR = ['Provision stores and supermarkets', 'Phone and gadget sellers', 'Pharmacies and chemists', 'Building materials', 'Fashion and boutiques', 'Wholesalers and distributors', 'Salons, restaurants and services'];
 
@@ -476,6 +527,7 @@ export default function Home() {
         <ClosingCta />
       </main>
       <SiteFooter />
+      <JsonLd data={structuredData()} />
     </div>
   );
 }

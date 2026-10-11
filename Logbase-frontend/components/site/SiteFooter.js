@@ -9,6 +9,7 @@ const COLUMNS = [
       { href: '/#features', label: 'Features' },
       { href: '/#pricing', label: 'Pricing' },
       { href: '/#faq', label: 'FAQ' },
+      { href: '/guides', label: 'Guides' },
       { href: '/signup', label: 'Start free trial' },
       { href: '/login', label: 'Log in' },
     ],

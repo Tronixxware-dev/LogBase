@@ -27,7 +27,13 @@ export const metadata = {
     locale: "en_NG",
   },
   icons: {
-    icon: [{ url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" }, { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    // Google shows the site's icon next to its search result. It needs a square icon whose size is a multiple of 48 pixels (48, 96, 192...);
+    // /favicon.ico (the file in the app folder) is added by Next.js automatically.
+    icon: [
+      { url: "/icons/favicon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/icons/favicon-96.png", sizes: "96x96", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   // opens full screen, without the browser's address bar, when added to an iPhone's home screen
