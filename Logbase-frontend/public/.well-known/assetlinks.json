@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.mylogbase.app",
+      "sha256_cert_fingerprints": [
+        "BC:27:D5:81:02:CC:1A:3A:A6:49:F4:C6:A2:23:41:65:CD:69:69:0B:4F:BE:5E:D2:A1:4F:22:A6:6C:60:65:7D"
+      ]
+    }
+  }
+]
