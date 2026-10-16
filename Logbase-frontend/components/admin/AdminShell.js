@@ -13,6 +13,7 @@ import Avatar from '@/components/Avatar';
 const LINKS = [
   { href: '/admin', label: 'Overview', icon: 'overview', exact: true },
   { href: '/admin/businesses', label: 'Businesses', icon: 'store' },
+  { href: '/admin/sales-stock', label: 'Sales & Stock', icon: 'sparkle' },
   { href: '/admin/payments', label: 'Payments', icon: 'billing' },
   { href: '/admin/activity', label: 'Activity', icon: 'activity' },
   { href: '/admin/email', label: 'Email', icon: 'mail' },
@@ -60,10 +61,10 @@ export default function AdminShell({ children }) {
                 href={link.href}
                 aria-current={active ? 'page' : undefined}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
-                  active ? 'bg-primary/10 font-medium text-primary' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  active ? 'bg-primary font-medium text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <Icon name={link.icon} className={`h-5 w-5 shrink-0 ${active ? 'text-primary' : 'text-gray-400'}`} />
+                <Icon name={link.icon} className={`h-5 w-5 shrink-0 ${active ? 'text-white' : 'text-gray-400'}`} />
                 {link.label}
               </Link>
             );
