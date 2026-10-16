@@ -13,10 +13,10 @@ import { formatMoney } from '@/lib/format';
   Admin panel > Sales & Stock: a DEMO page for videos and posts.
 
   The sales figures are made up and nothing is read from the database, so it never shows a real business, owner,
-  staff member or customer. Product prices are real Jiji.ng / Computer Village prices (see the note above PRODUCTS).
+  staff member or customer. Product prices are real Nigerian market prices from Jiji.ng and Jumia (see the note above PRODUCTS).
 
   To change the story the numbers tell, edit the blocks marked "EDIT HERE" below:
-    1. BUSINESS      how big the sample shop is and how fast it is growing
+    1. BUSINESS      how big the sample (all businesses together) is and how fast it is growing
     2. PRODUCTS      what is on the shelves (name, category, units in stock, price, reorder level)
     3. SELLING MIX   which categories sell the most
     4. RECENT_SALES  the "Recorded sales" list (minutesAgo = how long ago it was sold)
@@ -33,8 +33,8 @@ import { formatMoney } from '@/lib/format';
 const BUSINESS = {
   averageDailySales: 1450000, // naira sold on an average day
   growth: 0.6, // how much busier the last day is than the first of the 180 days: 0.6 = about 2x busier (try 0.3 for slower growth)
-  averageSale: 230000, // naira in an average sale
-  unitsPerSale: 1.7, // items in an average sale
+  averageSale: 95000, // naira in an average sale
+  unitsPerSale: 3, // items in an average sale
   collectedShare: 0.94, // share of the money already received (the rest is still owed by customers)
   customersShare: 0.86, // customers served, as a share of the sales made (some customers buy more than once)
 };
@@ -54,31 +54,36 @@ const PAYMENT_MIX = [
 /* ================================================================== */
 
 // qty = units in stock, price = selling price in naira, low = "low stock" when qty is at or below this
-// Prices are the middle (median) asking prices on Jiji.ng from Ikeja / Computer Village sellers, taken in October 2026:
-// brand new for the phones, tablet and accessories; used for the MacBook and the two business laptops.
+// This page shows every business on LogBase added together, so the shelves are a mixture of shops: phones and gadgets,
+// groceries, building materials, fashion, beauty, home appliances and pharmacy.
+// Prices are the middle (median) asking prices on Jiji.ng and Jumia Nigeria in October 2026 (new items).
 // Market prices move often, so check them again before you record a new video.
 const PRODUCTS = [
-  { name: 'iPhone 15 Pro Max 256GB', category: 'Phones', qty: 14, price: 1100000, low: 4 },
-  { name: 'iPhone 15 128GB', category: 'Phones', qty: 20, price: 695000, low: 5 },
-  { name: 'iPhone 14 128GB', category: 'Phones', qty: 22, price: 435000, low: 5 },
-  { name: 'Samsung Galaxy S25 Ultra 256GB', category: 'Phones', qty: 9, price: 1130000, low: 3 },
-  { name: 'Samsung Galaxy A56 5G 256GB', category: 'Phones', qty: 24, price: 515000, low: 6 },
-  { name: 'Samsung Galaxy A36 5G 256GB', category: 'Phones', qty: 30, price: 420000, low: 8 },
-  { name: 'Samsung Galaxy A26 128GB', category: 'Phones', qty: 0, price: 315000, low: 8 },
-  { name: 'Infinix Note 50 Pro 256GB', category: 'Phones', qty: 40, price: 410000, low: 10 },
+  { name: 'iPhone 15 128GB', category: 'Phones & Gadgets', qty: 20, price: 695000, low: 5 },
+  { name: 'Samsung Galaxy A36 5G 256GB', category: 'Phones & Gadgets', qty: 30, price: 420000, low: 8 },
+  { name: 'AirPods Pro 2', category: 'Phones & Gadgets', qty: 35, price: 200000, low: 8 },
+  { name: 'Oraimo Power Bank 20000mAh', category: 'Phones & Gadgets', qty: 85, price: 18500, low: 20 },
+  { name: '25W Fast Charger', category: 'Phones & Gadgets', qty: 240, price: 15000, low: 40 },
 
-  { name: 'MacBook Air M2 256GB', category: 'Laptops', qty: 9, price: 1150000, low: 3 },
-  { name: 'HP EliteBook 840 G8', category: 'Laptops', qty: 16, price: 580000, low: 4 },
-  { name: 'Lenovo ThinkPad T14', category: 'Laptops', qty: 3, price: 600000, low: 4 },
+  { name: 'Mama Gold Rice 50kg', category: 'Groceries', qty: 120, price: 65000, low: 30 },
+  { name: 'Indomie Chicken Carton (40 packs)', category: 'Groceries', qty: 300, price: 11300, low: 60 },
+  { name: "King's Vegetable Oil 25L", category: 'Groceries', qty: 0, price: 80000, low: 10 },
+  { name: 'Peak Evaporated Milk (24 tins)', category: 'Groceries', qty: 7, price: 30000, low: 10 },
 
-  { name: 'iPad (2025) 128GB', category: 'Tablets', qty: 8, price: 610000, low: 3 },
+  { name: 'Dangote Cement 50kg', category: 'Building Materials', qty: 600, price: 13000, low: 100 },
 
-  { name: 'AirPods Pro 2', category: 'Audio', qty: 35, price: 200000, low: 8 },
-  { name: 'JBL Flip 6', category: 'Audio', qty: 18, price: 135000, low: 5 },
+  { name: 'Nike Air Force 1 Sneakers', category: 'Fashion', qty: 40, price: 25500, low: 10 },
+  { name: 'Ankara Fabric (6 yards)', category: 'Fashion', qty: 150, price: 16000, low: 30 },
 
-  { name: '25W Fast Charger', category: 'Accessories', qty: 240, price: 15000, low: 40 },
-  { name: 'USB-C Fast Charging Cable', category: 'Accessories', qty: 380, price: 5500, low: 60 },
-  { name: 'Oraimo Power Bank 20000mAh', category: 'Accessories', qty: 85, price: 18500, low: 20 },
+  { name: 'Lattafa Yara 100ml', category: 'Beauty & Fragrance', qty: 45, price: 32000, low: 10 },
+  { name: 'Lattafa Khamrah Qahwa 100ml', category: 'Beauty & Fragrance', qty: 30, price: 46500, low: 8 },
+
+  { name: 'Hisense 43" Smart TV', category: 'Home Appliances', qty: 12, price: 280000, low: 4 },
+  { name: 'Hisense Double Door Fridge', category: 'Home Appliances', qty: 8, price: 385000, low: 3 },
+  { name: 'Sumec Firman RD3910 Generator', category: 'Home Appliances', qty: 6, price: 370000, low: 3 },
+  { name: 'Binatone Blender BLG-808', category: 'Home Appliances', qty: 25, price: 73000, low: 6 },
+
+  { name: 'Vitamin C 1000mg (100 tablets)', category: 'Pharmacy & Health', qty: 160, price: 12500, low: 30 },
 ];
 
 /* ================================================================== */
@@ -87,11 +92,13 @@ const PRODUCTS = [
 
 // share of the units sold and of the money, by category (each column adds up to 1)
 const SELLING_MIX = {
-  Phones: { units: 0.38, money: 0.55 },
-  Accessories: { units: 0.32, money: 0.08 },
-  Audio: { units: 0.11, money: 0.06 },
-  Laptops: { units: 0.12, money: 0.28 },
-  Tablets: { units: 0.07, money: 0.03 },
+  Groceries: { units: 0.3, money: 0.22 },
+  'Phones & Gadgets': { units: 0.22, money: 0.3 },
+  'Fashion': { units: 0.16, money: 0.1 },
+  'Building Materials': { units: 0.12, money: 0.08 },
+  'Beauty & Fragrance': { units: 0.1, money: 0.06 },
+  'Home Appliances': { units: 0.06, money: 0.2 },
+  'Pharmacy & Health': { units: 0.04, money: 0.04 },
 };
 
 /* ================================================================== */
@@ -100,18 +107,18 @@ const SELLING_MIX = {
 
 // product must match a name in PRODUCTS (it gives the price). status: paid | partial | credit
 const RECENT_SALES = [
-  { product: 'iPhone 15 Pro Max 256GB', quantity: 1, minutesAgo: 3, status: 'paid' },
-  { product: '25W Fast Charger', quantity: 4, minutesAgo: 11, status: 'paid' },
-  { product: 'HP EliteBook 840 G8', quantity: 2, minutesAgo: 24, status: 'partial' },
-  { product: 'Samsung Galaxy A36 5G 256GB', quantity: 3, minutesAgo: 38, status: 'paid' },
-  { product: 'AirPods Pro 2', quantity: 1, minutesAgo: 52, status: 'paid' },
-  { product: 'Samsung Galaxy S25 Ultra 256GB', quantity: 1, minutesAgo: 75, status: 'paid' },
-  { product: 'USB-C Fast Charging Cable', quantity: 10, minutesAgo: 96, status: 'paid' },
-  { product: 'MacBook Air M2 256GB', quantity: 1, minutesAgo: 130, status: 'paid' },
-  { product: 'Infinix Note 50 Pro 256GB', quantity: 2, minutesAgo: 175, status: 'credit' },
-  { product: 'Oraimo Power Bank 20000mAh', quantity: 3, minutesAgo: 220, status: 'paid' },
-  { product: 'iPad (2025) 128GB', quantity: 1, minutesAgo: 290, status: 'paid' },
-  { product: 'Samsung Galaxy A56 5G 256GB', quantity: 2, minutesAgo: 340, status: 'paid' },
+  { product: 'Hisense 43" Smart TV', quantity: 1, minutesAgo: 3, status: 'paid' },
+  { product: 'Mama Gold Rice 50kg', quantity: 10, minutesAgo: 11, status: 'paid' },
+  { product: 'Dangote Cement 50kg', quantity: 40, minutesAgo: 24, status: 'partial' },
+  { product: 'Lattafa Yara 100ml', quantity: 2, minutesAgo: 38, status: 'paid' },
+  { product: 'iPhone 15 128GB', quantity: 1, minutesAgo: 52, status: 'paid' },
+  { product: 'Indomie Chicken Carton (40 packs)', quantity: 15, minutesAgo: 75, status: 'paid' },
+  { product: 'Nike Air Force 1 Sneakers', quantity: 3, minutesAgo: 96, status: 'paid' },
+  { product: 'Hisense Double Door Fridge', quantity: 1, minutesAgo: 130, status: 'paid' },
+  { product: 'Ankara Fabric (6 yards)', quantity: 12, minutesAgo: 175, status: 'credit' },
+  { product: 'Vitamin C 1000mg (100 tablets)', quantity: 6, minutesAgo: 220, status: 'paid' },
+  { product: 'Binatone Blender BLG-808', quantity: 2, minutesAgo: 290, status: 'paid' },
+  { product: 'Sumec Firman RD3910 Generator', quantity: 1, minutesAgo: 340, status: 'paid' },
 ];
 
 /* ================================================================== */
