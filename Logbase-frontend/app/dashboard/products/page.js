@@ -3,17 +3,19 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { listProducts } from '@/lib/api';
+import { useShops } from '@/lib/shops';
+import { forShop } from '@/lib/shopStorage';
 import { formatMoney, variantLabel } from '@/lib/format';
 import { useUser } from '@/components/UserProvider';
 import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
+import FilterBar from '@/components/FilterBar';
 import {
   ErrorBanner,
   LoadingState,
   EmptyState,
   ListTotal,
   PrimaryLink,
-  inputClass,
 } from '@/components/ui';
 
 const isLow = (p) => p.quantity <= p.reorderThreshold;
@@ -25,6 +27,7 @@ function ProductsList() {
   const searchParams = useSearchParams();
   const { can } = useUser();
   const canManage = can('manageProducts');
+  const { multiple, scopeReady } = useShops();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,12 +43,14 @@ function ProductsList() {
     setCategory(searchParams.get('category') || '');
   }, [searchParams]);
 
+  // with several stores, the stock shown is what the store being worked in holds
   useEffect(() => {
+    if (!scopeReady) return;
     listProducts()
-      .then((data) => setProducts(data.products || []))
+      .then((data) => setProducts(multiple ? forShop(data.products || []) : data.products || []))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [scopeReady, multiple]);
 
   // the category filter is built from the products themselves, so it works without access to the Categories page
   const categories = useMemo(
@@ -135,47 +140,23 @@ function ProductsList() {
     <>
       <ErrorBanner message={error} />
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, brand, SKU or category"
-          className={`${inputClass} sm:max-w-xs`}
-        />
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className={`${inputClass} sm:max-w-[12rem]`}
-          aria-label="Filter by category"
-        >
-          <option value="">All categories</option>
-          {categories.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
-        {brands.length > 0 && (
-          <select
-            value={brand}
-            onChange={(e) => setBrand(e.target.value)}
-            className={`${inputClass} sm:max-w-[12rem]`}
-            aria-label="Filter by brand"
-          >
-            <option value="">All brands</option>
-            {brands.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-        )}
-        <label className="flex items-center gap-2 text-sm text-gray-600">
-          <input type="checkbox" checked={lowOnly} onChange={(e) => setLowOnly(e.target.checked)} />
-          Low stock only
-        </label>
-      </div>
+      <FilterBar
+        search={{ value: search, onChange: setSearch, placeholder: 'Search by name, brand, SKU or category', label: 'Search products' }}
+        filters={[
+          { key: 'category', label: 'Category', value: category, onChange: setCategory, options: [{ value: '', label: 'All categories' }, ...categories.map((n) => ({ value: n, label: n }))] },
+          brands.length > 0 && { key: 'brand', label: 'Brand', value: brand, onChange: setBrand, options: [{ value: '', label: 'All brands' }, ...brands.map((n) => ({ value: n, label: n }))] },
+          {
+            key: 'stock',
+            label: 'Stock',
+            value: lowOnly ? 'low' : 'all',
+            onChange: (v) => setLowOnly(v === 'low'),
+            options: [
+              { value: 'all', label: 'Any stock' },
+              { value: 'low', label: 'Low or out of stock' },
+            ],
+          },
+        ]}
+      />
 
       {!loading && products.length > 0 && (
         <div className="mb-3 flex flex-wrap items-baseline gap-x-6 gap-y-1">
@@ -202,7 +183,7 @@ function ProductsList() {
           <EmptyState message="No products yet. The administrator has not added any stock." />
         )
       ) : filtered.length === 0 ? (
-        <EmptyState message="No products match your search." />
+        <EmptyState message="No products match these filters." />
       ) : (
         <DataTable
           columns={columns}

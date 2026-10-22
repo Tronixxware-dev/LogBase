@@ -23,26 +23,30 @@ export default function DataTable({ columns, rows, onRowClick, numbered = true }
 
   return (
     <>
-      {/* Phones: cards */}
+      {/* Phones: one clear card per item, with a coloured edge */}
       <div className="stagger space-y-3 sm:hidden">
         {rows.map((row, index) => (
           <div
             key={row._id}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
-            className={`${cardClass} p-4 transition active:scale-[0.99] ${clickable}`}
+            className={`${cardClass} overflow-hidden border-l-4 border-l-primary !border-gray-300 p-4 transition active:scale-[0.99] ${clickable}`}
           >
-            <div className="flex items-start justify-between gap-2 font-medium text-gray-900">
+            <div className="flex items-start justify-between gap-2 text-base font-bold text-gray-900">
               <span className="min-w-0">
-                {numbered && <span className="mr-2 text-xs font-normal text-gray-400">#{index + 1}</span>}
+                {numbered && (
+                  <span className="mr-2 inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-gray-100 px-1.5 align-middle text-xs font-bold text-gray-600">
+                    {index + 1}
+                  </span>
+                )}
                 {cell(primary, row)}
               </span>
-              {onRowClick && <Icon name="chevronRight" className="mt-0.5 h-4 w-4 shrink-0 text-gray-300" />}
+              {onRowClick && <Icon name="chevronRight" className="mt-1 h-4 w-4 shrink-0 text-gray-400" />}
             </div>
-            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-gray-200 pt-3 text-sm">
               {rest.map((col) => (
                 <div key={col.key}>
-                  <dt className="text-[11px] font-medium uppercase tracking-wide text-gray-400">{col.label}</dt>
-                  <dd className="mt-0.5 text-gray-700">{cell(col, row)}</dd>
+                  <dt className="text-[11px] font-bold uppercase tracking-wide text-gray-500">{col.label}</dt>
+                  <dd className="mt-0.5 font-medium text-gray-900">{cell(col, row)}</dd>
                 </div>
               ))}
             </dl>
@@ -50,21 +54,17 @@ export default function DataTable({ columns, rows, onRowClick, numbered = true }
         ))}
       </div>
 
-      {/* Tablets and up: table */}
-      <div className={`${cardClass} hidden overflow-hidden sm:block`}>
+      {/* Tablets and up: a table with a solid header, banded rows and a bold first column */}
+      <div className={`${cardClass} hidden overflow-hidden !border-gray-300 sm:block`}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50/70 text-left">
+            <thead className="border-b-2 border-gray-300 bg-gray-100 text-left">
               <tr>
-                {numbered && (
-                  <th className="w-12 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">#</th>
-                )}
+                {numbered && <th className="w-14 px-4 py-3.5 text-xs font-bold uppercase tracking-wide text-gray-700">#</th>}
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    className={`px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400 ${
-                      col.align === 'right' ? 'text-right' : ''
-                    }`}
+                    className={`px-4 py-3.5 text-xs font-bold uppercase tracking-wide text-gray-700 ${col.align === 'right' ? 'text-right' : ''}`}
                   >
                     {col.label}
                   </th>
@@ -72,18 +72,26 @@ export default function DataTable({ columns, rows, onRowClick, numbered = true }
                 {onRowClick && <th className="w-8 px-2" aria-hidden="true" />}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-200">
               {rows.map((row, index) => (
                 <tr
                   key={row._id}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
-                  className={`group transition-colors hover:bg-primary/[0.04] ${clickable}`}
+                  className={`even:bg-gray-100 ${clickable}`}
                 >
-                  {numbered && <td className="tabular px-4 py-3.5 text-gray-400">{index + 1}</td>}
-                  {columns.map((col) => (
+                  {numbered && (
+                    <td className="tabular px-4 py-4">
+                      <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-gray-200 px-1.5 text-xs font-bold text-gray-700">
+                        {index + 1}
+                      </span>
+                    </td>
+                  )}
+                  {columns.map((col, ci) => (
                     <td
                       key={col.key}
-                      className={`tabular px-4 py-3.5 text-gray-700 ${col.align === 'right' ? 'text-right' : ''}`}
+                      className={`tabular px-4 py-4 align-middle ${ci === 0 ? 'text-[15px] font-bold text-gray-900' : col.align === 'right' ? 'font-bold text-gray-900' : 'font-medium text-gray-800'} ${
+                        col.align === 'right' ? 'text-right' : ''
+                      }`}
                     >
                       {cell(col, row)}
                     </td>
@@ -92,7 +100,7 @@ export default function DataTable({ columns, rows, onRowClick, numbered = true }
                     <td className="px-2">
                       <Icon
                         name="chevronRight"
-                        className="h-4 w-4 -translate-x-1 text-gray-300 opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100"
+                        className="h-4 w-4 text-gray-400"
                       />
                     </td>
                   )}

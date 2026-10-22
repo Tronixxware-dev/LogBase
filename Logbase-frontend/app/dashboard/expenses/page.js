@@ -1,7 +1,7 @@
 'use client';
 
 import { notifySuccess } from '@/lib/feedback';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createExpense, deleteExpense, listExpenses } from '@/lib/api';
 import { formatDate, formatMoney } from '@/lib/format';
 import {
@@ -16,12 +16,17 @@ import {
 } from '@/lib/expenses';
 import PageHeader from '@/components/PageHeader';
 import { BarList, SERIES_PURCHASES } from '@/components/charts';
+import FilterBar, { optionsFrom } from '@/components/FilterBar';
 import { ErrorBanner, Field, LoadingState, cardClass, inputClass, primaryButtonClass } from '@/components/ui';
 
 // Money spent that is not stock: rent, salaries, transport, power... It is taken off the profit on the
 // Overview to give the net profit. Administrator only.
 export default function ExpensesPage() {
   const [period, setPeriod] = useState('month');
+  const [search, setSearch] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterMethod, setFilterMethod] = useState('all');
+  const [filterBy, setFilterBy] = useState('all');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -97,7 +102,18 @@ export default function ExpensesPage() {
     }
   }
 
-  const expenses = data ? data.expenses : [];
+  const expenses = useMemo(() => (data ? data.expenses : []), [data]);
+  // the period is answered by the server; the rest narrows the list under the totals
+  const shownExpenses = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return expenses.filter((e) => {
+      if (filterCategory !== 'all' && e.category !== filterCategory) return false;
+      if (filterMethod !== 'all' && e.paymentMethod !== filterMethod) return false;
+      if (filterBy !== 'all' && e.createdByName !== filterBy) return false;
+      if (!q) return true;
+      return [categoryLabel(e.category), e.description, e.createdByName].some((v) => v && String(v).toLowerCase().includes(q));
+    });
+  }, [expenses, search, filterCategory, filterMethod, filterBy]);
   const periodLabel = (PERIODS.find((p) => p.key === period) || PERIODS[0]).label.toLowerCase();
 
   return (
@@ -171,24 +187,16 @@ export default function ExpensesPage() {
         </button>
       </form>
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-gray-900">Spending</h2>
-        <div className="inline-flex flex-wrap rounded-lg border border-gray-200 bg-white p-0.5" role="group" aria-label="Period">
-          {PERIODS.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => setPeriod(p.key)}
-              aria-pressed={period === p.key}
-              className={`rounded-md px-3 py-1.5 text-sm transition ${
-                period === p.key ? 'bg-primary/10 font-medium text-primary' : 'text-gray-500 hover:text-gray-800'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <h2 className="mb-3 text-base font-semibold text-gray-900">Spending</h2>
+      <FilterBar
+        search={{ value: search, onChange: setSearch, placeholder: 'Search category, note or who added it', label: 'Search expenses' }}
+        filters={[
+          { key: 'period', label: 'Period', value: period, onChange: setPeriod, options: PERIODS.map((p) => ({ value: p.key, label: p.label })) },
+          { key: 'category', label: 'Category', value: filterCategory, onChange: setFilterCategory, options: [{ value: 'all', label: 'All categories' }, ...EXPENSE_CATEGORIES.map((c) => ({ value: c.key, label: c.label }))] },
+          { key: 'method', label: 'Paid by', value: filterMethod, onChange: setFilterMethod, advanced: true, options: [{ value: 'all', label: 'Any way' }, ...PAY_METHODS.map((m) => ({ value: m.key, label: m.label }))] },
+          { key: 'by', label: 'Added by', value: filterBy, onChange: setFilterBy, advanced: true, options: optionsFrom(expenses, (e) => e.createdByName, 'Everyone') },
+        ]}
+      />
 
       {loading ? (
         <LoadingState label="Loading expenses…" />
@@ -226,9 +234,11 @@ export default function ExpensesPage() {
 
           {expenses.length === 0 ? (
             <div className={`${cardClass} p-8 text-center text-sm text-gray-500`}>Nothing recorded for this period yet.</div>
+          ) : shownExpenses.length === 0 ? (
+            <div className={`${cardClass} p-8 text-center text-sm text-gray-500`}>No expenses match these filters.</div>
           ) : (
             <ul className={`${cardClass} divide-y divide-gray-100`}>
-              {expenses.map((e) => (
+              {shownExpenses.map((e) => (
                 <li key={e._id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-gray-900">{categoryLabel(e.category)}</p>

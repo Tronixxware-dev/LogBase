@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getMe, getToken, clearToken } from '@/lib/api';
 import { queueCounts } from '@/lib/outbox';
 import { userCan } from '@/lib/permissions';
+import { settingsOf } from '@/lib/settings';
 import { LogoLoader } from '@/components/LogoLoader';
 
 const UserContext = createContext(null);
@@ -100,7 +101,7 @@ export function UserProvider({ children }) {
   const can = (...wanted) => userCan(user, ...wanted);
 
   return (
-    <UserContext.Provider value={{ user, updateUser, logout, isOwner: user.role === 'owner', can }}>
+    <UserContext.Provider value={{ user, updateUser, logout, isOwner: user.role === 'owner', can, settings: settingsOf(user) }}>
       {children}
     </UserContext.Provider>
   );

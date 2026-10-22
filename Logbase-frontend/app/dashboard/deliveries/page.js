@@ -3,10 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { listSales, listPurchases } from '@/lib/api';
+import { useShops } from '@/lib/shops';
 import { formatDateTime, formatMoney } from '@/lib/format';
 import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
-import { ErrorBanner, LoadingState, EmptyState, cardClass, inputClass } from '@/components/ui';
+import FilterBar from '@/components/FilterBar';
+import { ErrorBanner, LoadingState, EmptyState, cardClass } from '@/components/ui';
+import OrdersTabs from '@/components/OrdersTabs';
 
 const PERIODS = [
   { days: 7, label: '7 days' },
@@ -23,29 +26,6 @@ const KINDS = [
 
 const MAX_ROWS = 200;
 
-function Segmented({ label, options, value, onChange }) {
-  return (
-    <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5" role="group" aria-label={label}>
-      {options.map((o) => {
-        const v = o.value !== undefined ? o.value : o.days;
-        return (
-          <button
-            key={String(v)}
-            type="button"
-            onClick={() => onChange(v)}
-            aria-pressed={v === value}
-            className={`rounded-md px-3 py-1.5 text-sm transition ${
-              v === value ? 'bg-primary/10 font-medium text-primary' : 'text-gray-500 hover:text-gray-800'
-            }`}
-          >
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 function lineName(line) {
   if (line.saleGroup || line.purchaseGroup) return 'Multi-item ' + (line.saleGroup ? 'sale' : 'purchase');
   const name = line.product?.name || '—';
@@ -56,6 +36,7 @@ function lineName(line) {
 // The delivery fee is kept on the first line of a multi-item sale or purchase, so each fee shows once.
 export default function DeliveriesPage() {
   const router = useRouter();
+  const { scopeQuery, scopeReady } = useShops();
   const [sales, setSales] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,14 +46,15 @@ export default function DeliveriesPage() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    Promise.all([listSales(), listPurchases()])
+    if (!scopeReady) return;
+    Promise.all([listSales(scopeQuery), listPurchases(scopeQuery)])
       .then(([salesData, purchasesData]) => {
         setSales(salesData.sales || []);
         setPurchases(purchasesData.purchases || []);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [scopeReady, scopeQuery]);
 
   const all = useMemo(() => {
     const since = days ? Date.now() - days * 24 * 60 * 60 * 1000 : null;
@@ -147,6 +129,7 @@ export default function DeliveriesPage() {
 
   return (
     <>
+      <OrdersTabs />
       <PageHeader
         title="Deliveries"
         subtitle="What you paid for deliveries, to customers on sales and to get stock on purchases. Newest first."
@@ -154,17 +137,20 @@ export default function DeliveriesPage() {
 
       <ErrorBanner message={error} />
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Segmented label="Period" options={PERIODS} value={days} onChange={setDays} />
-        <Segmented label="Type" options={KINDS} value={kind} onChange={setKind} />
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search item, customer, supplier or name"
-          className={`${inputClass} sm:max-w-xs`}
-        />
-      </div>
+      <FilterBar
+        search={{ value: search, onChange: setSearch, placeholder: 'Search item, customer, supplier or name', label: 'Search deliveries' }}
+        filters={[
+          {
+            key: 'period',
+            label: 'Period',
+            value: String(days),
+            onChange: (v) => setDays(v === 'null' ? null : Number(v)),
+            defaultValue: '30',
+            options: PERIODS.map((p) => ({ value: String(p.days), label: p.label })),
+          },
+          { key: 'kind', label: 'Type', value: kind, onChange: setKind, options: KINDS.map((k) => ({ value: k.value, label: k.label })) },
+        ]}
+      />
 
       {!loading && (
         <div className={`${cardClass} mb-4 grid grid-cols-2 divide-x divide-gray-100 sm:grid-cols-4`}>

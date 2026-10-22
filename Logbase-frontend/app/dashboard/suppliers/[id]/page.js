@@ -11,6 +11,7 @@ import { describePhone } from '@/lib/phone';
 import { useUser } from '@/components/UserProvider';
 import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
+import { Detail, DetailCard, DetailGrid } from '@/components/DetailParts';
 import { ErrorBanner, Field, LoadingState, StatusBadge, cardClass, inputClass, primaryButtonClass } from '@/components/ui';
 
 const columns = [
@@ -37,15 +38,6 @@ const paymentColumns = [
 
 // the cost and payment columns are only for the owner
 const COST_KEYS = ['costPricePerUnit', 'totalCost', 'payment'];
-
-function Detail({ label, value }) {
-  return (
-    <div>
-      <dt className="text-xs text-gray-400">{label}</dt>
-      <dd className="text-sm text-gray-900">{value || '—'}</dd>
-    </div>
-  );
-}
 
 export default function SupplierDetailPage() {
   const { id } = useParams();
@@ -161,15 +153,15 @@ export default function SupplierDetailPage() {
         </form>
       )}
 
-      <div className={`${cardClass} mb-8 p-6`}>
-        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Detail label="Country" value={phone.country} />
-          <Detail label="Phone number" value={phone.display} />
-          <Detail label="Email" value={supplier.email} />
-          <Detail label="Address" value={supplier.address} />
-          <Detail label="Notes" value={supplier.notes} />
-        </dl>
-      </div>
+      <DetailCard title="Supplier details" icon="suppliers" className="mb-8">
+        <DetailGrid cols={2}>
+          <Detail label="Country" icon="pin" color="rose">{phone.country}</Detail>
+          <Detail label="Phone number" icon="phone" color="sky">{phone.display}</Detail>
+          <Detail label="Email" icon="mail" color="sky">{supplier.email}</Detail>
+          <Detail label="Address" icon="pin" color="rose">{supplier.address}</Detail>
+          <Detail label="Notes" icon="note" color="amber" wide>{supplier.notes}</Detail>
+        </DetailGrid>
+      </DetailCard>
 
       <h2 className="mb-3 text-lg font-semibold text-gray-900">
         Purchase history <span className="text-sm font-normal text-gray-400">({purchases.length} total)</span>

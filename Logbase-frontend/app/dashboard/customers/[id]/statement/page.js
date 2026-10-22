@@ -7,6 +7,7 @@ import { getCustomerStatement } from '@/lib/api';
 import { formatDate, formatMoney } from '@/lib/format';
 import { statementText, whatsappLink } from '@/lib/receipt';
 import { useUser } from '@/components/UserProvider';
+import IdentityHeader from '@/components/Identity';
 import { ErrorBanner, LoadingState, cardClass } from '@/components/ui';
 
 const TYPE_LABEL = { sale: 'Sale', payment: 'Payment', return: 'Return', earlier: 'Earlier' };
@@ -15,7 +16,8 @@ const TYPE_LABEL = { sale: 'Sale', payment: 'Payment', return: 'Return', earlier
 // Print it (or save it as a PDF from the print window) or send a short version on WhatsApp.
 export default function CustomerStatementPage() {
   const { id } = useParams();
-  const { user } = useUser();
+  const { user, settings } = useUser();
+  const org = settings.organization;
   const [statement, setStatement] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,7 +44,7 @@ export default function CustomerStatementPage() {
   }
 
   const { customer, entries, balance } = statement;
-  const text = statementText(statement, businessName);
+  const text = statementText(statement, businessName, org);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -69,9 +71,8 @@ export default function CustomerStatementPage() {
 
       <article className={`${cardClass} p-6 print:rounded-none print:border-0 print:p-0`} data-statement>
         <header className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-200 pb-4">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">{businessName}</h1>
-            <p className="mt-1 text-xs uppercase tracking-wide text-gray-500">Account statement</p>
+          <div className="min-w-0">
+            <IdentityHeader org={org} name={businessName} title="Account statement" align="left" />
           </div>
           <div className="text-right text-sm">
             <p className="font-medium text-gray-900">{customer.name}</p>

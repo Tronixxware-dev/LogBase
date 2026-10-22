@@ -8,6 +8,7 @@ import { Icon } from '@/components/Icons';
 import InstallButton from '@/components/InstallButton';
 import { BrandMark } from '@/components/Navbar';
 import JsonLd from '@/components/site/JsonLd';
+import ReturnVisitRedirect from '@/components/site/ReturnVisitRedirect';
 import { SITE, PLANS } from '@/lib/site';
 
 export const metadata = {
@@ -515,6 +516,7 @@ function ClosingCta() {
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
+      <ReturnVisitRedirect />
       <SiteHeader />
       <main>
         <Hero />

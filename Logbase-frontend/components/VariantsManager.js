@@ -12,6 +12,7 @@ import { inputClass } from '@/components/ui';
 // onNewChange:   (key, field, value)
 // onNewRemove:   (key)
 // onAddRow:      add a blank new row
+// stockLocked:   the stock numbers cannot be typed here (a business with several stores changes a store's count with Adjust stock)
 export default function VariantsManager({
   rows,
   newRows,
@@ -20,6 +21,7 @@ export default function VariantsManager({
   onNewChange,
   onNewRemove,
   onAddRow,
+  stockLocked = false,
 }) {
   const total =
     rows.filter((r) => !r.removed).reduce((sum, r) => sum + (Number(r.quantity) || 0), 0) +
@@ -78,7 +80,8 @@ export default function VariantsManager({
                 onChange={(e) => onRowChange(row.id, 'quantity', e.target.value)}
                 placeholder="Qty"
                 aria-label="Stock"
-                className={inputClass}
+                disabled={stockLocked}
+                className={`${inputClass}${stockLocked ? ' bg-gray-50' : ''}`}
               />
               <button
                 type="button"
@@ -117,7 +120,8 @@ export default function VariantsManager({
               onChange={(e) => onNewChange(row.key, 'quantity', e.target.value)}
               placeholder="Qty"
               aria-label="Stock"
-              className={`${inputClass} border-primary`}
+              disabled={stockLocked}
+              className={`${inputClass} border-primary${stockLocked ? ' bg-gray-50' : ''}`}
             />
             <button
               type="button"

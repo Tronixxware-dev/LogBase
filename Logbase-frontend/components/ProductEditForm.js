@@ -3,6 +3,7 @@
 import BrandInput from '@/components/BrandInput';
 import CategoryPicker from '@/components/CategoryPicker';
 import { useUser } from '@/components/UserProvider';
+import { useShops } from '@/lib/shops';
 import TrackingFields from '@/components/TrackingFields';
 import { Field, inputClass } from '@/components/ui';
 
@@ -16,6 +17,7 @@ import { Field, inputClass } from '@/components/ui';
 // totalStock:  total shown for products with colours / sizes
 export default function ProductEditForm({ form, onChange, hasVariants, totalStock }) {
   const { isOwner } = useUser();
+  const { multiple } = useShops();
 
   function handle(e) {
     onChange(e.target.name, e.target.value);
@@ -69,18 +71,22 @@ export default function ProductEditForm({ form, onChange, hasVariants, totalStoc
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {hasVariants ? (
-          <Field label="In stock" hint="Add up from the colours / sizes below.">
+          <Field label={multiple ? 'In stock here' : 'In stock'} hint="Add up from the colours / sizes below.">
             <input value={totalStock} disabled className={`${inputClass} bg-gray-50`} />
           </Field>
         ) : (
-          <Field label="In stock" hint="Only change this to correct a counting mistake.">
+          <Field
+            label={multiple ? 'In stock here' : 'In stock'}
+            hint={multiple ? 'What this store holds. To correct the count, use Adjust stock.' : 'Only change this to correct a counting mistake.'}
+          >
             <input
               type="number"
               name="quantity"
               value={form.quantity}
               onChange={handle}
               min="0"
-              className={inputClass}
+              disabled={multiple}
+              className={`${inputClass}${multiple ? ' bg-gray-50' : ''}`}
             />
           </Field>
         )}

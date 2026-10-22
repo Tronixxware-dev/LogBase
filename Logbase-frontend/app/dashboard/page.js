@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useShops } from '@/lib/shops';
+import { forShop } from '@/lib/shopStorage';
 import { listProducts, listSales, listPurchases, listReturns, listStockAdjustments, listExpenses, listSuppliers } from '@/lib/api';
 import { useUser } from '@/components/UserProvider';
 import { formatMoney, formatLongDate, formatTime, greetingFor } from '@/lib/format';
@@ -162,6 +164,8 @@ export default function DashboardPage() {
 
 function OwnerOverview() {
   const { user, can, isOwner } = useUser();
+  // with several stores the figures are those of the store being worked in
+  const { scopeQuery, scopeReady, multiple } = useShops();
   const now = useNow();
   const greet = greetingFor(now);
   // Profit, what stock cost, delivery fees and cost values are for the owner only.
@@ -175,15 +179,16 @@ function OwnerOverview() {
   const [days, setDays] = useState(30);
 
   useEffect(() => {
+    if (!scopeReady) return;
     async function load() {
       try {
         const [productsData, salesData, purchasesData, returnsData, adjustmentsData, expensesData, suppliersData] = await Promise.all([
           listProducts(),
-          listSales(),
-          listPurchases(),
+          listSales(scopeQuery),
+          listPurchases(scopeQuery),
           // returns and stock adjustments only refine the numbers, so a failure here does not hide the rest
-          listReturns().catch(() => ({ returns: [] })),
-          isOwner ? listStockAdjustments().catch(() => ({ adjustments: [] })) : Promise.resolve({ adjustments: [] }),
+          listReturns(scopeQuery).catch(() => ({ returns: [] })),
+          isOwner ? listStockAdjustments(scopeQuery).catch(() => ({ adjustments: [] })) : Promise.resolve({ adjustments: [] }),
           // the longest period on this page is 90 days
           isOwner ? listExpenses(periodQuery('90')).catch(() => ({ expenses: [] })) : Promise.resolve({ expenses: [] }),
           // what is owed to suppliers right now (administrator only; a failure just hides that number)
@@ -198,7 +203,8 @@ function OwnerOverview() {
           ...returns.filter((r) => r.writtenOffCost > 0).map((r) => ({ date: r.date, amount: r.writtenOffCost })),
         ];
         setData({
-          products: productsData.products || [],
+          // stock as the store being worked in holds it (with one store, the products as they are)
+          products: multiple ? forShop(productsData.products || []) : productsData.products || [],
           sales: salesData.sales || [],
           purchases: purchasesData.purchases || [],
           returns,
@@ -213,7 +219,7 @@ function OwnerOverview() {
     }
 
     load();
-  }, [isOwner]);
+  }, [isOwner, scopeReady, scopeQuery, multiple]);
 
   const insights = useMemo(() => (data ? buildAnalytics({ ...data, days }) : null), [data, days]);
   const today = useMemo(() => (data ? buildAnalytics({ ...data, days: 1 }).summary : null), [data]);
@@ -500,6 +506,8 @@ function OwnerOverview() {
                 segments={[
                   { label: 'Collected', value: s.collected, color: STATUS_COLORS.ok, display: formatMoney(s.collected) },
                   { label: 'Still owed', value: s.owed, color: STATUS_COLORS.low, display: formatMoney(s.owed) },
+                  // old items customers handed in on swaps: part of the price, but not money received
+                  ...(s.swapCredit > 0 ? [{ label: 'Old items taken in (swaps)', value: s.swapCredit, color: '#64748b', display: formatMoney(s.swapCredit) }] : []),
                 ]}
               />
               {insights.methods.length > 0 && (

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createCategory, deleteCategory, listCategories, renameCategory } from '@/lib/api';
 import PageHeader from '@/components/PageHeader';
+import InventoryTabs from '@/components/InventoryTabs';
 import {
   ErrorBanner,
   LoadingState,
@@ -165,6 +166,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
+      <InventoryTabs />
       <PageHeader
         title="Categories"
         subtitle="Group your products. Pick a category whenever you add a product."

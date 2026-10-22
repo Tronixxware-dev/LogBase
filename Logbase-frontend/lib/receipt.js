@@ -2,6 +2,7 @@
 
 import { formatMoney, formatDate, formatDateTime } from '@/lib/format';
 import { phoneKey } from '@/lib/phone';
+import { closingOf, identityLines } from '@/lib/settings';
 
 function num(value) {
   const n = Number(value);
@@ -60,13 +61,26 @@ export function buildReceipt({ sale, lines }) {
     paid,
     balance: round2(Math.max(total - paid, 0)),
     hasWarranty: items.some((i) => i.warrantyEndsAt),
+    // set when the sale was an item swap: the old item handed in, what it was worth and what the customer added
+    tradeIn:
+      first.tradeIn && first.tradeIn.description
+        ? {
+            description: first.tradeIn.description,
+            imei: first.tradeIn.imei || '',
+            value: round2(first.tradeIn.value),
+            credit: round2(first.tradeIn.creditApplied),
+            cashTopUp: round2(first.tradeIn.cashTopUp),
+            refund: round2(first.tradeIn.refundGiven),
+          }
+        : null,
   };
 }
 
 // The same receipt as plain text, for WhatsApp or SMS.
-export function receiptText(receipt, businessName) {
+export function receiptText(receipt, businessName, org) {
   const lines = [];
   lines.push(`*${businessName || 'Receipt'}*`);
+  lines.push(...identityLines(org));
   lines.push(`Receipt #${receipt.number}`);
   if (receipt.date) lines.push(receiptDateTime(receipt.date));
   if (receipt.customerName) lines.push(`Customer: ${receipt.customerName}`);
@@ -81,11 +95,18 @@ export function receiptText(receipt, businessName) {
   }
   lines.push('');
   lines.push(`*Total: ${formatMoney(receipt.total)}*`);
-  lines.push(`Paid: ${formatMoney(receipt.paid)}${receipt.paymentMethod ? ` (${receipt.paymentMethod})` : ''}`);
+  if (receipt.tradeIn) {
+    lines.push(`Item handed in: ${receipt.tradeIn.description}${receipt.tradeIn.imei ? ` (${receipt.tradeIn.imei})` : ''}: -${formatMoney(receipt.tradeIn.credit)}`);
+    lines.push(`Customer added: ${formatMoney(receipt.tradeIn.cashTopUp)}${receipt.paymentMethod ? ` (${receipt.paymentMethod})` : ''}`);
+    if (receipt.tradeIn.refund > 0) lines.push(`Given back to the customer: ${formatMoney(receipt.tradeIn.refund)}`);
+  } else {
+    lines.push(`Paid: ${formatMoney(receipt.paid)}${receipt.paymentMethod ? ` (${receipt.paymentMethod})` : ''}`);
+  }
   if (receipt.balance > 0) lines.push(`*Still owed: ${formatMoney(receipt.balance)}*`);
   lines.push('');
   if (receipt.hasWarranty) lines.push('Keep this receipt: it is your proof of purchase for the warranty.');
-  lines.push('Thank you for your business!');
+  lines.push(closingOf(org));
+  if (org && org.receipt && org.receipt.footer) lines.push(org.receipt.footer);
   return lines.join('\n');
 }
 
@@ -96,9 +117,10 @@ export function receiptDateTime(value) {
 }
 
 // A statement as plain text.
-export function statementText(statement, businessName) {
+export function statementText(statement, businessName, org) {
   const lines = [];
   lines.push(`*${businessName || 'Statement'}*`);
+  lines.push(...identityLines(org));
   lines.push(`Account statement for ${statement.customer.name}`);
   lines.push(formatDate(new Date()));
   lines.push('');

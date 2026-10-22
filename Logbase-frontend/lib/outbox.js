@@ -14,6 +14,7 @@
 import { createCustomer, createSale, listCustomers } from '@/lib/api';
 import { outboxAll, outboxDelete, outboxGet, outboxPut, cacheGet, cachePut } from '@/lib/offline';
 import { phoneKey } from '@/lib/phone';
+import { scopedKey } from '@/lib/shopStorage';
 
 export const SYNCED_EVENT = 'logbase:sales-synced';
 
@@ -123,10 +124,18 @@ export function takeOffStock(products, items) {
     const product = next.find((p) => p._id === item.product);
     if (!product) continue;
     const qty = Number(item.quantity) || 0;
-    product.quantity = Math.max(0, (Number(product.quantity) || 0) - qty);
+    // `quantity` is what the store in use holds when the list went through forShop(), the business total otherwise;
+    // `shopQuantity` and `totalQuantity` are the other two views of the same stock
+    for (const field of ['quantity', 'shopQuantity', 'totalQuantity']) {
+      if (product[field] !== undefined) product[field] = Math.max(0, (Number(product[field]) || 0) - qty);
+    }
     if (item.variant) {
       const variant = product.variants.find((v) => v._id === item.variant);
-      if (variant) variant.quantity = Math.max(0, (Number(variant.quantity) || 0) - qty);
+      if (variant) {
+        for (const field of ['quantity', 'shopQuantity', 'totalQuantity']) {
+          if (variant[field] !== undefined) variant[field] = Math.max(0, (Number(variant[field]) || 0) - qty);
+        }
+      }
     }
   }
   return next;
@@ -134,9 +143,10 @@ export function takeOffStock(products, items) {
 
 export async function applyLocalStock(items) {
   try {
-    const copy = await cacheGet('/products');
+    const key = scopedKey('/products');
+    const copy = await cacheGet(key);
     if (!copy || !copy.data || !Array.isArray(copy.data.products)) return;
-    await cachePut('/products', { ...copy.data, products: takeOffStock(copy.data.products, items) });
+    await cachePut(key, { ...copy.data, products: takeOffStock(copy.data.products, items) });
   } catch {
     // the numbers are only a convenience
   }

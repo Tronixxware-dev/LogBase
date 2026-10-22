@@ -11,16 +11,8 @@ import { purchasePayment } from '@/lib/payables';
 import { useUser } from '@/components/UserProvider';
 import PageHeader from '@/components/PageHeader';
 import PhotoGrid from '@/components/PhotoGrid';
+import { Detail, DetailCard, DetailGrid, DetailSubhead, MoneyStrip } from '@/components/DetailParts';
 import { ErrorBanner, Field, LoadingState, StatusBadge, cardClass, inputClass, primaryButtonClass } from '@/components/ui';
-
-function Detail({ label, children }) {
-  return (
-    <div>
-      <dt className="text-xs text-gray-400">{label}</dt>
-      <dd className="text-sm text-gray-900">{children || '—'}</dd>
-    </div>
-  );
-}
 
 // A purchase a staff recorded has no supplier. The administrator picks one here and says what was paid for the goods:
 // paid in full, or only part of it, and the rest is added to what is owed to that supplier.
@@ -208,49 +200,49 @@ export default function PurchaseDetailPage() {
         </div>
       )}
 
-      <div className={`${cardClass} mb-6 p-6`}>
-        <h2 className="mb-4 text-lg font-medium text-gray-900">Details</h2>
-        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <Detail label="Quantity">{purchase.quantity}</Detail>
-          {isOwner && <Detail label="Cost per unit">{formatMoney(purchase.costPricePerUnit)}</Detail>}
-          {isOwner && <Detail label="Total cost">{formatMoney(purchase.totalCost)}</Detail>}
+      <DetailCard title="Details" icon="purchases">
+        {isOwner && (
+          <MoneyStrip
+            items={[
+              { label: isGroup ? 'Total cost (whole purchase)' : 'Total cost', value: formatMoney(groupTotal), tone: 'brand' },
+              hasSupplier && onCredit ? { label: 'Paid on the day', value: formatMoney(paidToday), tone: 'good' } : null,
+              hasSupplier && onCredit ? { label: 'Left owed', value: formatMoney(stillOwed), tone: stillOwed > 0 ? 'bad' : 'good' } : null,
+              hasSupplier && !onCredit ? { label: 'Payment', value: 'Paid in full', tone: 'good', note: 'Nothing owed' } : null,
+            ]}
+          />
+        )}
+        <DetailGrid>
+          <Detail label="Quantity" icon="hash" color="teal">{purchase.quantity}</Detail>
+          {isOwner && <Detail label="Cost per unit" icon="naira" color="green">{formatMoney(purchase.costPricePerUnit)}</Detail>}
           {isOwner && (
-            <Detail label="Delivery">{deliveryCost > 0 ? `You paid ${formatMoney(deliveryCost)}` : 'Not paid by you'}</Detail>
-          )}
-          {isOwner && hasSupplier && (
-            <Detail label="Payment">
-              {onCredit ? (
-                <>
-                  <span className="mr-2 align-middle"><StatusBadge status={purchasePayment({ onCredit, amountPaid: paidToday }).status} /></span>
-                  Paid {formatMoney(paidToday)} on the day, {formatMoney(stillOwed)} was left owed
-                </>
-              ) : (
-                'Paid in full'
-              )}
+            <Detail label="Delivery" icon="deliveries" color="violet">
+              {deliveryCost > 0 ? `You paid ${formatMoney(deliveryCost)}` : 'Not paid by you'}
             </Detail>
           )}
-          <Detail label="Batch number">{purchase.batchNumber}</Detail>
-          <Detail label="Purchased by">{purchase.purchasedBy}</Detail>
-          <Detail label="Recorded">{formatDateTime(purchase.createdAt)}</Detail>
-        </dl>
+          {isOwner && hasSupplier && onCredit && (
+            <Detail label="Payment status" icon="wallet" color="teal">
+              <StatusBadge status={purchasePayment({ onCredit, amountPaid: paidToday }).status} />
+            </Detail>
+          )}
+          <Detail label="Batch number" icon="tag" color="amber">{purchase.batchNumber}</Detail>
+          <Detail label="Purchased by" icon="user" color="sky">{purchase.purchasedBy}</Detail>
+          <Detail label="Recorded" icon="calendar" color="violet">{formatDateTime(purchase.createdAt)}</Detail>
+        </DetailGrid>
 
         {/* who the goods came from is for the administrator only */}
         {isOwner && hasSupplier && (
           <>
-            <h3 className="mb-3 mt-6 border-t border-gray-100 pt-5 text-sm font-semibold text-gray-900">Supplier</h3>
-            <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <Detail label="Name">{purchase.supplierName || purchase.supplier?.name}</Detail>
-              <Detail label="Country">{supplierPhone.country}</Detail>
-              <Detail label="Phone number">{supplierPhone.display}</Detail>
-              <Detail label="Email">{purchase.supplier?.email}</Detail>
-              <div className="col-span-2 sm:col-span-3">
-                <dt className="text-xs text-gray-400">Address</dt>
-                <dd className="text-sm text-gray-900">{purchase.supplier?.address || '—'}</dd>
-              </div>
-            </dl>
+            <DetailSubhead title="Supplier" icon="suppliers" />
+            <DetailGrid>
+              <Detail label="Name" icon="user" color="sky">{purchase.supplierName || purchase.supplier?.name}</Detail>
+              <Detail label="Country" icon="pin" color="rose">{supplierPhone.country}</Detail>
+              <Detail label="Phone number" icon="phone" color="sky">{supplierPhone.display}</Detail>
+              <Detail label="Email" icon="mail" color="sky" wide>{purchase.supplier?.email}</Detail>
+              <Detail label="Address" icon="pin" color="rose" wide>{purchase.supplier?.address}</Detail>
+            </DetailGrid>
           </>
         )}
-      </div>
+      </DetailCard>
 
       {(isGroup ? group : [purchase]).some((l) => (l.serials || []).length > 0) && (
         <div className={`${cardClass} mb-6 p-6`}>

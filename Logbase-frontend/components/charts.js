@@ -82,7 +82,7 @@ function smoothPath(points) {
 
 // data:   [{ date, <seriesKey>: number, ... }]  one row per day
 // series: [{ key, label, color }]               the first one also gets a soft area fill
-export function TrendChart({ data, series, height = 240 }) {
+export function TrendChart({ data, series, height = 240, formatValue = formatMoney, formatAxis = compactMoney }) {
   const wrapRef = useRef(null);
   const [width, setWidth] = useState(640);
   const [hover, setHover] = useState(null);
@@ -166,7 +166,7 @@ export function TrendChart({ data, series, height = 240 }) {
                 strokeDasharray={t === 0 ? undefined : '4 5'}
               />
               <text x={margin.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" className="fill-gray-400">
-                {compactMoney(t)}
+                {formatAxis(t)}
               </text>
             </g>
           ))}
@@ -247,7 +247,7 @@ export function TrendChart({ data, series, height = 240 }) {
                   <span className="inline-block h-2 w-2 rounded-sm" style={{ background: s.color }} />
                   {s.label}
                 </span>
-                <span className="tabular font-semibold text-gray-900">{formatMoney(active[s.key])}</span>
+                <span className="tabular font-semibold text-gray-900">{formatValue(active[s.key])}</span>
               </p>
             ))}
           </div>
@@ -275,7 +275,7 @@ export function TrendChart({ data, series, height = 240 }) {
                   <td className="px-3 py-1.5">{longDate(row.date)}</td>
                   {series.map((s) => (
                     <td key={s.key} className="px-3 py-1.5 text-right text-gray-800">
-                      {formatMoney(row[s.key])}
+                      {formatValue(row[s.key])}
                     </td>
                   ))}
                 </tr>
@@ -310,7 +310,7 @@ export function BarList({ items, color = SERIES_SALES, empty = 'Nothing to show 
               className="animate-grow-x h-2.5 rounded-full"
               style={{
                 width: `${Math.max(2, (item.value / max) * 100)}%`,
-                backgroundImage: `linear-gradient(90deg, color-mix(in srgb, ${color} 70%, #fff), ${color})`,
+                backgroundImage: `linear-gradient(90deg, ${color}b3, ${color})`,
               }}
             />
           </div>

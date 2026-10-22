@@ -8,6 +8,10 @@ import { BrandMark } from '@/components/Navbar';
 import { ThemeIconButton } from '@/components/ThemeToggle';
 import CommandPalette from '@/components/CommandPalette';
 import InstallButton from '@/components/InstallButton';
+import StoreSwitcher from '@/components/StoreSwitcher';
+import NotificationBell from '@/components/NotificationBell';
+import { useShops } from '@/lib/shops';
+import { businessTypeOf, hasFeature } from '@/lib/businessTypes';
 import { pageTitleFor } from '@/lib/nav';
 
 const openMenu = () => window.dispatchEvent(new Event('logbase:open-menu'));
@@ -17,7 +21,10 @@ const openSearch = () => window.dispatchEvent(new Event('logbase:open-search'));
 // On phones it also carries the menu button and the LogBase mark.
 export default function TopBar() {
   const pathname = usePathname();
-  const { can, isOwner } = useUser();
+  const { user, can, isOwner } = useUser();
+  const { multiple } = useShops();
+  // with a store switcher in the bar, a phone has no room for the word LogBase next to its mark
+  const switcherShown = multiple && hasFeature(businessTypeOf(user), 'products');
   const title = pageTitleFor(pathname, { can, isOwner });
 
   return (
@@ -34,7 +41,7 @@ export default function TopBar() {
 
         <Link href="/dashboard" className="flex items-center gap-2 lg:hidden" aria-label="LogBase home">
           <BrandMark className="h-8 w-8" />
-          <span className="text-lg font-semibold tracking-tight text-gray-900">LogBase</span>
+          <span className={`text-lg font-semibold tracking-tight text-gray-900 ${switcherShown ? 'hidden sm:inline' : ''}`}>LogBase</span>
         </Link>
 
         {/* the page name, large screens */}
@@ -45,6 +52,7 @@ export default function TopBar() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <StoreSwitcher />
           <button
             type="button"
             onClick={openSearch}
@@ -64,6 +72,7 @@ export default function TopBar() {
             <Icon name="search" className="h-5 w-5" />
           </button>
           <InstallButton variant="pill" className="hidden sm:inline-flex" />
+          <NotificationBell />
           <ThemeIconButton />
         </div>
       </div>

@@ -11,6 +11,7 @@ import {
 } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 import { PERMISSIONS } from '@/lib/permissions';
+import { BUSINESS_TYPES, businessTypeOf } from '@/lib/businessTypes';
 import { useUser } from '@/components/UserProvider';
 import PageHeader from '@/components/PageHeader';
 import Avatar from '@/components/Avatar';
@@ -127,6 +128,7 @@ export default function ProfilePage() {
   const [name, setName] = useState(user.name || '');
   const [phone, setPhone] = useState(user.phone || '');
   const [businessName, setBusinessName] = useState(user.businessName || '');
+  const [businessType, setBusinessType] = useState(businessTypeOf(user));
   const [savingDetails, setSavingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState('');
   const [detailsDone, setDetailsDone] = useState('');
@@ -148,12 +150,18 @@ export default function ProfilePage() {
     setSavingDetails(true);
     try {
       const payload = { name: name.trim(), phone: phone.trim() };
-      if (isOwner) payload.businessName = businessName.trim();
+      if (isOwner) {
+        payload.businessName = businessName.trim();
+        payload.businessType = businessType;
+      }
       const data = await updateMe(payload);
       updateUser(data.user); // the menu shows the new name straight away
       setName(data.user.name);
       setPhone(data.user.phone || '');
-      if (isOwner) setBusinessName(data.user.businessName || businessName.trim());
+      if (isOwner) {
+        setBusinessName(data.user.businessName || businessName.trim());
+        setBusinessType(businessTypeOf(data.user));
+      }
       setDetailsDone('Your details are saved.');
     } catch (err) {
       setDetailsError(err.message);
@@ -308,6 +316,23 @@ export default function ProfilePage() {
               disabled={!isOwner}
               className={`${inputClass} ${isOwner ? '' : 'bg-gray-50 text-gray-500'}`}
             />
+          </Field>
+          <Field
+            label="Type of business"
+            hint={isOwner ? 'Decides which menus your business gets. Nothing you have recorded is lost when you change it.' : 'Only the administrator can change this.'}
+          >
+            <select
+              value={businessType}
+              onChange={(e) => setBusinessType(e.target.value)}
+              disabled={!isOwner}
+              className={`${inputClass} ${isOwner ? '' : 'bg-gray-50 text-gray-500'}`}
+            >
+              {BUSINESS_TYPES.map((t) => (
+                <option key={t.key} value={t.key}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
           </Field>
         </div>
 

@@ -14,6 +14,7 @@
   /* brand */
   --primary: #0d9488;
   --primary-dark: #0f766e;
+  --primary-rgb: 13 148 136; /* the same colour as --primary, for the see-through versions below */
   --primary-ink: #0f766e; /* brand colour for text on a light surface */
   --accent: #f59e0b;
   --accent-dark: #d97706;
@@ -407,3 +408,45 @@ button.bg-primary:disabled {
   74% { opacity: 1; transform: translateY(0); }
   88%, 100% { opacity: 0; transform: translateY(4px); }
 }
+
+/* ------------------------------------------------------------------ */
+/* See-through brand colour that works in every browser                  */
+/* Tailwind builds "bg-primary/10" with color-mix(). A browser that does  */
+/* not have color-mix (an older Chrome, Edge or Android WebView) then      */
+/* paints it as the full solid colour, so text and icons in the brand       */
+/* colour disappear on it. These plain rgb() versions are the same look,    */
+/* drawn by every browser. Only the see-through brand colours the app uses. */
+/* ------------------------------------------------------------------ */
+
+.bg-primary\/5 { background-color: rgb(var(--primary-rgb) / 0.05); }
+.bg-primary\/10 { background-color: rgb(var(--primary-rgb) / 0.1); }
+.bg-primary\/60 { background-color: rgb(var(--primary-rgb) / 0.6); }
+.bg-primary\/\[0\.03\] { background-color: rgb(var(--primary-rgb) / 0.03); }
+.hover\:bg-primary\/5:hover { background-color: rgb(var(--primary-rgb) / 0.05); }
+.hover\:bg-primary\/15:hover { background-color: rgb(var(--primary-rgb) / 0.15); }
+.hover\:bg-primary\/\[0\.04\]:hover { background-color: rgb(var(--primary-rgb) / 0.04); }
+.text-primary\/10 { color: rgb(var(--primary-rgb) / 0.1); }
+.border-primary\/15 { border-color: rgb(var(--primary-rgb) / 0.15); }
+.border-primary\/20 { border-color: rgb(var(--primary-rgb) / 0.2); }
+.hover\:border-primary\/40:hover { border-color: rgb(var(--primary-rgb) / 0.4); }
+.ring-primary\/15 { --tw-ring-color: rgb(var(--primary-rgb) / 0.15); }
+.ring-primary\/30 { --tw-ring-color: rgb(var(--primary-rgb) / 0.3); }
+.ring-primary\/40 { --tw-ring-color: rgb(var(--primary-rgb) / 0.4); }
+.focus-visible\:ring-primary\/50:focus-visible { --tw-ring-color: rgb(var(--primary-rgb) / 0.5); }
+.shadow-primary\/30 { --tw-shadow-color: rgb(var(--primary-rgb) / 0.3); }
+
+/* white and black see-through shades (panels on the green side of the sign-in page, photo viewers, camera overlays) */
+.bg-white\/10 { background-color: rgb(255 255 255 / 0.1); }
+.bg-white\/15 { background-color: rgb(255 255 255 / 0.15); }
+.bg-white\/20 { background-color: rgb(255 255 255 / 0.2); }
+.hover\:bg-white\/15:hover { background-color: rgb(255 255 255 / 0.15); }
+.hover\:bg-white\/25:hover { background-color: rgb(255 255 255 / 0.25); }
+.border-white\/20 { border-color: rgb(255 255 255 / 0.2); }
+.text-white\/70 { color: rgb(255 255 255 / 0.7); }
+.ring-white\/15 { --tw-ring-color: rgb(255 255 255 / 0.15); }
+.ring-white\/25 { --tw-ring-color: rgb(255 255 255 / 0.25); }
+.ring-white\/40 { --tw-ring-color: rgb(255 255 255 / 0.4); }
+.ring-black\/5 { --tw-ring-color: rgb(0 0 0 / 0.05); }
+.bg-black\/50 { background-color: rgb(0 0 0 / 0.5); }
+.bg-black\/60 { background-color: rgb(0 0 0 / 0.6); }
+.shadow-black\/20 { --tw-shadow-color: rgb(0 0 0 / 0.2); }

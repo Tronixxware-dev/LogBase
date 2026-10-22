@@ -1,0 +1,6 @@
+# Videos and flyers made for marketing: not part of the code
+*.mp4
+*.mov
+Flyers/
+logbase-flyer-*
+logbase-logo-*

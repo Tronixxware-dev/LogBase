@@ -4,17 +4,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { listSuppliers } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
+import { describePhone } from '@/lib/phone';
 import { suppliersOwed, totalOwed } from '@/lib/payables';
 import { useUser } from '@/components/UserProvider';
 import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
+import FilterBar, { optionsFrom } from '@/components/FilterBar';
 import {
   ErrorBanner,
   LoadingState,
   EmptyState,
   PrimaryLink,
   cardClass,
-  inputClass,
 } from '@/components/ui';
 
 const columns = [
@@ -40,6 +41,7 @@ export default function SuppliersPage() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [onlyOwed, setOnlyOwed] = useState(false);
+  const [country, setCountry] = useState('all');
 
   useEffect(() => {
     listSuppliers()
@@ -51,11 +53,12 @@ export default function SuppliersPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const pool = isOwner && onlyOwed ? suppliersOwed(suppliers) : suppliers;
-    if (!q) return pool;
-    return pool.filter((s) =>
+    const inCountry = country === 'all' ? pool : pool.filter((s) => describePhone(s.phone).country === country);
+    if (!q) return inCountry;
+    return inCountry.filter((s) =>
       [s.name, s.phone, s.email, s.address].some((v) => v && v.toLowerCase().includes(q))
     );
-  }, [suppliers, search, onlyOwed, isOwner]);
+  }, [suppliers, search, onlyOwed, isOwner, country]);
 
   const owedTo = isOwner ? suppliersOwed(suppliers) : [];
 
@@ -66,7 +69,7 @@ export default function SuppliersPage() {
         subtitle={
           loading
             ? undefined
-            : search.trim() && filtered.length !== suppliers.length
+            : filtered.length !== suppliers.length
               ? `Showing ${filtered.length} of ${suppliers.length} ${suppliers.length === 1 ? 'supplier' : 'suppliers'}`
               : `${suppliers.length} ${suppliers.length === 1 ? 'supplier' : 'suppliers'} in total`
         }
@@ -96,12 +99,21 @@ export default function SuppliersPage() {
       )}
 
       {suppliers.length > 0 && (
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, phone, email or address"
-          className={`${inputClass} mb-4 sm:max-w-xs`}
+        <FilterBar
+          search={{ value: search, onChange: setSearch, placeholder: 'Search by name, phone, email or address', label: 'Search suppliers' }}
+          filters={[
+            isOwner && {
+              key: 'owed',
+              label: 'Balance',
+              value: onlyOwed ? 'owed' : 'all',
+              onChange: (v) => setOnlyOwed(v === 'owed'),
+              options: [
+                { value: 'all', label: 'All suppliers' },
+                { value: 'owed', label: 'Who you owe' },
+              ],
+            },
+            { key: 'country', label: 'Country', value: country, onChange: setCountry, options: optionsFrom(suppliers, (s) => describePhone(s.phone).country, 'All countries') },
+          ]}
         />
       )}
 
@@ -114,7 +126,7 @@ export default function SuppliersPage() {
           actionLabel="Add your first supplier"
         />
       ) : filtered.length === 0 ? (
-        <EmptyState message="No suppliers match your search." />
+        <EmptyState message="No suppliers match these filters." />
       ) : (
         <DataTable
           columns={isOwner ? [...columns, owedColumn] : columns}

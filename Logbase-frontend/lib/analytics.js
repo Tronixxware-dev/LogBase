@@ -147,6 +147,7 @@ export function buildAnalytics({ products = [], sales = [], purchases = [], loss
   const salesIn = sales.filter((s) => inRange(s.date));
   let revenue = 0;
   let collected = 0;
+  let swapCredit = 0; // the value of old items customers handed in on swaps (not cash)
   let soldUnits = 0;
   let knownRevenue = 0;
   let knownCost = 0;
@@ -164,7 +165,10 @@ export function buildAnalytics({ products = [], sales = [], purchases = [], loss
     // a line whose goods all came back is not a sale any more
     if (qty <= 0 && num(s.returnedQuantity) > 0) continue;
     revenue += total;
-    collected += num(s.amountPaid);
+    // on an item swap, part of what was "paid" is the old item handed in, not money received
+    const credit = s.tradeIn && s.tradeIn.description ? num(s.tradeIn.creditApplied) : 0;
+    swapCredit += credit;
+    collected += num(s.amountPaid) - credit;
     soldUnits += qty;
     saleIds.add(s.saleGroup ? String(s.saleGroup) : String(s._id));
 
@@ -192,7 +196,7 @@ export function buildAnalytics({ products = [], sales = [], purchases = [], loss
     topMap.set(pid, top);
 
     const method = s.paymentMethod || 'other';
-    methodMap.set(method, (methodMap.get(method) || 0) + total);
+    methodMap.set(method, (methodMap.get(method) || 0) + total - credit);
   }
 
   /* ---- purchases ---- */
@@ -259,7 +263,8 @@ export function buildAnalytics({ products = [], sales = [], purchases = [], loss
     summary: {
       revenue,
       collected,
-      owed: Math.max(0, revenue - collected),
+      swapCredit,
+      owed: Math.max(0, revenue - collected - swapCredit),
       salesCount: saleIds.size,
       soldUnits,
       // profit only counts sales of products that still exist, so a deleted product cannot fake a profit.
@@ -345,6 +350,7 @@ export function buildActivity({ sales = [], purchases = [], returns = [], adjust
           amount: num(s.totalAmount) + num(s.returnedAmount),
           party: s.customerName || (s.customer && s.customer.name) || '',
           by: s.sellerName || '',
+          store: s.shopName || '',
         };
       }),
     ...purchases
@@ -361,6 +367,7 @@ export function buildActivity({ sales = [], purchases = [], returns = [], adjust
         amount: num(p.totalCost),
         party: p.supplierName || (p.supplier && p.supplier.name) || '',
         by: p.purchasedBy || '',
+        store: p.shopName || '',
       })),
     ...returnRows,
     ...adjustments
@@ -377,6 +384,7 @@ export function buildActivity({ sales = [], purchases = [], returns = [], adjust
         amount: a.costValue == null ? null : Math.abs(num(a.costValue)),
         party: '',
         by: a.createdByName || '',
+        store: a.shopName || '',
         note: a.type || '',
         noteText: a.note || '',
       })),

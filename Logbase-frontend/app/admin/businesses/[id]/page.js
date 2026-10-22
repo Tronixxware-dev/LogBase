@@ -16,6 +16,7 @@ import {
   adminSetUserActive,
 } from '@/lib/api';
 import { notifySuccess } from '@/lib/feedback';
+import { DetailRow } from '@/components/DetailParts';
 import { formatDate, formatDateTime, formatMoney } from '@/lib/format';
 import { Pager, Panel, PaymentBadge, StatCard, StateBadge, endsText, timeAgo, useLoad } from '@/components/admin/ui';
 
@@ -268,14 +269,7 @@ function Actions({ business, plan, run, id }) {
 /* Overview tab: plan, numbers, people                                 */
 /* ------------------------------------------------------------------ */
 
-function Line({ label, children }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2 text-sm">
-      <dt className="text-gray-500">{label}</dt>
-      <dd className="text-right font-medium text-gray-900">{children}</dd>
-    </div>
-  );
-}
+const Line = DetailRow;
 
 function OverviewTab({ data, run }) {
   const { plan, stats, users } = data;
@@ -293,33 +287,33 @@ function OverviewTab({ data, run }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="Plan">
           <dl className="divide-y divide-gray-100">
-            <Line label="Right now">
+            <Line label="Right now" icon="bolt" color="teal">
               <StateBadge state={plan.state} />
             </Line>
-            <Line label="Plan">{plan.planName}</Line>
+            <Line label="Plan" icon="sparkle" color="violet">{plan.planName}</Line>
             {plan.planState === 'trialing' && <Line label="Trial ends">{formatDate(plan.trialEndsAt)} ({endsText(plan)})</Line>}
             {plan.planState === 'active' && (
               <>
-                <Line label="Billed">{plan.interval}</Line>
+                <Line label="Billed" icon="calendar" color="sky">{plan.interval}</Line>
                 <Line label="Paid until">{formatDate(plan.currentPeriodEnd)} ({endsText(plan)})</Line>
-                <Line label="Brings in">{formatMoney(plan.monthlyValue)} a month</Line>
+                <Line label="Brings in" icon="naira" color="green">{formatMoney(plan.monthlyValue)} a month</Line>
               </>
             )}
             {(plan.planState === 'expired' || plan.planState === 'trial_ended') && (
-              <Line label="History">
+              <Line label="History" icon="clock" color="amber">
                 {plan.planState === 'expired' ? `Was on ${plan.lastPaidPlan || 'a paid plan'}, ended ${formatDate(plan.currentPeriodEnd)}` : `Trial ended ${formatDate(plan.trialEndsAt)}`}
               </Line>
             )}
-            <Line label="Last payment">{plan.lastPaymentAt ? formatDateTime(plan.lastPaymentAt) : 'none'}</Line>
-            <Line label="Automatic renewal">{plan.autoRenew ? 'On' : 'Off'}</Line>
+            <Line label="Last payment" icon="wallet" color="teal">{plan.lastPaymentAt ? formatDateTime(plan.lastPaymentAt) : 'none'}</Line>
+            <Line label="Automatic renewal" icon="bolt" color="sky">{plan.autoRenew ? 'On' : 'Off'}</Line>
             {plan.card && (
-              <Line label="Saved card">
+              <Line label="Saved card" icon="credit" color="violet">
                 {plan.card.brand} •••• {plan.card.last4}
                 {plan.card.expMonth && ` (${plan.card.expMonth}/${plan.card.expYear})`}
               </Line>
             )}
             {plan.renewalAttempts > 0 && (
-              <Line label="Renewal problem">
+              <Line label="Renewal problem" icon="alert" color="red">
                 <span className="text-red-600">
                   Failed {plan.renewalAttempts} time{plan.renewalAttempts === 1 ? '' : 's'}
                   {plan.renewalFailure ? `: ${plan.renewalFailure}` : ''}

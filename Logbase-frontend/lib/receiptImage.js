@@ -4,6 +4,7 @@
 import { formatMoney, formatDate } from '@/lib/format';
 import { describePhone } from '@/lib/phone';
 import { receiptDateTime } from '@/lib/receipt';
+import { closingOf, identityLines } from '@/lib/settings';
 
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace';
 const W = 760; // picture width in CSS pixels (it is drawn at 2x for sharpness)
@@ -43,7 +44,7 @@ function wrap(ctx, text, maxWidth) {
 }
 
 // Draws everything. With dry = true nothing is painted: it only measures, so the picture can be made the right height.
-function paint(ctx, receipt, businessName, dry, height) {
+function paint(ctx, receipt, businessName, dry, height, extra = {}) {
   const left = MARGIN + PAD;
   const right = W - MARGIN - PAD;
   const inner = right - left;
@@ -94,8 +95,17 @@ function paint(ctx, receipt, businessName, dry, height) {
     }
   };
 
-  // header
+  // header: the logo (when there is one), the name, and the address / phone lines
+  if (extra.logo) {
+    const box = { w: 300, h: 96 };
+    const k = Math.min(box.w / extra.logo.width, box.h / extra.logo.height, 1);
+    const w = extra.logo.width * k;
+    const h = extra.logo.height * k;
+    if (!dry) ctx.drawImage(extra.logo, mid - w / 2, y - 18, w, h);
+    y += h + 6;
+  }
   centered(String(businessName || 'Receipt').toUpperCase(), 36, 800, INK, '1px', 8);
+  for (const line of extra.lines || []) centered(line, 18, 400, MUTED, '0px', 6);
   y += 6;
   centered('SALES RECEIPT', 20, 600, MUTED, '5px', 8);
   dashed();
@@ -159,7 +169,31 @@ function paint(ctx, receipt, businessName, dry, height) {
   y += 8;
   row('TOTAL', formatMoney(receipt.total), { size: 36, weight: 800 });
   y += 4;
-  row('AMOUNT PAID', formatMoney(receipt.paid), { size: 24 });
+  if (receipt.tradeIn) {
+    const t = receipt.tradeIn;
+    set(22, 400, INK);
+    const handed = wrap(ctx, `ITEM HANDED IN: ${t.description.toUpperCase()}`, inner - 170);
+    handed.forEach((line, i) => {
+      text(line, left);
+      if (i === 0) {
+        set(22, 700, INK);
+        text(`-${formatMoney(t.credit)}`, right, 'right');
+        set(22, 400, INK);
+      }
+      y += 34;
+    });
+    if (t.imei) {
+      set(17, 400, MUTED);
+      for (const line of wrap(ctx, `IMEI / SERIAL: ${t.imei}`, inner)) {
+        text(line, left);
+        y += 24;
+      }
+    }
+    row('CUSTOMER ADDED', formatMoney(t.cashTopUp), { size: 24, valueWeight: 700 });
+    if (t.refund > 0) row('GIVEN BACK', formatMoney(t.refund), { size: 24, valueWeight: 700 });
+  } else {
+    row('AMOUNT PAID', formatMoney(receipt.paid), { size: 24 });
+  }
   if (receipt.balance > 0) {
     y += 2;
     row('BALANCE DUE', formatMoney(receipt.balance), { size: 28, weight: 800, color: '#b91c1c' });
@@ -208,10 +242,14 @@ function paint(ctx, receipt, businessName, dry, height) {
   y += 50;
 
   // thank you
-  centered('THANK YOU FOR YOUR BUSINESS!', 23, 800, INK, '0px', 8);
+  centered(extra.closing.toUpperCase(), 23, 800, INK, '0px', 8);
   if (receipt.hasWarranty) {
     y += 4;
     centered('Keep this receipt. It is your proof of purchase for the warranty.', 18, 400, MUTED, '0px', 6);
+  }
+  if (extra.footer) {
+    y += 6;
+    centered(extra.footer, 18, 400, MUTED, '0px', 6);
   }
   y += 8;
   centered('Powered by LogBase  |  mylogbase.com', 17, 400, MUTED, '0px', 6);
@@ -248,8 +286,34 @@ function paper(ctx, height) {
   ctx.restore();
 }
 
-// Resolves with a PNG Blob of the receipt.
-export async function receiptToPng(receipt, businessName) {
+// The logo as a picture the canvas may draw (null when there is none, or it cannot be loaded: the receipt is made without it)
+function loadLogo(url) {
+  return new Promise((resolve) => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const timer = setTimeout(() => resolve(null), 6000);
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve(img.width > 0 && img.height > 0 ? img : null);
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      resolve(null);
+    };
+    img.src = url;
+  });
+}
+
+// Resolves with a PNG Blob of the receipt. `org` is the business identity from Settings (logo, address, phone, message).
+export async function receiptToPng(receipt, businessName, org) {
+  const choices = (org && org.receipt) || {};
+  const extra = {
+    logo: org && org.logoUrl && choices.showLogo !== false ? await loadLogo(org.logoUrl) : null,
+    lines: identityLines(org),
+    footer: choices.footer || '',
+    closing: closingOf(org),
+  };
   try {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
   } catch {
@@ -257,7 +321,7 @@ export async function receiptToPng(receipt, businessName) {
   }
   const scale = 2;
   const probe = document.createElement('canvas').getContext('2d');
-  const height = Math.ceil(paint(probe, receipt, businessName, true, 0));
+  const height = Math.ceil(paint(probe, receipt, businessName, true, 0, extra));
   const canvas = document.createElement('canvas');
   canvas.width = W * scale;
   canvas.height = height * scale;
@@ -265,7 +329,7 @@ export async function receiptToPng(receipt, businessName) {
   ctx.scale(scale, scale);
   paper(ctx, height);
   ctx.textBaseline = 'alphabetic';
-  paint(ctx, receipt, businessName, false, height);
+  paint(ctx, receipt, businessName, false, height, extra);
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not make the picture'))), 'image/png');
   });

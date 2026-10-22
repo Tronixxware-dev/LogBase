@@ -7,6 +7,8 @@ import { listProducts, createStockAdjustment, listStockAdjustments } from '@/lib
 import { formatDateTime, formatMoney, variantLabel } from '@/lib/format';
 import { ADJUST_TYPES, previewStock, typeInfo } from '@/lib/stockAdjust';
 import { useUser } from '@/components/UserProvider';
+import { forShop } from '@/lib/shopStorage';
+import { useShops } from '@/lib/shops';
 import PageHeader from '@/components/PageHeader';
 import {
   ErrorBanner,
@@ -21,6 +23,7 @@ import {
 // of the shelf. Every change is saved with who made it and why, and shows on Stock activities.
 export default function AdjustStockPage() {
   const { isOwner } = useUser();
+  const { active, multiple, scopeQuery, scopeReady } = useShops();
   const [products, setProducts] = useState([]);
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,17 +42,18 @@ export default function AdjustStockPage() {
   const load = useCallback(async () => {
     const [productsData, adjustmentsData] = await Promise.all([
       listProducts(),
-      listStockAdjustments().catch(() => ({ adjustments: [] })),
+      listStockAdjustments(scopeQuery).catch(() => ({ adjustments: [] })),
     ]);
-    setProducts((productsData.products || []).slice().sort((a, b) => a.name.localeCompare(b.name)));
+    setProducts(forShop(productsData.products || []).sort((a, b) => a.name.localeCompare(b.name)));
     setRecent((adjustmentsData.adjustments || []).slice(0, 8));
-  }, []);
+  }, [scopeQuery]);
 
   useEffect(() => {
+    if (!scopeReady) return;
     load()
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [load]);
+  }, [load, scopeReady]);
 
   const product = useMemo(() => products.find((p) => p._id === productId) || null, [products, productId]);
   const hasVariants = Boolean(product && product.variants && product.variants.length > 0);
@@ -82,10 +86,16 @@ export default function AdjustStockPage() {
         quantity: Number(quantity),
         note: note.trim(),
       });
-      const a = data.adjustment;
-      const label = a.variantLabel ? `${a.productName} (${a.variantLabel})` : a.productName;
-      setSuccess(`Saved: ${label} went from ${a.before} to ${a.after}.`);
-      notifySuccess('Stock adjusted', `${label}: ${a.before} to ${a.after}`);
+      if (data.approvalRequired) {
+        // a rule the administrator set holds this change until they say yes: the stock has not changed yet
+        setSuccess('Sent to the administrator for approval. The stock changes when they approve it.');
+        notifySuccess('Sent for approval', data.approval && data.approval.summary ? data.approval.summary : 'The administrator will be asked');
+      } else {
+        const a = data.adjustment;
+        const label = a.variantLabel ? `${a.productName} (${a.variantLabel})` : a.productName;
+        setSuccess(`Saved: ${label} went from ${a.before} to ${a.after}.`);
+        notifySuccess('Stock adjusted', `${label}: ${a.before} to ${a.after}`);
+      }
       setQuantity('');
       setNote('');
       await load();
@@ -102,7 +112,7 @@ export default function AdjustStockPage() {
     <div className="mx-auto max-w-2xl">
       <PageHeader
         title="Adjust stock"
-        subtitle="Record damaged, lost or found items, or correct the count after checking the shelf."
+        subtitle={multiple && active ? `Changes the stock of ${active.name}. Record damaged, lost or found items, or correct the count after checking the shelf.` : 'Record damaged, lost or found items, or correct the count after checking the shelf.'}
         backHref="/dashboard/stock-activities"
         backLabel="Back to stock activities"
       />

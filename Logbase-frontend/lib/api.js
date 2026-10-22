@@ -1,5 +1,6 @@
 import { markReachable } from '@/lib/connection';
 import { cacheClear, cacheGet, cachePut } from '@/lib/offline';
+import { getActiveShopId, scopedKey, forgetShop } from '@/lib/shopStorage';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -11,6 +12,7 @@ const OFFLINE_MESSAGE = 'You are offline, or the server cannot be reached. Check
 /* ------------------------------------------------------------------ */
 
 const TOKEN_KEY = 'logbase_token';
+const RETURNING_KEY = 'logbase_returning'; // set once someone has signed in on this device (see components/site/ReturnVisitRedirect.js)
 const OLD_TOKEN_KEYS = ['logg_token', 'loggr_token']; // the app's earlier names: people who are already signed in stay signed in
 
 function getToken() {
@@ -32,12 +34,18 @@ function getToken() {
 // (Sales waiting in the outbox are NOT touched: they belong to whoever recorded them and are sent when they sign in again.)
 function setToken(token) {
   cacheClear();
+  forgetShop(); // the next person starts in the main store
   localStorage.setItem(TOKEN_KEY, token);
   OLD_TOKEN_KEYS.forEach((k) => localStorage.removeItem(k));
+  // remember that LogBase has been used on this device: the home page then opens the app / sign-in page instead of the sales page
+  try {
+    if (!localStorage.getItem(RETURNING_KEY)) localStorage.setItem(RETURNING_KEY, new Date().toISOString());
+  } catch {}
 }
 
 function clearToken() {
   cacheClear();
+  forgetShop();
   localStorage.removeItem(TOKEN_KEY);
   OLD_TOKEN_KEYS.forEach((k) => localStorage.removeItem(k));
 }
@@ -96,6 +104,9 @@ async function apiRequest(path, { method = 'GET', body, auth = false, timeoutMs 
   if (auth) {
     const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
+    // the store this person is working in (empty = the main store)
+    const shopId = getActiveShopId();
+    if (shopId) headers['X-Shop-Id'] = shopId;
   }
 
   // Signed-in pages keep a copy of what the server last said, so they still open with no connection.
@@ -114,7 +125,7 @@ async function apiRequest(path, { method = 'GET', body, auth = false, timeoutMs 
     );
   } catch (err) {
     if (saveCopy && err.offline) {
-      const copy = await cacheGet(path);
+      const copy = await cacheGet(scopedKey(path));
       if (copy) return copy.data;
     }
     throw err;
@@ -129,7 +140,7 @@ async function apiRequest(path, { method = 'GET', body, auth = false, timeoutMs 
     throw err;
   }
 
-  if (saveCopy) cachePut(path, data);
+  if (saveCopy) cachePut(scopedKey(path), data);
   return data;
 }
 
@@ -504,7 +515,7 @@ export async function createSale(payload, files = []) {
     `${API_URL}/sales`,
     {
       method: 'POST',
-      headers: { Authorization: `Bearer ${getToken()}` },
+      headers: { Authorization: `Bearer ${getToken()}`, ...(getActiveShopId() ? { 'X-Shop-Id': getActiveShopId() } : {}) },
       body: formData,
     },
     SALE_TIMEOUT_MS * 2 // photos take longer
@@ -579,7 +590,7 @@ export async function createPurchase(payload, files = []) {
 
   const res = await send(`${API_URL}/purchases`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${getToken()}` },
+    headers: { Authorization: `Bearer ${getToken()}`, ...(getActiveShopId() ? { 'X-Shop-Id': getActiveShopId() } : {}) },
     body: formData,
   });
 
@@ -667,6 +678,229 @@ export function adminEmailAudiences() {
 // payload: { audience, businessId, subject, message, dryRun }
 export function adminSendEmail(payload) {
   return apiRequest('/admin/email', { method: 'POST', body: payload, auth: true, timeoutMs: 60000 });
+}
+
+/* ------------------------------------------------------------------ */
+/* Item swaps (a swap itself is recorded with createSale + a tradeIn)  */
+/* ------------------------------------------------------------------ */
+
+export function listSwaps(query = '') {
+  return apiRequest(`/swaps${query}`, { auth: true });
+}
+
+/* ------------------------------------------------------------------ */
+/* Repair jobs                                                         */
+/* ------------------------------------------------------------------ */
+
+// params: { status, search }
+export function listRepairs(params) {
+  return apiRequest(`/repairs${query(params)}`, { auth: true });
+}
+
+export function getRepair(id) {
+  return apiRequest(`/repairs/${id}`, { auth: true });
+}
+
+// The job carries its own id (clientId), so pressing Save twice, or a lost answer, never makes two jobs.
+export function createRepair(payload) {
+  return apiRequest('/repairs', { method: 'POST', body: payload, auth: true, timeoutMs: SALE_TIMEOUT_MS });
+}
+
+export function updateRepair(id, payload) {
+  return apiRequest(`/repairs/${id}`, { method: 'PATCH', body: payload, auth: true });
+}
+
+// extra: { free: true } confirms that a job with no price is handed over free of charge
+export function setRepairStatus(id, status, note, extra) {
+  return apiRequest(`/repairs/${id}/status`, { method: 'POST', body: { status, note, ...(extra || {}) }, auth: true });
+}
+
+export function addRepairPayment(id, payload) {
+  return apiRequest(`/repairs/${id}/payments`, { method: 'POST', body: payload, auth: true });
+}
+
+// payload: { product, variant?, quantity } for a spare part from stock, or { name, quantity, cost? } for one that is not
+export function addRepairPart(id, payload) {
+  return apiRequest(`/repairs/${id}/parts`, { method: 'POST', body: payload, auth: true });
+}
+
+export function removeRepairPart(id, partId) {
+  return apiRequest(`/repairs/${id}/parts/${partId}`, { method: 'DELETE', auth: true });
+}
+
+export function deleteRepair(id) {
+  return apiRequest(`/repairs/${id}`, { method: 'DELETE', auth: true });
+}
+
+/* ------------------------------------------------------------------ */
+/* Laundry register                                                    */
+/* ------------------------------------------------------------------ */
+
+// the list of clothing types and their prices
+export function listLaundryItems() {
+  return apiRequest('/laundry/items', { auth: true });
+}
+
+export function createLaundryItem(payload) {
+  return apiRequest('/laundry/items', { method: 'POST', body: payload, auth: true });
+}
+
+export function updateLaundryItem(id, payload) {
+  return apiRequest(`/laundry/items/${id}`, { method: 'PUT', body: payload, auth: true });
+}
+
+export function deleteLaundryItem(id) {
+  return apiRequest(`/laundry/items/${id}`, { method: 'DELETE', auth: true });
+}
+
+// params: { status, search }
+export function listLaundryOrders(params) {
+  return apiRequest(`/laundry${query(params)}`, { auth: true });
+}
+
+export function getLaundryOrder(id) {
+  return apiRequest(`/laundry/${id}`, { auth: true });
+}
+
+export function createLaundryOrder(payload) {
+  return apiRequest('/laundry', { method: 'POST', body: payload, auth: true, timeoutMs: SALE_TIMEOUT_MS });
+}
+
+export function updateLaundryOrder(id, payload) {
+  return apiRequest(`/laundry/${id}`, { method: 'PATCH', body: payload, auth: true });
+}
+
+// `extra` can carry the delivery details to save with the new status: { handover, deliveryAddress, deliveryFee, riderName, riderPhone }
+export function setLaundryStatus(id, status, note, extra) {
+  return apiRequest(`/laundry/${id}/status`, { method: 'POST', body: { ...(extra || {}), status, note }, auth: true });
+}
+
+// Today at a glance, the last 30 days and the orders that need attention
+export function getLaundryOverview() {
+  return apiRequest('/laundry/overview', { auth: true });
+}
+
+export function addLaundryPayment(id, payload) {
+  return apiRequest(`/laundry/${id}/payments`, { method: 'POST', body: payload, auth: true });
+}
+
+export function deleteLaundryOrder(id) {
+  return apiRequest(`/laundry/${id}`, { method: 'DELETE', auth: true });
+}
+
+/* ------------------------------------------------------------------ */
+/* Stores and stock transfers                                         */
+/* ------------------------------------------------------------------ */
+
+export function listShops() {
+  return apiRequest('/shops', { auth: true });
+}
+
+export function createShop(payload) {
+  return apiRequest('/shops', { method: 'POST', body: payload, auth: true });
+}
+
+export function updateShop(id, payload) {
+  return apiRequest(`/shops/${id}`, { method: 'PATCH', body: payload, auth: true });
+}
+
+export function listTransfers(params = '') {
+  return apiRequest(`/transfers${params}`, { auth: true });
+}
+
+export function getTransfer(id) {
+  return apiRequest(`/transfers/${id}`, { auth: true });
+}
+
+export function createTransfer(payload) {
+  return apiRequest('/transfers', { method: 'POST', body: payload, auth: true });
+}
+
+export function acceptTransfer(id) {
+  return apiRequest(`/transfers/${id}/accept`, { method: 'POST', body: {}, auth: true });
+}
+
+export function declineTransfer(id, reason) {
+  return apiRequest(`/transfers/${id}/decline`, { method: 'POST', body: { reason }, auth: true });
+}
+
+export function cancelTransfer(id, reason) {
+  return apiRequest(`/transfers/${id}/cancel`, { method: 'POST', body: { reason }, auth: true });
+}
+
+export function restoreProduct(id) {
+  return apiRequest(`/products/${id}/restore`, { method: 'POST', body: {}, auth: true });
+}
+
+export function setLowStockThreshold(threshold) {
+  return apiRequest('/products/low-stock-threshold', { method: 'PUT', body: { threshold }, auth: true });
+}
+
+/* ------------------------------------------------------------------ */
+/* Settings, approvals and alerts                                      */
+/* ------------------------------------------------------------------ */
+
+// The business identity, preferences and approval rules. Everyone reads them; only the administrator saves.
+export function getSettings() {
+  return apiRequest('/settings', { auth: true });
+}
+
+export function saveOrganization(payload) {
+  return apiRequest('/settings/organization', { method: 'PUT', body: payload, auth: true });
+}
+
+export function savePreferences(payload) {
+  return apiRequest('/settings/preferences', { method: 'PUT', body: payload, auth: true });
+}
+
+export function saveApprovalPolicies(payload) {
+  return apiRequest('/settings/approval-policies', { method: 'PUT', body: payload, auth: true });
+}
+
+export function uploadLogo(file) {
+  return uploadPicture('/settings/logo', 'logo', file);
+}
+
+export function deleteLogo() {
+  return apiRequest('/settings/logo', { method: 'DELETE', auth: true });
+}
+
+// params: { status: 'pending' | 'approved' | 'declined' | 'cancelled' | 'failed' }
+export function listApprovals(params) {
+  return apiRequest(`/approvals${query(params)}`, { auth: true });
+}
+
+export function approveRequest(id) {
+  return apiRequest(`/approvals/${id}/approve`, { method: 'POST', body: {}, auth: true, timeoutMs: 70000 });
+}
+
+export function declineRequest(id, note) {
+  return apiRequest(`/approvals/${id}/decline`, { method: 'POST', body: { note }, auth: true });
+}
+
+export function cancelRequest(id) {
+  return apiRequest(`/approvals/${id}/cancel`, { method: 'POST', body: {}, auth: true });
+}
+
+// params: { unread: true, limit }
+export function listNotifications(params) {
+  return apiRequest(`/notifications${query(params)}`, { auth: true });
+}
+
+export function markNotificationRead(id) {
+  return apiRequest(`/notifications/${id}/read`, { method: 'POST', body: {}, auth: true });
+}
+
+export function markAllNotificationsRead() {
+  return apiRequest('/notifications/read-all', { method: 'POST', body: {}, auth: true });
+}
+
+export function getNotificationPrefs() {
+  return apiRequest('/notifications/preferences', { auth: true });
+}
+
+export function saveNotificationPrefs(payload) {
+  return apiRequest('/notifications/preferences', { method: 'PUT', body: payload, auth: true });
 }
 
 export { getToken, setToken, clearToken };

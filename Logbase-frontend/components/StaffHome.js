@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { listProducts } from '@/lib/api';
+import { useShops } from '@/lib/shops';
+import { forShop } from '@/lib/shopStorage';
 import { useUser } from '@/components/UserProvider';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { Icon } from '@/components/Icons';
@@ -29,6 +31,7 @@ function HeroLink({ href, solid, icon, children }) {
 export default function StaffHome() {
   const { user, can } = useUser();
   const showStock = can('viewStock', 'manageProducts');
+  const { multiple, scopeReady } = useShops();
   const canRecord = can('recordSales');
   const canAddCustomer = can('addCustomers', 'manageCustomers');
 
@@ -37,10 +40,11 @@ export default function StaffHome() {
 
   useEffect(() => {
     if (!showStock) return;
+    if (!scopeReady) return;
     listProducts()
-      .then((data) => setProducts(data.products || []))
+      .then((data) => setProducts(multiple ? forShop(data.products || []) : data.products || []))
       .catch(() => setFailed(true));
-  }, [showStock]);
+  }, [showStock, scopeReady, multiple]);
 
   const units = products ? products.reduce((sum, p) => sum + (Number(p.quantity) || 0), 0) : 0;
   const lowOrOut = products ? products.filter((p) => p.quantity <= p.reorderThreshold) : [];

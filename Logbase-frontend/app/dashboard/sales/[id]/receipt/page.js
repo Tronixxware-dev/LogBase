@@ -8,7 +8,9 @@ import { formatMoney, formatDate } from '@/lib/format';
 import { describePhone } from '@/lib/phone';
 import { buildReceipt, receiptDateTime, receiptText, whatsappLink } from '@/lib/receipt';
 import { receiptToPng } from '@/lib/receiptImage';
+import { closingOf } from '@/lib/settings';
 import { useUser } from '@/components/UserProvider';
+import IdentityHeader from '@/components/Identity';
 import { ErrorBanner, LoadingState } from '@/components/ui';
 
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace';
@@ -67,7 +69,8 @@ function ActionButton({ children, onClick, href, primary, disabled }) {
 // Print it (or save it as a PDF), send it on WhatsApp as a picture, or copy it as text.
 export default function ReceiptPage() {
   const { id } = useParams();
-  const { user } = useUser();
+  const { user, settings } = useUser();
+  const org = settings.organization;
   const [sale, setSale] = useState(null);
   const [group, setGroup] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +89,13 @@ export default function ReceiptPage() {
   }, [id]);
 
   const businessName = user?.businessName || 'Receipt';
-  const receipt = useMemo(() => (sale ? buildReceipt({ sale, lines: group.length > 1 ? group : [sale] }) : null), [sale, group]);
+  const showSeller = org.receipt.showSeller;
+  const receipt = useMemo(() => {
+    if (!sale) return null;
+    const built = buildReceipt({ sale, lines: group.length > 1 ? group : [sale] });
+    // the administrator can choose not to print who served the customer
+    return showSeller ? built : { ...built, servedBy: '' };
+  }, [sale, group, showSeller]);
 
   if (loading) return <LoadingState />;
   if (!receipt) {
@@ -100,7 +109,7 @@ export default function ReceiptPage() {
     );
   }
 
-  const text = receiptText(receipt, businessName);
+  const text = receiptText(receipt, businessName, org);
   const phone = describePhone(receipt.customerPhone);
   const itemCount = receipt.items.reduce((n, i) => n + i.quantity, 0);
   const paidInFull = receipt.balance <= 0 && receipt.total > 0;
@@ -111,7 +120,7 @@ export default function ReceiptPage() {
   }
 
   async function makeFile() {
-    const blob = await receiptToPng(receipt, businessName);
+    const blob = await receiptToPng(receipt, businessName, org);
     return new File([blob], `receipt-${receipt.number}.png`, { type: 'image/png' });
   }
 
@@ -212,10 +221,7 @@ export default function ReceiptPage() {
           className="lb-paper px-6 pb-9 pt-10 text-[15px] leading-relaxed text-gray-800 shadow-[0_10px_40px_-12px_rgba(15,23,42,0.35)] sm:px-10 print:px-2 print:pt-2"
           style={{ fontFamily: MONO }}
         >
-          <header className="text-center">
-            <h1 className="text-balance text-[26px] font-extrabold uppercase leading-tight tracking-wide text-gray-900 sm:text-3xl">{businessName}</h1>
-            <p className="mt-2 text-xs font-semibold uppercase tracking-[0.35em] text-gray-500">Sales receipt</p>
-          </header>
+          <IdentityHeader org={org} name={businessName} title="Sales receipt" />
 
           <Divider />
 
@@ -284,10 +290,30 @@ export default function ReceiptPage() {
               <span>TOTAL</span>
               <span>{formatMoney(receipt.total)}</span>
             </div>
-            <div className="flex justify-between text-base text-gray-800">
-              <span>AMOUNT PAID</span>
-              <span className="font-semibold">{formatMoney(receipt.paid)}</span>
-            </div>
+            {receipt.tradeIn ? (
+              <>
+                <div className="flex justify-between gap-4 text-base text-gray-800">
+                  <span className="min-w-0 break-words uppercase">Item handed in: {receipt.tradeIn.description}</span>
+                  <span className="shrink-0 font-semibold">-{formatMoney(receipt.tradeIn.credit)}</span>
+                </div>
+                {receipt.tradeIn.imei && <p className="break-all text-xs uppercase text-gray-500">IMEI / serial: {receipt.tradeIn.imei}</p>}
+                <div className="flex justify-between text-base text-gray-800">
+                  <span>CUSTOMER ADDED</span>
+                  <span className="font-semibold">{formatMoney(receipt.tradeIn.cashTopUp)}</span>
+                </div>
+                {receipt.tradeIn.refund > 0 && (
+                  <div className="flex justify-between text-base text-gray-800">
+                    <span>GIVEN BACK</span>
+                    <span className="font-semibold">{formatMoney(receipt.tradeIn.refund)}</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex justify-between text-base text-gray-800">
+                <span>AMOUNT PAID</span>
+                <span className="font-semibold">{formatMoney(receipt.paid)}</span>
+              </div>
+            )}
             {receipt.balance > 0 && (
               <div className="flex items-baseline justify-between pt-1 text-lg font-extrabold text-red-700">
                 <span>BALANCE DUE</span>
@@ -312,7 +338,8 @@ export default function ReceiptPage() {
           </div>
 
           <div className="mt-7 text-center">
-            <p className="text-base font-extrabold uppercase text-gray-900">Thank you for your business!</p>
+            <p className="break-words text-base font-extrabold uppercase text-gray-900">{closingOf(org)}</p>
+            {org.receipt.footer && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-gray-600">{org.receipt.footer}</p>}
             {receipt.hasWarranty && (
               <p className="mt-2 text-xs text-gray-500">Keep this receipt. It is your proof of purchase for the warranty.</p>
             )}

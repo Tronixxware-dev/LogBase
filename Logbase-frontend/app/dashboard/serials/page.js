@@ -8,16 +8,8 @@ import { warrantyLabel, warrantyStatus, SERIAL_STATUS, EVENT_LABEL } from '@/lib
 import PageHeader from '@/components/PageHeader';
 import { ScanButton } from '@/components/BarcodeScanner';
 import { useUser } from '@/components/UserProvider';
+import { Detail, DetailGrid } from '@/components/DetailParts';
 import { ErrorBanner, LoadingState, cardClass, inputClass, primaryButtonClass } from '@/components/ui';
-
-function Detail({ label, children }) {
-  return (
-    <div>
-      <dt className="text-xs text-gray-400">{label}</dt>
-      <dd className="text-sm text-gray-900">{children || '—'}</dd>
-    </div>
-  );
-}
 
 // One unit: what it is, where it came from, where it is now and where its warranty stands.
 function UnitCard({ unit }) {
@@ -49,24 +41,25 @@ function UnitCard({ unit }) {
         </p>
       )}
 
-      <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {isOwner && <Detail label="Supplier">{unit.supplierName}</Detail>}
-        <Detail label="Received">{unit.receivedAt ? formatDate(unit.receivedAt) : 'Not recorded'}</Detail>
-        {unit.costPrice != null && <Detail label="Cost">{formatMoney(unit.costPrice)}</Detail>}
+      <DetailGrid className="mt-4">
+        {isOwner && <Detail label="Supplier" icon="suppliers" color="sky">{unit.supplierName}</Detail>}
+        {unit.store && unit.status === 'in_stock' && <Detail label="Store" icon="store" color="rose">{unit.store}</Detail>}
+        <Detail label="Received" icon="calendar" color="violet">{unit.receivedAt ? formatDate(unit.receivedAt) : 'Not recorded'}</Detail>
+        {unit.costPrice != null && <Detail label="Cost" icon="naira" color="green">{formatMoney(unit.costPrice)}</Detail>}
         {unit.status === 'sold' && (
           <>
-            <Detail label="Sold on">{formatDate(unit.soldAt)}</Detail>
-            <Detail label="Customer">{unit.customerName}</Detail>
-            <Detail label="Sale">
+            <Detail label="Sold on" icon="calendar" color="violet">{formatDate(unit.soldAt)}</Detail>
+            <Detail label="Customer" icon="user" color="sky">{unit.customerName}</Detail>
+            <Detail label="Sale" icon="sales" color="teal">
               {unit.sale ? (
-                <Link href={`/dashboard/sales/${unit.sale}`} className="font-medium text-primary hover:underline">
+                <Link href={`/dashboard/sales/${unit.sale}`} className="font-semibold text-primary hover:underline">
                   Open the sale
                 </Link>
               ) : null}
             </Detail>
           </>
         )}
-      </dl>
+      </DetailGrid>
 
       {events.length > 0 && (
         <div className="mt-5 border-t border-gray-100 pt-4">

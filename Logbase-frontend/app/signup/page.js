@@ -4,11 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { registerBusiness, setToken } from '@/lib/api';
 import AuthShell, { AuthButton, AuthError, AuthField } from '@/components/AuthShell';
+import { Icon } from '@/components/Icons';
+import { BUSINESS_TYPES, DEFAULT_BUSINESS_TYPE } from '@/lib/businessTypes';
 
 export default function SignupPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     businessName: '',
+    businessType: DEFAULT_BUSINESS_TYPE,
     businessEmail: '',
     ownerName: '',
     ownerEmail: '',
@@ -52,6 +55,36 @@ export default function SignupPage() {
       <AuthError>{error}</AuthError>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* the kind of business decides the menus and pages you get */}
+        <fieldset>
+          <legend className="mb-1.5 block text-sm font-medium text-gray-700">What kind of business do you run?</legend>
+          <div role="radiogroup" className="grid gap-2 sm:grid-cols-2">
+            {BUSINESS_TYPES.map((type) => {
+              const selected = form.businessType === type.key;
+              return (
+                <button
+                  key={type.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setForm({ ...form, businessType: type.key })}
+                  className={`flex items-start gap-3 rounded-xl border p-3 text-left transition ${
+                    selected
+                      ? 'border-primary bg-primary/10 ring-1 ring-primary'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon name={type.icon} className={`mt-0.5 h-5 w-5 shrink-0 ${selected ? 'text-primary' : 'text-gray-400'}`} />
+                  <span className="min-w-0">
+                    <span className={`block text-sm font-medium ${selected ? 'text-primary' : 'text-gray-900'}`}>{type.label}</span>
+                    <span className="mt-0.5 block text-xs leading-snug text-gray-500">{type.blurb}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <AuthField
             label="Business name"

@@ -13,6 +13,8 @@ import {
   uploadProductImages,
 } from '@/lib/api';
 import { useUser } from '@/components/UserProvider';
+import { useShops } from '@/lib/shops';
+import { forShop } from '@/lib/shopStorage';
 import PageHeader from '@/components/PageHeader';
 import ProductEditForm from '@/components/ProductEditForm';
 import ProductPhotosEditor from '@/components/ProductPhotosEditor';
@@ -49,6 +51,8 @@ export default function ProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { isOwner } = useUser(); // cost prices are for the owner only
+  // with several stores, the stock shown is this store's own and is changed with Adjust stock, not here
+  const { multiple, scopeReady } = useShops();
 
   const [product, setProduct] = useState(null); // what is saved on the server
   const [form, setForm] = useState(null); // edits to the product's own fields
@@ -62,14 +66,15 @@ export default function ProductDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
 
-  const applyProduct = useCallback((p) => {
+  const applyProduct = useCallback((raw) => {
+    const p = multiple ? forShop([raw])[0] : raw;
     setProduct(p);
     setForm(formFromProduct(p));
     setRows(rowsFromProduct(p));
     setNewRows([]);
     setRemovedIds([]);
     setPhotoFiles([]);
-  }, []);
+  }, [multiple]);
 
   const load = useCallback(() => {
     return getProduct(id)
@@ -79,8 +84,8 @@ export default function ProductDetailPage() {
   }, [id, applyProduct]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (scopeReady) load();
+  }, [load, scopeReady]);
 
   /* ---------------- what has changed ---------------- */
 
@@ -201,7 +206,7 @@ export default function ProductDetailPage() {
           warrantyMonths: Number(form.warrantyMonths || 0),
         };
         if (isOwner) payload.costPrice = Number(form.costPrice);
-        if (!hasVariants) payload.quantity = Number(form.quantity || 0);
+        if (!hasVariants && !multiple) payload.quantity = Number(form.quantity || 0);
         latest = (await updateProduct(id, payload)).product;
         anySaved = true;
       }
@@ -216,14 +221,14 @@ export default function ProductDetailPage() {
           await updateVariant(id, r.id, {
             color: r.color,
             size: r.size,
-            quantity: Number(r.quantity),
+            ...(multiple ? {} : { quantity: Number(r.quantity) }),
           })
         ).product;
         anySaved = true;
       }
       for (const r of addedRows) {
         const payload = { color: r.color, size: r.size };
-        if (r.quantity !== '') payload.quantity = Number(r.quantity);
+        if (r.quantity !== '' && !multiple) payload.quantity = Number(r.quantity);
         latest = (await addVariant(id, payload)).product;
         anySaved = true;
       }
@@ -327,6 +332,7 @@ export default function ProductDetailPage() {
           onRowRemove={handleRowRemove}
           onNewChange={handleNewChange}
           onNewRemove={(key) => setNewRows((prev) => prev.filter((r) => r.key !== key))}
+          stockLocked={multiple}
           onAddRow={() => {
             touch();
             setNewRows((prev) => [...prev, newVariantRow()]);

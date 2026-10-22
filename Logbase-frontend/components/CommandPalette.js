@@ -4,14 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/components/UserProvider';
 import { Icon } from '@/components/Icons';
-import { labelFor, visibleLinks } from '@/lib/nav';
+import { flattenLinks, labelFor, visibleLinks } from '@/lib/nav';
+import { businessTypeOf, hasFeature } from '@/lib/businessTypes';
 import { currentTheme, setTheme } from '@/lib/theme';
 
 // Quick search: press Ctrl + K (or ⌘ K), or click the search box in the top bar, type a few letters,
 // press Enter. It only lists what this person may open.
 export default function CommandPalette() {
   const router = useRouter();
-  const { can, isOwner } = useUser();
+  const { can, isOwner, user } = useUser();
+  const businessType = businessTypeOf(user);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
@@ -44,11 +46,16 @@ export default function CommandPalette() {
   }, [open]);
 
   const items = useMemo(() => {
-    const { top, products, owner } = visibleLinks({ can, isOwner });
+    const { top, products, owner, account } = visibleLinks({ can, isOwner, businessType, approvalsOn: true });
+    const has = (feature) => hasFeature(businessType, feature);
     const actions = [
-      can('recordSales') && { id: 'a-sale', label: 'Record a sale', icon: 'record', href: '/dashboard/sales/new', group: 'Quick actions' },
-      can('managePurchases') && { id: 'a-purchase', label: 'Record a purchase', icon: 'purchases', href: '/dashboard/purchases/new', group: 'Quick actions' },
-      can('manageProducts') && { id: 'a-product', label: 'Add a product', icon: 'products', href: '/dashboard/products/new', group: 'Quick actions' },
+      has('sales') && can('recordSales') && { id: 'a-sale', label: 'Record a sale', icon: 'record', href: '/dashboard/sales/new', group: 'Quick actions' },
+      has('swaps') && can('recordSales') && { id: 'a-swap', label: 'Record an item swap', icon: 'swap', href: '/dashboard/sales/swaps/new', group: 'Quick actions' },
+      has('repairs') && can('recordSales') && { id: 'a-repair', label: 'Take in a repair', icon: 'wrench', href: '/dashboard/repairs/new', group: 'Quick actions' },
+      has('laundry') && can('recordSales') && { id: 'a-laundry', label: 'New laundry order', icon: 'shirt', href: '/dashboard/laundry/new', group: 'Quick actions' },
+      has('products') && can('managePurchases') && { id: 'a-purchase', label: 'Record a purchase', icon: 'purchases', href: '/dashboard/purchases/new', group: 'Quick actions' },
+      has('products') && can('manageProducts') && { id: 'a-product', label: businessType === 'repair' ? 'Add a spare part' : 'Add a product', icon: 'products', href: '/dashboard/products/new', group: 'Quick actions' },
+      has('products') && can('adjustStock') && { id: 'a-transfer', label: 'Transfer stock to another store', icon: 'transfer', href: '/dashboard/transfers/new', group: 'Quick actions' },
       can('addCustomers', 'manageCustomers') && { id: 'a-customer', label: 'Add a customer', icon: 'customers', href: '/dashboard/customers/new', group: 'Quick actions' },
       {
         id: 'a-theme',
@@ -58,15 +65,27 @@ export default function CommandPalette() {
         group: 'Quick actions',
       },
     ].filter(Boolean);
-    const pages = [...top, ...products, ...owner].map((l) => ({
+    // the pages inside Settings, and the alerts
+    const settingsPages = [
+      { href: '/dashboard/notifications', label: 'Alerts', icon: 'bell' },
+      { href: '/dashboard/settings/notifications', label: 'Notification preferences', icon: 'bell' },
+      ...(isOwner
+        ? [
+            { href: '/dashboard/settings/organization', label: 'Organization & receipt details', icon: 'building' },
+            { href: '/dashboard/settings/preferences', label: 'Business preferences', icon: 'sliders' },
+            { href: '/dashboard/settings/approvals', label: 'Approval policies', icon: 'approve' },
+          ]
+        : []),
+    ];
+    const pages = [...flattenLinks(top), ...products, ...owner, ...account, ...settingsPages].map((l) => ({
       id: `p-${l.href}-${l.label}`,
-      label: labelFor(l, can),
+      label: labelFor(l, can, businessType),
       icon: l.icon,
       href: l.href,
       group: 'Go to',
     }));
     return [...actions, ...pages];
-  }, [can, isOwner]);
+  }, [can, isOwner, businessType]);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();

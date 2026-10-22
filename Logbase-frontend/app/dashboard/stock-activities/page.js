@@ -7,9 +7,11 @@ import { listSales, listPurchases, listReturns, listStockAdjustments } from '@/l
 import { buildActivity } from '@/lib/analytics';
 import { formatDateTime, formatMoney } from '@/lib/format';
 import { useUser } from '@/components/UserProvider';
+import { storeNameOf, useShops } from '@/lib/shops';
 import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
-import { ErrorBanner, LoadingState, EmptyState, cardClass, inputClass } from '@/components/ui';
+import FilterBar, { optionsFrom } from '@/components/FilterBar';
+import { ErrorBanner, LoadingState, EmptyState, cardClass } from '@/components/ui';
 
 const PERIODS = [
   { days: 7, label: '7 days' },
@@ -46,32 +48,11 @@ const KIND_STYLE = {
 
 const MAX_ROWS = 200;
 
-function Segmented({ label, options, value, onChange }) {
-  return (
-    <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5" role="group" aria-label={label}>
-      {options.map((o) => (
-        <button
-          key={String(o.value ?? o.days)}
-          type="button"
-          onClick={() => onChange(o.value !== undefined ? o.value : o.days)}
-          aria-pressed={(o.value !== undefined ? o.value : o.days) === value}
-          className={`rounded-md px-3 py-1.5 text-sm transition ${
-            (o.value !== undefined ? o.value : o.days) === value
-              ? 'bg-primary/10 font-medium text-primary'
-              : 'text-gray-500 hover:text-gray-800'
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 // Every unit that came in (a purchase) or went out (a sale). It used to sit on the Overview.
 export default function StockActivitiesPage() {
   const router = useRouter();
   const { can, isOwner } = useUser();
+  const { shops, multiple, scopeQuery, scopeReady } = useShops();
   // each list is only loaded when the person may see it
   const seesSales = can('recordSales', 'viewAllSales', 'viewInsights');
   const seesPurchases = can('managePurchases', 'viewInsights');
@@ -90,13 +71,16 @@ export default function StockActivitiesPage() {
   // opens on "Stock out" (what was sold); pick All or Stock in to see the rest
   const [kind, setKind] = useState('out');
   const [search, setSearch] = useState('');
+  const [by, setBy] = useState('all');
 
+  // what moved in the store being worked in
   useEffect(() => {
+    if (!scopeReady) return;
     Promise.all([
-      seesSales ? listSales() : Promise.resolve({ sales: [] }),
-      seesPurchases ? listPurchases() : Promise.resolve({ purchases: [] }),
-      seesReturns ? listReturns() : Promise.resolve({ returns: [] }),
-      seesAdjustments ? listStockAdjustments() : Promise.resolve({ adjustments: [] }),
+      seesSales ? listSales(scopeQuery) : Promise.resolve({ sales: [] }),
+      seesPurchases ? listPurchases(scopeQuery) : Promise.resolve({ purchases: [] }),
+      seesReturns ? listReturns(scopeQuery) : Promise.resolve({ returns: [] }),
+      seesAdjustments ? listStockAdjustments(scopeQuery) : Promise.resolve({ adjustments: [] }),
     ])
       .then(([salesData, purchasesData, returnsData, adjustmentsData]) => {
         setSales(salesData.sales || []);
@@ -106,7 +90,7 @@ export default function StockActivitiesPage() {
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [seesSales, seesPurchases, seesReturns, seesAdjustments]);
+  }, [seesSales, seesPurchases, seesReturns, seesAdjustments, scopeReady, scopeQuery]);
 
   const all = useMemo(
     () => buildActivity({ sales, purchases, returns, adjustments, days }),
@@ -117,9 +101,10 @@ export default function StockActivitiesPage() {
     const q = search.trim().toLowerCase();
     return all
       .filter((a) => kind === 'all' || a.kind === kind)
+      .filter((a) => by === 'all' || a.by === by)
       .filter((a) => !q || [a.product, a.variant, a.party, a.by, a.noteText].some((v) => v && v.toLowerCase().includes(q)))
-      .map((a) => ({ ...a, _id: a.rowKey || `${a.kind}-${a.id}` }));
-  }, [all, kind, search]);
+      .map((a) => ({ ...a, _id: a.rowKey || `${a.kind}-${a.id}`, store: a.kind === 'return' ? '' : multiple ? storeNameOf({ shopName: a.store }, shops) : '' }));
+  }, [all, kind, by, search, multiple, shops]);
 
   // what actually happened on the shelf: purchases, returned goods put back and stock found add units;
   // sales and stock damaged or lost take them away
@@ -173,6 +158,7 @@ export default function StockActivitiesPage() {
       label: isOwner ? 'Customer / supplier' : 'Customer',
       render: (a) => (a.party ? `${a.kind === 'out' ? 'To' : 'From'} ${a.party}` : '—'),
     },
+    ...(multiple ? [{ key: 'store', label: 'Store', render: (a) => a.store || '—' }] : []),
     { key: 'by', label: 'By', render: (a) => a.by || '—' },
     {
       key: 'amount',
@@ -214,17 +200,21 @@ export default function StockActivitiesPage() {
         </p>
       )}
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Segmented label="Period" options={PERIODS} value={days} onChange={setDays} />
-        <Segmented label="Type" options={KINDS} value={kind} onChange={setKind} />
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={isOwner ? 'Search product, customer, supplier or name' : 'Search product, customer or name'}
-          className={`${inputClass} sm:max-w-xs`}
-        />
-      </div>
+      <FilterBar
+        search={{ value: search, onChange: setSearch, placeholder: isOwner ? 'Search product, customer, supplier or name' : 'Search product, customer or name', label: 'Search stock activities' }}
+        filters={[
+          { key: 'kind', label: 'Type', value: kind, onChange: setKind, defaultValue: 'out', options: KINDS },
+          {
+            key: 'period',
+            label: 'Period',
+            value: String(days),
+            onChange: (v) => setDays(v === 'null' ? null : Number(v)),
+            defaultValue: '30',
+            options: PERIODS.map((p) => ({ value: String(p.days), label: p.label })),
+          },
+          { key: 'by', label: 'Recorded by', value: by, onChange: setBy, advanced: true, options: optionsFrom(all, (a) => a.by, 'Everyone') },
+        ]}
+      />
 
       {!loading && (
         <div className={`${cardClass} mb-4 grid grid-cols-2 divide-x divide-gray-100 sm:grid-cols-4`}>

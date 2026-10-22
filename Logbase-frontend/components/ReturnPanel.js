@@ -84,18 +84,20 @@ export default function ReturnPanel({ lines, hasCustomer, onDone }) {
           quantity: Number(wanted[l._id]),
           ...(l.serials?.length > 0 ? { serials: picked[l._id] || [] } : {}),
         }));
-      await createReturn({
+      const result = await createReturn({
         items,
         reason,
         restock,
         note: note.trim(),
         refundMethod: preview.refund > 0 ? method : undefined,
       });
-      const message = `Return saved: ${formatMoney(preview.value)} taken back${
-        preview.refund > 0 ? ` (${formatMoney(preview.refund)} to give back to the customer)` : ''
-      }.`;
+      // a rule the administrator set can hold the return until they say yes: nothing has changed yet
+      const held = Boolean(result && result.approvalRequired);
+      const message = held
+        ? 'Sent to the administrator for approval. Do not give the customer any money until it is approved. You will get an alert when it is answered.'
+        : `Return saved: ${formatMoney(preview.value)} taken back${preview.refund > 0 ? ` (${formatMoney(preview.refund)} to give back to the customer)` : ''}.`;
       setDone(message);
-      notifySuccess('Return saved', `${formatMoney(preview.value)} taken back`);
+      notifySuccess(held ? 'Sent for approval' : 'Return saved', held ? `${formatMoney(preview.value)} return` : `${formatMoney(preview.value)} taken back`);
       setOpen(false);
       setWanted({});
       setPicked({});

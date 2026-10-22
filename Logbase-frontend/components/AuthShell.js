@@ -105,7 +105,13 @@ export default function AuthShell({ title, subtitle, children, footer }) {
             <BrandMark className="h-9 w-9" />
             <span className="text-lg font-semibold tracking-tight text-gray-900">LogBase</span>
           </Link>
-          <ThemeIconButton />
+          <div className="flex items-center gap-3">
+            {/* people who use LogBase land on this page, so the website needs a way in */}
+            <Link href="/" className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900">
+              Visit website
+            </Link>
+            <ThemeIconButton />
+          </div>
         </div>
 
         <div className="flex flex-1 items-center justify-center py-8">

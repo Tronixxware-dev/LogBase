@@ -5,21 +5,44 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/components/UserProvider';
 
 // Which permission(s) a page needs (any one is enough). The first matching rule wins.
-// A page that matches no rule (like /dashboard/staffs, /dashboard/billing, /dashboard/expenses, /dashboard/data, /dashboard/deliveries or /dashboard/activity) is for the owner only.
+// A page that matches no rule (like /dashboard/staffs, /dashboard/billing, /dashboard/expenses, /dashboard/data, /dashboard/deliveries,
+// /dashboard/stores, /dashboard/laundry/items or /dashboard/activity) is for the owner only.
 // null = every signed-in person may open it.
 // (The server refuses requests for data a person may not see as well; this only keeps people from
 // landing on pages that would show errors.)
 const RULES = [
   [/^\/dashboard\/?$/, null],
-  // everyone can open their own profile
+  // everyone can open their own profile, the Settings hub, their alerts and their requests (the server shows each person only their own)
   [/^\/dashboard\/profile\/?$/, null],
+  [/^\/dashboard\/settings\/?$/, null],
+  [/^\/dashboard\/settings\/notifications\/?$/, null],
+  [/^\/dashboard\/notifications\/?$/, null],
+  [/^\/dashboard\/approvals\/?$/, null],
   // the old Stock page now redirects to Products; Products (the list) is open to anyone who may see stock
   [/^\/dashboard\/stock\/?$/, ['viewStock', 'manageProducts']],
   [/^\/dashboard\/products\/?$/, ['viewStock', 'manageProducts']],
   [/^\/dashboard\/stock-activities\/?$/, ['viewInsights', 'viewAllSales', 'managePurchases']],
+  // the Inventory page: anyone who may see stock (adding a product still needs "Manage products", checked on the pages and the server)
+  [/^\/dashboard\/inventory\/?$/, ['viewStock', 'manageProducts']],
+  // stock sent between stores: sending or answering one needs "Adjust stock"; anyone who sees stock may read them
+  [/^\/dashboard\/transfers\/new\/?$/, ['adjustStock']],
+  [/^\/dashboard\/transfers(\/[^/]+)?\/?$/, ['adjustStock', 'manageProducts', 'managePurchases', 'viewStock', 'viewInsights']],
+  // returns made on sales, and what customers still owe (the stores page is for the owner only: no rule)
+  [/^\/dashboard\/returns\/?$/, ['processReturns', 'viewAllSales', 'viewInsights']],
+  [/^\/dashboard\/credit\/?$/, ['manageCustomers']],
   [/^\/dashboard\/sales\/new\/?$/, ['recordSales']],
   // sales saved on this phone while offline: only the people who can record sales have any
   [/^\/dashboard\/sales\/pending\/?$/, ['recordSales']],
+  // item swaps (a customer hands in an old item and takes a new one), under Sales
+  [/^\/dashboard\/sales\/swaps\/new\/?$/, ['recordSales']],
+  [/^\/dashboard\/sales\/swaps(\/[^/]+)?\/?$/, ['recordSales', 'viewAllSales', 'viewInsights']],
+  // repair jobs (taking one in needs "Record sales")
+  [/^\/dashboard\/repairs\/new\/?$/, ['recordSales']],
+  [/^\/dashboard\/repairs(\/.*)?$/, ['recordSales', 'viewAllSales', 'viewInsights']],
+  // the laundry register; the list of clothing items and prices is for the owner only (no rule = owner only)
+  [/^\/dashboard\/laundry\/items\/?$/, []],
+  [/^\/dashboard\/laundry\/new\/?$/, ['recordSales']],
+  [/^\/dashboard\/laundry(\/.*)?$/, ['recordSales', 'viewAllSales', 'viewInsights']],
   // a sale and its receipt
   [/^\/dashboard\/sales(\/[^/]+(\/receipt)?)?\/?$/, ['recordSales', 'viewAllSales', 'viewInsights']],
   // changing stock by hand

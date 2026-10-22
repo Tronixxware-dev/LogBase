@@ -8,6 +8,7 @@ import { listProducts, listCustomers, createCustomer, createSale, availableSeria
 import { formatMoney, variantLabel } from '@/lib/format';
 import { useUser } from '@/components/UserProvider';
 import { SYNC_NOW_EVENT } from '@/components/OfflineStatus';
+import { forShop, getActiveShopId } from '@/lib/shopStorage';
 import { applyLocalStock, describeSale, newClientId, queueSale, takeOffStock } from '@/lib/outbox';
 import PageHeader from '@/components/PageHeader';
 import PhoneInput from '@/components/PhoneInput';
@@ -31,7 +32,8 @@ function newLine(productId = '') {
 
 export default function NewSalePage() {
   const router = useRouter();
-  const { user } = useUser(); // every sale is recorded under the name of whoever is signed in
+  const { user, settings } = useUser(); // every sale is recorded under the name of whoever is signed in
+  const usualMethod = settings.preferences.defaultPaymentMethod; // the business's usual way of being paid (Settings > Preferences)
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
   // One line per product colour / size being sold. A customer can buy several at once.
@@ -39,7 +41,7 @@ export default function NewSalePage() {
   const [customerName, setCustomerName] = useState('');
   const [fullPayment, setFullPayment] = useState(true);
   const [amountPaid, setAmountPaid] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentMethod, setPaymentMethod] = useState(usualMethod);
   // Does the business pay for the delivery? "No" means the customer pays and there is nothing to record.
   const [deliveryPaidByUs, setDeliveryPaidByUs] = useState(false);
   const [deliveryCost, setDeliveryCost] = useState('');
@@ -61,7 +63,7 @@ export default function NewSalePage() {
   useEffect(() => {
     Promise.all([listProducts(), listCustomers()])
       .then(([productsData, customersData]) => {
-        setProducts(productsData.products || []);
+        setProducts(forShop(productsData.products || []));
         setCustomers(customersData.customers || []);
       })
       .catch((err) => setError(err.message));
@@ -209,6 +211,8 @@ export default function NewSalePage() {
 
     const payload = {
       items,
+      // the store this sale is made from: kept in the payload so a sale saved offline is sent to the same store later
+      shop: getActiveShopId() || undefined,
       amountPaid: paid,
       paymentMethod,
       deliveryPaidByUs,
@@ -231,13 +235,19 @@ export default function NewSalePage() {
       }
 
       // The photos travel with the sale, so the sale and its photos are saved together.
-      await createSale(
+      const result = await createSale(
         { ...payload, clientId, customer: customer._id, customerName: customer.name },
         photos
       );
 
-      notifySuccess('Sale recorded', customer && customer.name ? `Sold to ${customer.name}` : 'Your sale is saved');
-      router.push('/dashboard/sales');
+      if (result && result.approvalRequired) {
+        // a rule the administrator set holds this sale until they say yes: nothing is recorded yet
+        notifySuccess('Sent for approval', result.approval && result.approval.summary ? result.approval.summary : 'The administrator will be asked');
+        router.push('/dashboard/approvals');
+      } else {
+        notifySuccess('Sale recorded', customer && customer.name ? `Sold to ${customer.name}` : 'Your sale is saved');
+        router.push('/dashboard/sales');
+      }
     } catch (err) {
       if (err.offline) {
         // No connection (or the server did not answer in time): keep the sale on this phone and send it later.
@@ -287,7 +297,7 @@ export default function NewSalePage() {
     setCustomerName('');
     setFullPayment(true);
     setAmountPaid('');
-    setPaymentMethod('cash');
+    setPaymentMethod(usualMethod);
     setDeliveryPaidByUs(false);
     setDeliveryCost('');
     setCustomerPhone('');

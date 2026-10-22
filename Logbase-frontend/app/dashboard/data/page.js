@@ -23,6 +23,8 @@ import {
 } from '@/lib/exports';
 import { KINDS, autoMap, buildRows, rowProblem, templateText } from '@/lib/importMap';
 import { PERIODS, periodFromDay, periodQuery } from '@/lib/expenses';
+import { useShops } from '@/lib/shops';
+import { forShop } from '@/lib/shopStorage';
 import PageHeader from '@/components/PageHeader';
 import { ErrorBanner, cardClass, inputClass, primaryButtonClass } from '@/components/ui';
 
@@ -55,6 +57,8 @@ const EXPORTS = [
 ];
 
 function ExportSection() {
+  // each store keeps its own records, so an export is of the store being worked in
+  const { scopeQuery, multiple } = useShops();
   const [period, setPeriod] = useState('all');
   const [busy, setBusy] = useState('');
   const [message, setMessage] = useState('');
@@ -71,15 +75,16 @@ function ExportSection() {
       let extra = '';
       if (item.key === 'products') {
         rows = (await listProducts()).products || [];
+        if (multiple) rows = forShop(rows);
         columns = PRODUCT_COLUMNS;
       } else if (item.key === 'customers') {
         rows = (await listCustomers()).customers || [];
         columns = CUSTOMER_COLUMNS;
       } else if (item.key === 'sales') {
-        rows = sinceDay((await listSales()).sales || [], from);
+        rows = sinceDay((await listSales(scopeQuery)).sales || [], from);
         columns = SALE_COLUMNS;
       } else if (item.key === 'purchases') {
-        rows = sinceDay((await listPurchases()).purchases || [], from);
+        rows = sinceDay((await listPurchases(scopeQuery)).purchases || [], from);
         columns = PURCHASE_COLUMNS;
       } else {
         const data = await listExpenses(periodQuery(period));

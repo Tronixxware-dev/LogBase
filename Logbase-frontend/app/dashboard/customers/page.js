@@ -9,13 +9,14 @@ import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
 import Avatar from '@/components/Avatar';
 import { Icon } from '@/components/Icons';
+import FilterBar, { DateRange, inDateRange, optionsFrom } from '@/components/FilterBar';
+import { describePhone } from '@/lib/phone';
 import {
   Badge,
   ErrorBanner,
   LoadingState,
   EmptyState,
   PrimaryLink,
-  inputClass,
 } from '@/components/ui';
 
 const columns = [
@@ -53,6 +54,10 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [balance, setBalance] = useState('all');
+  const [country, setCountry] = useState('all');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
 
   useEffect(() => {
     listCustomers()
@@ -61,11 +66,20 @@ export default function CustomersPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const countryOf = (c) => describePhone(c.phone).country;
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return customers;
-    return customers.filter((b) => [b.name, b.phone, b.address].some((v) => v && v.toLowerCase().includes(q)));
-  }, [customers, search]);
+    return customers.filter((b) => {
+      if (balance === 'owes' && !(b.balance > 0)) return false;
+      if (balance === 'credit' && !(b.balance < 0)) return false;
+      if (balance === 'clear' && b.balance !== 0 && b.balance != null) return false;
+      if (country !== 'all' && countryOf(b) !== country) return false;
+      if (!inDateRange(b.createdAt, from, to)) return false;
+      if (!q) return true;
+      return [b.name, b.phone, b.address].some((v) => v && v.toLowerCase().includes(q));
+    });
+  }, [customers, search, balance, country, from, to]);
+  const filtering = filtered.length !== customers.length;
 
   return (
     <>
@@ -74,7 +88,7 @@ export default function CustomersPage() {
         subtitle={
           loading
             ? undefined
-            : search.trim() && filtered.length !== customers.length
+            : filtering
               ? `Showing ${filtered.length} of ${customers.length} ${customers.length === 1 ? 'customer' : 'customers'}`
               : `${customers.length} ${customers.length === 1 ? 'customer' : 'customers'} in total`
         }
@@ -91,17 +105,30 @@ export default function CustomersPage() {
       <ErrorBanner message={error} />
 
       {customers.length > 0 && (
-        <div className="relative mb-4 sm:max-w-xs">
-          <Icon name="search" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, phone or address"
-            aria-label="Search customers"
-            className={`${inputClass} !pl-10`}
-          />
-        </div>
+        <FilterBar
+          search={{ value: search, onChange: setSearch, placeholder: 'Search by name, phone or address', label: 'Search customers' }}
+          filters={[
+            can('manageCustomers') && {
+              key: 'balance',
+              label: 'Balance',
+              value: balance,
+              onChange: setBalance,
+              options: [
+                { value: 'all', label: 'All customers' },
+                { value: 'owes', label: 'Owes money' },
+                { value: 'credit', label: 'Has credit' },
+                { value: 'clear', label: 'Nothing owed' },
+              ],
+            },
+            { key: 'country', label: 'Country', value: country, onChange: setCountry, advanced: true, options: optionsFrom(customers, countryOf, 'All countries') },
+          ]}
+          panel={<DateRange label="Added" from={from} to={to} onFrom={setFrom} onTo={setTo} />}
+          panelCount={(from ? 1 : 0) + (to ? 1 : 0)}
+          onClear={() => {
+            setFrom('');
+            setTo('');
+          }}
+        />
       )}
 
       {loading ? (
@@ -114,7 +141,7 @@ export default function CustomersPage() {
           actionLabel={canAdd ? 'Add your first customer' : undefined}
         />
       ) : filtered.length === 0 ? (
-        <EmptyState icon="search" message="No customers match your search." />
+        <EmptyState icon="search" message="No customers match these filters." />
       ) : (
         <DataTable
           // what a customer owes needs the "Manage customers" permission

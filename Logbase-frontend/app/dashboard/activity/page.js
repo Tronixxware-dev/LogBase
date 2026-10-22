@@ -3,9 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { listActivity } from '@/lib/api';
+import { useUser } from '@/components/UserProvider';
+import { businessTypeOf, hasFeature } from '@/lib/businessTypes';
 import PageHeader from '@/components/PageHeader';
 import { PersonChip } from '@/components/Avatar';
-import { ErrorBanner, LoadingState, EmptyState, cardClass, inputClass, primaryButtonClass } from '@/components/ui';
+import FilterBar from '@/components/FilterBar';
+import { ErrorBanner, LoadingState, EmptyState, cardClass, primaryButtonClass } from '@/components/ui';
 
 const CATEGORIES = [
   { key: '', label: 'Everything' },
@@ -17,6 +20,11 @@ const CATEGORIES = [
   { key: 'customer', label: 'Customers' },
   { key: 'payment', label: 'Payments' },
   { key: 'expense', label: 'Expenses' },
+  { key: 'swap', label: 'Item swaps', feature: 'swaps' },
+  { key: 'repair', label: 'Repairs', feature: 'repairs' },
+  { key: 'laundry', label: 'Laundry', feature: 'laundry' },
+  { key: 'transfer', label: 'Stock transfers', feature: 'products' },
+  { key: 'store', label: 'Stores', feature: 'products' },
   { key: 'staff', label: 'Staff and roles' },
 ];
 
@@ -30,6 +38,11 @@ const TAG_STYLE = {
   payment: 'bg-green-50 text-green-700',
   expense: 'bg-yellow-50 text-yellow-800',
   staff: 'bg-rose-50 text-rose-700',
+  swap: 'bg-teal-50 text-teal-700',
+  repair: 'bg-blue-50 text-blue-700',
+  laundry: 'bg-cyan-50 text-cyan-700',
+  transfer: 'bg-indigo-50 text-indigo-700',
+  store: 'bg-indigo-50 text-indigo-700',
 };
 
 function categoryOf(action) {
@@ -58,6 +71,10 @@ function timeLabel(value) {
 
 // Who did what, newest first. Administrator only.
 export default function ActivityPage() {
+  const { user } = useUser();
+  // the activity types that belong to this kind of business (a laundromat has no item swaps)
+  const businessType = businessTypeOf(user);
+  const categories = CATEGORIES.filter((c) => !c.feature || hasFeature(businessType, c.feature));
   const [items, setItems] = useState([]);
   const [nextBefore, setNextBefore] = useState(null);
   const [category, setCategory] = useState('');
@@ -156,28 +173,10 @@ export default function ActivityPage() {
 
       <ErrorBanner message={error} />
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className={`${inputClass} sm:max-w-[14rem]`}
-          aria-label="Type of activity"
-        >
-          {CATEGORIES.map((c) => (
-            <option key={c.key} value={c.key}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search, e.g. a customer or product"
-          className={`${inputClass} sm:max-w-xs`}
-          aria-label="Search activity"
-        />
-      </div>
+      <FilterBar
+        search={{ value: search, onChange: setSearch, placeholder: 'Search, e.g. a customer or product', label: 'Search activity' }}
+        filters={[{ key: 'type', label: 'Type of activity', value: category, onChange: setCategory, options: categories.map((c) => ({ value: c.key, label: c.label })) }]}
+      />
 
       {loading ? (
         <LoadingState label="Loading activity…" />

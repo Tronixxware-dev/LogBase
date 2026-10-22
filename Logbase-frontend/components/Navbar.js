@@ -7,7 +7,10 @@ import { useUser } from '@/components/UserProvider';
 import Avatar from '@/components/Avatar';
 import { Icon } from '@/components/Icons';
 import { ThemeSwitchRow } from '@/components/ThemeToggle';
-import { dataLink, billingLink, teamLink, isActive, labelFor, visibleLinks } from '@/lib/nav';
+import { isActive, labelFor, productsSectionLabel, visibleLinks } from '@/lib/nav';
+import { businessTypeOf } from '@/lib/businessTypes';
+import { useAlerts } from '@/lib/alerts';
+import { anyPolicyOn, settingsOf } from '@/lib/settings';
 
 // The LogBase mark: three stacked teal layers on a deep green tile.
 // The size comes from className (for example "h-9 w-9").
@@ -24,7 +27,7 @@ export function BrandMark({ className = 'h-9 w-9' }) {
   );
 }
 
-function NavItem({ link, pathname, showsRecordItem, label, onNavigate }) {
+function NavItem({ link, pathname, showsRecordItem, label, onNavigate, nested = false, className = '', badge = 0 }) {
   const active = isActive(pathname, link, showsRecordItem);
   return (
     <Link
@@ -35,9 +38,9 @@ function NavItem({ link, pathname, showsRecordItem, label, onNavigate }) {
         active
           ? 'bg-primary/10 font-medium text-primary'
           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-      }`}
+      } ${className}`}
     >
-      {active && (
+      {active && !nested && (
         <span
           className="absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-linear-to-b from-teal-300 to-primary"
           aria-hidden="true"
@@ -45,12 +48,76 @@ function NavItem({ link, pathname, showsRecordItem, label, onNavigate }) {
       )}
       <Icon
         name={link.icon}
-        className={`h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+        className={`${nested ? 'h-4 w-4' : 'h-5 w-5'} shrink-0 transition-transform duration-200 group-hover:scale-110 ${
           active ? 'text-primary' : 'text-gray-400 group-hover:text-gray-600'
         }`}
       />
       <span className="truncate">{label || link.label}</span>
+      {badge > 0 && (
+        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-semibold text-white" aria-label={`${badge} waiting`}>
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
     </Link>
+  );
+}
+
+// A menu item with a sub-menu under it (Sales > Swaps). A heading (`group`, like Sales) only opens and folds its sub-menu;
+// any other item opens its own page too, and the arrow folds the sub-menu away.
+function NavGroup({ link, pathname, showsRecordItem, label, onNavigate }) {
+  const items = link.children.filter((c) => !c.searchOnly);
+  const childActive = items.some((c) => isActive(pathname, c, showsRecordItem));
+  const [open, setOpen] = useState(true);
+  const showChildren = open || childActive;
+  const toggleLabel = `${showChildren ? 'Hide' : 'Show'} ${label || link.label} sub-menu`;
+  return (
+    <div>
+      {link.group ? (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={showChildren}
+          aria-label={toggleLabel}
+          className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-all duration-200 hover:bg-gray-100 hover:text-gray-900 ${
+            childActive ? 'font-medium text-gray-900' : 'text-gray-600'
+          }`}
+        >
+          <Icon
+            name={link.icon}
+            className={`h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 ${childActive ? 'text-primary' : 'text-gray-400 group-hover:text-gray-600'}`}
+          />
+          <span className="flex-1 truncate">{label || link.label}</span>
+          <Icon name="chevron" className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${showChildren ? '' : '-rotate-90'}`} />
+        </button>
+      ) : (
+        <div className="relative">
+          <NavItem link={link} label={label} pathname={pathname} showsRecordItem={showsRecordItem} onNavigate={onNavigate} className="pr-10" />
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={showChildren}
+            aria-label={toggleLabel}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-200/60 hover:text-gray-700"
+          >
+            <Icon name="chevron" className={`h-4 w-4 transition-transform duration-200 ${showChildren ? '' : '-rotate-90'}`} />
+          </button>
+        </div>
+      )}
+      {showChildren && (
+        <div className="animate-fade-in ml-5 mt-0.5 space-y-0.5 border-l border-gray-200 pl-2">
+          {items.map((child) => (
+            <NavItem
+              key={child.href}
+              link={child}
+              pathname={pathname}
+              showsRecordItem={showsRecordItem}
+              onNavigate={onNavigate}
+              nested
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -60,7 +127,10 @@ function businessNameOf(user) {
 }
 
 function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
-  const { top: visibleTop, products: visibleProducts } = visibleLinks({ can, isOwner });
+  const businessType = businessTypeOf(user);
+  const approvalsOn = anyPolicyOn(settingsOf(user).approvalPolicies);
+  const { pendingApprovals } = useAlerts();
+  const { top: visibleTop, products: visibleProducts, owner: visibleOwner, account: visibleAccount } = visibleLinks({ can, isOwner, businessType, approvalsOn });
   const showsRecordItem = visibleTop.some((l) => l.label === 'Record sale');
 
   const sectionHasActive = visibleProducts.some((l) => isActive(pathname, l, showsRecordItem));
@@ -80,16 +150,19 @@ function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
       </Link>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-6 pt-1 [mask-image:linear-gradient(to_bottom,#000_calc(100%-22px),transparent)]">
-        {visibleTop.map((link) => (
-          <NavItem
-            key={`${link.href}-${link.label}`}
-            link={link}
-            label={labelFor(link, can)}
-            pathname={pathname}
-            showsRecordItem={showsRecordItem}
-            onNavigate={onNavigate}
-          />
-        ))}
+        {visibleTop.map((link) => {
+          const Item = link.children ? NavGroup : NavItem;
+          return (
+            <Item
+              key={`${link.href}-${link.label}`}
+              link={link}
+              label={labelFor(link, can, businessType)}
+              pathname={pathname}
+              showsRecordItem={showsRecordItem}
+              onNavigate={onNavigate}
+            />
+          );
+        })}
 
         {visibleProducts.length > 0 && (
           <div className="pt-4">
@@ -99,7 +172,7 @@ function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
               aria-expanded={showSection}
               className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400 transition hover:text-gray-600"
             >
-              Products
+              {productsSectionLabel(businessType)}
               <Icon
                 name="chevron"
                 className={`h-4 w-4 transition-transform duration-200 ${showSection ? '' : '-rotate-90'}`}
@@ -111,6 +184,7 @@ function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
                   <NavItem
                     key={link.href}
                     link={link}
+                    label={labelFor(link, can, businessType)}
                     pathname={pathname}
                     showsRecordItem={showsRecordItem}
                     onNavigate={onNavigate}
@@ -131,9 +205,18 @@ function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
         {isOwner && (
           <div className="space-y-0.5 pt-4">
             <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Business</p>
-            <NavItem link={teamLink} pathname={pathname} onNavigate={onNavigate} />
-            <NavItem link={dataLink} pathname={pathname} onNavigate={onNavigate} />
-            <NavItem link={billingLink} pathname={pathname} onNavigate={onNavigate} />
+            {visibleOwner.map((link) => (
+              <NavItem key={link.href} link={link} pathname={pathname} onNavigate={onNavigate} badge={link.href === '/dashboard/approvals' ? pendingApprovals : 0} />
+            ))}
+          </div>
+        )}
+
+        {!isOwner && visibleAccount.length > 0 && (
+          <div className="space-y-0.5 pt-4">
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Account</p>
+            {visibleAccount.map((link) => (
+              <NavItem key={link.href} link={link} label={link.label} pathname={pathname} onNavigate={onNavigate} badge={link.href === '/dashboard/approvals' ? pendingApprovals : 0} />
+            ))}
           </div>
         )}
       </nav>

@@ -49,3 +49,19 @@ export function variantLabel(variant) {
   if (!variant) return '';
   return [variant.color, variant.size].filter(Boolean).join(' / ');
 }
+
+// "just now", "5 min ago", "3 h ago", "yesterday", then the date
+export function timeAgo(value) {
+  if (!value) return '';
+  const then = new Date(value).getTime();
+  if (Number.isNaN(then)) return '';
+  const mins = Math.floor((Date.now() - then) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days} days ago`;
+  return formatDate(value);
+}

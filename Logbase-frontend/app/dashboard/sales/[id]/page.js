@@ -14,15 +14,7 @@ import SaleGallery from '@/components/SaleGallery';
 import ReturnPanel from '@/components/ReturnPanel';
 import { ErrorBanner, LoadingState, StatusBadge, cardClass } from '@/components/ui';
 import { PersonChip } from '@/components/Avatar';
-
-function Detail({ label, children }) {
-  return (
-    <div>
-      <dt className="text-xs text-gray-400">{label}</dt>
-      <dd className="text-sm text-gray-900">{children || '—'}</dd>
-    </div>
-  );
-}
+import { Detail, DetailCard, DetailGrid, DetailSubhead, MoneyStrip } from '@/components/DetailParts';
 
 function lineName(line) {
   return `${line.product?.name || line.productName || 'Product'}${line.variantLabel ? ` · ${line.variantLabel}` : ''}`;
@@ -134,43 +126,69 @@ export default function SaleDetailPage() {
         </div>
       )}
 
-      <div className={`${cardClass} mb-6 p-6`}>
-        <h2 className="mb-4 text-lg font-medium text-gray-900">Details</h2>
-        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <Detail label="Quantity">
+      <DetailCard title="Details" icon="sales">
+        <MoneyStrip
+          items={[
+            { label: isGroup ? 'Total (whole sale)' : 'Total', value: formatMoney(groupTotal), tone: 'brand' },
+            { label: isGroup ? 'Paid (whole sale)' : 'Paid', value: formatMoney(groupPaid), tone: 'good' },
+            balance > 0
+              ? { label: isGroup ? 'Still owed (whole sale)' : 'Still owed', value: formatMoney(balance), tone: 'bad' }
+              : { label: isGroup ? 'Still owed (whole sale)' : 'Still owed', value: formatMoney(0), tone: 'good', note: 'All settled' },
+          ]}
+        />
+        <DetailGrid>
+          <Detail label="Quantity" icon="hash" color="teal">
             {sale.quantity}
             {sale.returnedQuantity > 0 && (
-              <span className="ml-1 text-xs text-gray-500">(of {sale.quantity + sale.returnedQuantity} sold)</span>
+              <span className="ml-1 text-xs font-normal text-gray-500">(of {sale.quantity + sale.returnedQuantity} sold)</span>
             )}
           </Detail>
-          <Detail label="Unit price">{formatMoney(sale.unitPrice)}</Detail>
-          <Detail label="Total">{formatMoney(sale.totalAmount)}</Detail>
-          <Detail label={isGroup ? 'Paid (whole sale)' : 'Paid'}>{formatMoney(groupPaid)}</Detail>
-          <Detail label={isGroup ? 'Still owed (whole sale)' : 'Still owed'}>{balance > 0 ? formatMoney(balance) : '—'}</Detail>
-          <Detail label="Payment method">{sale.paymentMethod}</Detail>
+          <Detail label="Unit price" icon="naira" color="green">{formatMoney(sale.unitPrice)}</Detail>
+          <Detail label="Payment method" icon="wallet" color="teal">{sale.paymentMethod}</Detail>
           {returnedUnits > 0 && (
-            <Detail label="Returned">
+            <Detail label="Returned" icon="returns" color="amber">
               {returnedUnits} {returnedUnits === 1 ? 'unit' : 'units'} · {formatMoney(returnedValue)}
             </Detail>
           )}
           {isOwner && (
-            <Detail label="Delivery">{deliveryCost > 0 ? `You paid ${formatMoney(deliveryCost)}` : 'Not paid by you'}</Detail>
+            <Detail label="Delivery" icon="deliveries" color="violet">
+              {deliveryCost > 0 ? `You paid ${formatMoney(deliveryCost)}` : 'Not paid by you'}
+            </Detail>
           )}
-          <Detail label="Sold by">{sale.sellerName && <PersonChip name={sale.sellerName} photoUrl={sale.sellerPhotoUrl} />}</Detail>
-          <Detail label="Recorded">{formatDateTime(sale.createdAt)}</Detail>
-        </dl>
+          <Detail label="Sold by" icon="user" color="sky">
+            {sale.sellerName && <PersonChip name={sale.sellerName} photoUrl={sale.sellerPhotoUrl} />}
+          </Detail>
+          <Detail label="Recorded" icon="calendar" color="violet">{formatDateTime(sale.createdAt)}</Detail>
+        </DetailGrid>
 
-        <h3 className="mb-3 mt-6 border-t border-gray-100 pt-5 text-sm font-semibold text-gray-900">Customer</h3>
-        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <Detail label="Name">{sale.customerName || sale.customer?.name || 'Walk-in'}</Detail>
-          <Detail label="Country">{customerPhone.country}</Detail>
-          <Detail label="Phone number">{customerPhone.display}</Detail>
-          <div className="col-span-2 sm:col-span-3">
-            <dt className="text-xs text-gray-400">Address</dt>
-            <dd className="text-sm text-gray-900">{sale.customer?.address || '—'}</dd>
-          </div>
-        </dl>
-      </div>
+        <DetailSubhead title="Customer" icon="customers" />
+        <DetailGrid>
+          <Detail label="Name" icon="user" color="sky">{sale.customerName || sale.customer?.name || 'Walk-in'}</Detail>
+          <Detail label="Country" icon="pin" color="rose">{customerPhone.country}</Detail>
+          <Detail label="Phone number" icon="phone" color="sky">{customerPhone.display}</Detail>
+          <Detail label="Address" icon="pin" color="rose" wide>{sale.customer?.address}</Detail>
+        </DetailGrid>
+      </DetailCard>
+
+      {sale.tradeIn?.description && (
+        <DetailCard title="Item swap" icon="swap" subtitle="The customer handed in an old item. Its value was taken off the price of the new one.">
+          <DetailGrid>
+            <Detail label="Item handed in" icon="swap" color="amber">{sale.tradeIn.description}</Detail>
+            <Detail label="Its IMEI / serial" icon="hash" color="teal" mono>{sale.tradeIn.imei}</Detail>
+            <Detail label="Condition" icon="note" color="amber">{sale.tradeIn.condition}</Detail>
+            <Detail label="Valued at" icon="naira" color="green">{formatMoney(sale.tradeIn.value)}</Detail>
+            <Detail label="Taken off the price" icon="naira" color="green">{formatMoney(sale.tradeIn.creditApplied)}</Detail>
+            {sale.tradeIn.refundGiven > 0 ? (
+              <Detail label="You gave back" icon="naira" color="red">{formatMoney(sale.tradeIn.refundGiven)}</Detail>
+            ) : (
+              <Detail label="Customer added" icon="naira" color="green">{formatMoney(sale.tradeIn.cashTopUp)}</Detail>
+            )}
+          </DetailGrid>
+          <p className="mt-4 text-xs text-gray-500">
+            A swap cannot be returned from here, because the old item was part of the payment. To undo one, speak to your administrator.
+          </p>
+        </DetailCard>
+      )}
 
       {tracked.length > 0 && (
         <div className={`${cardClass} mb-6 p-6`}>
@@ -221,7 +239,7 @@ export default function SaleDetailPage() {
         </div>
       )}
 
-      {can('processReturns') && (
+      {can('processReturns') && !sale.tradeIn?.description && (
         <ReturnPanel
           lines={lines}
           hasCustomer={Boolean(sale.customer)}
