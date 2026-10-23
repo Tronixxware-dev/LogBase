@@ -64,6 +64,7 @@ export default function AdminReferralsPage() {
     { key: 'paying', label: 'Paying', align: 'right' },
     { key: 'owed', label: 'Owed now', align: 'right', render: (r) => <span className={r.owed > 0 ? 'font-semibold text-amber-700' : ''}>{formatMoney(r.owed)}</span> },
     { key: 'paid', label: 'Paid out', align: 'right', render: (r) => formatMoney(r.paid) },
+    { key: 'linked', label: 'Login linked', render: (r) => <Badge tone={r.linked ? 'green' : 'gray'}>{r.linked ? 'Linked' : 'Not linked'}</Badge> },
     { key: 'isActive', label: 'Status', render: (r) => <Badge tone={r.isActive ? 'green' : 'gray'}>{r.isActive ? 'Active' : 'Switched off'}</Badge> },
   ];
 
