@@ -46,7 +46,7 @@ export default function CommandPalette() {
   }, [open]);
 
   const items = useMemo(() => {
-    const { top, products, owner, account } = visibleLinks({ can, isOwner, businessType, approvalsOn: true });
+    const { top, products, owner, account } = visibleLinks({ can, isOwner, businessType, approvalsOn: true, isReferrer: Boolean(user && user.isReferrer) });
     const has = (feature) => hasFeature(businessType, feature);
     const actions = [
       has('sales') && can('recordSales') && { id: 'a-sale', label: 'Record a sale', icon: 'record', href: '/dashboard/sales/new', group: 'Quick actions' },
@@ -85,7 +85,7 @@ export default function CommandPalette() {
       group: 'Go to',
     }));
     return [...actions, ...pages];
-  }, [can, isOwner, businessType]);
+  }, [can, isOwner, businessType, user]);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();

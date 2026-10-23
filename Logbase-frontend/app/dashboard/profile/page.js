@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import {
   updateMe,
   changePassword,
+  requestEmailChange,
   uploadMyPhoto,
   deleteMyPhoto,
   uploadMyCover,
@@ -121,6 +122,76 @@ function PictureControls({ kind, url, locked, upload, remove, onSaved }) {
 
 // Your own profile: the details you may change, what you are allowed to do, and your password.
 // Everyone (owner and staff) can open it from the name at the bottom of the menu.
+// Changing the email you log in with: your password, then a link sent to the NEW address (nothing changes until it is opened)
+function LoginEmailCard({ email, isOwner }) {
+  const [open, setOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState('');
+  const [sent, setSent] = useState('');
+
+  async function send(e) {
+    e.preventDefault();
+    setProblem('');
+    if (!newEmail.trim()) return setProblem('Enter the new email');
+    if (!password) return setProblem('Enter your password');
+    setBusy(true);
+    try {
+      const result = await requestEmailChange(newEmail.trim(), password);
+      setSent(result.message);
+      setOpen(false);
+      setNewEmail('');
+      setPassword('');
+    } catch (err) {
+      setProblem(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={`${cardClass} mb-6 p-5`}>
+      <h2 className="text-sm font-semibold text-gray-900">Login email</h2>
+      <p className="mt-2 text-sm text-gray-600">
+        You log in with <span className="font-medium text-gray-900">{email}</span>.
+      </p>
+      {!isOwner ? (
+        <p className="mt-1 text-xs text-gray-500">To change it, ask the administrator of your business to contact LogBase support.</p>
+      ) : (
+        <>
+          <SuccessNote message={sent} />
+          {!open ? (
+            <button type="button" onClick={() => { setOpen(true); setSent(''); }} className={`${secondaryButtonClass} mt-3`}>
+              Change email
+            </button>
+          ) : (
+            <form onSubmit={send} className="mt-4 space-y-4">
+              <ErrorBanner message={problem} />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="New email" hint="We send a link to this address. The change only happens when you open it.">
+                  <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} autoComplete="email" maxLength={254} className={inputClass} placeholder="you@example.com" />
+                </Field>
+                <Field label="Your password" hint="To make sure it is really you.">
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" className={inputClass} />
+                </Field>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button type="submit" disabled={busy} className={primaryButtonClass}>
+                  {busy ? 'Sending…' : 'Send confirmation link'}
+                </button>
+                <button type="button" onClick={() => { setOpen(false); setProblem(''); }} className={secondaryButtonClass}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { user, updateUser, isOwner } = useUser();
 
@@ -300,7 +371,7 @@ export default function ProfilePage() {
               className={inputClass}
             />
           </Field>
-          <Field label="Email" hint="You sign in with this email, so it can’t be changed here.">
+          <Field label="Email" hint={isOwner ? 'You sign in with this email. To change it, use “Login email” below.' : 'You sign in with this email. Only LogBase support can change it.'}>
             <input type="email" value={user.email || ''} readOnly disabled className={`${inputClass} bg-gray-50 text-gray-500`} />
           </Field>
           <Field
@@ -368,6 +439,8 @@ export default function ProfilePage() {
           </>
         )}
       </div>
+
+      <LoginEmailCard email={user.email} isOwner={isOwner} />
 
       {/* password */}
       <form onSubmit={savePassword} className={`${cardClass} mb-8 space-y-4 p-5`}>

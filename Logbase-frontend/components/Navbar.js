@@ -130,7 +130,7 @@ function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
   const businessType = businessTypeOf(user);
   const approvalsOn = anyPolicyOn(settingsOf(user).approvalPolicies);
   const { pendingApprovals } = useAlerts();
-  const { top: visibleTop, products: visibleProducts, owner: visibleOwner, account: visibleAccount } = visibleLinks({ can, isOwner, businessType, approvalsOn });
+  const { top: visibleTop, products: visibleProducts, owner: visibleOwner, account: visibleAccount } = visibleLinks({ can, isOwner, businessType, approvalsOn, isReferrer: Boolean(user && user.isReferrer) });
   const showsRecordItem = visibleTop.some((l) => l.label === 'Record sale');
 
   const sectionHasActive = visibleProducts.some((l) => isActive(pathname, l, showsRecordItem));

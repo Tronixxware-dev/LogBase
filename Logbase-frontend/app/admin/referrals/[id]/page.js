@@ -10,6 +10,7 @@ import { formatDate, formatDateTime, formatMoney } from '@/lib/format';
 import { notifySuccess } from '@/lib/feedback';
 import { Panel, StatCard, useLoad } from '@/components/admin/ui';
 import CopyButton from '@/components/admin/CopyButton';
+import PersonPicker from '@/components/admin/PersonPicker';
 import { signupLink } from '@/lib/referrals';
 
 const link = signupLink;
@@ -160,6 +161,28 @@ export default function AdminReferrerPage() {
           </form>
         </Panel>
       )}
+
+      <Panel title="Their LogBase account" className="mb-6">
+        {referrer.account ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-gray-700">
+              Linked to <span className="font-semibold text-gray-900">{referrer.account.name}</span> ({referrer.account.email})
+              {referrer.account.businessName ? ` · ${referrer.account.businessName}` : ''}. They see this code, the businesses they referred and their earnings under <span className="font-medium">Referrals</span> in their own LogBase menu.
+            </p>
+            <button type="button" disabled={busy} onClick={() => run('Account unlinked', () => adminUpdateReferrer(id, { userId: null }))} className={secondaryButtonClass}>
+              Unlink account
+            </button>
+          </div>
+        ) : (
+          <PersonPicker
+            picked={null}
+            label="Link a LogBase account"
+            hint="Pick the account this person signs in with. A Referrals item then appears in their menu. Until you link one, only you see these numbers."
+            onPick={(p) => run('Account linked', () => adminUpdateReferrer(id, { userId: p._id }))}
+            onClear={() => {}}
+          />
+        )}
+      </Panel>
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
         <StatCard label="Referred" value={referrer.referred} sub="businesses signed up" />

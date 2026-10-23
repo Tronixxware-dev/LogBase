@@ -8,6 +8,7 @@ import { Badge, EmptyState, ErrorBanner, Field, LoadingState, inputClass, primar
 import {
   adminBusiness,
   adminBusinessData,
+  adminChangeUserEmail,
   adminEndPlan,
   adminExtendTrial,
   adminGrantPlan,
@@ -337,11 +338,14 @@ function OverviewTab({ data, run }) {
 
 function PersonRow({ user, run }) {
   const [busy, setBusy] = useState(false);
+  const [changing, setChanging] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
 
   async function act(label, task) {
     setBusy(true);
-    await run(label, task);
+    const done = await run(label, task);
     setBusy(false);
+    return done;
   }
 
   return (
@@ -370,6 +374,19 @@ function PersonRow({ user, run }) {
             <button
               type="button"
               disabled={busy}
+              onClick={() => {
+                setChanging((v) => !v);
+                setNewEmail('');
+              }}
+              className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
+            >
+              Change email
+            </button>
+          )}
+          {!user.isSuperAdmin && (
+            <button
+              type="button"
+              disabled={busy}
               onClick={() => act(user.isActive ? 'Account switched off' : 'Account switched on', () => adminSetUserActive(user._id, !user.isActive))}
               className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
             >
@@ -378,6 +395,37 @@ function PersonRow({ user, run }) {
           )}
         </span>
       </div>
+      {changing && (
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const done = await act('Email changed', () => adminChangeUserEmail(user._id, newEmail.trim()));
+            if (done) {
+              setChanging(false);
+              setNewEmail('');
+            }
+          }}
+          className="mt-3 rounded-xl bg-gray-50 p-3"
+        >
+          <p className="mb-2 text-xs text-gray-500">
+            The new email replaces {user.email} straight away. They log in with it and the same password; anywhere they are logged in now is signed out. Both addresses get a notice.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              required
+              maxLength={254}
+              placeholder="new-email@example.com"
+              className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm"
+            />
+            <button type="submit" disabled={busy} className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">
+              {busy ? 'Saving…' : 'Change email'}
+            </button>
+          </div>
+        </form>
+      )}
     </li>
   );
 }

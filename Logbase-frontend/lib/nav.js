@@ -112,6 +112,8 @@ export const profileLink = { href: '/dashboard/profile', label: 'Your profile', 
 export const settingsLink = { href: '/dashboard/settings', label: 'Settings', icon: 'settings' };
 export const approvalsLink = { href: '/dashboard/approvals', label: 'Approvals', icon: 'approve' };
 // alerts page (the bell opens a short list; this is the full one)
+// a referrer (someone the admin linked to a referral code) gets this in their menu
+export const referralsLink = { href: '/dashboard/referrals', label: 'Referrals', icon: 'tag' };
 export const alertsLink = { href: '/dashboard/notifications', label: 'Alerts', icon: 'bell' };
 
 // `businessType` is optional: leave it out to ignore the business type (the top bar does, so every page has a title).
@@ -157,7 +159,7 @@ function hasMenuItems(link) {
 
 // Every page this person may open, in menu order, with the name to show for it.
 // `approvalsOn`: some approval rule is switched on (a staff then gets "My requests" in the menu)
-export function visibleLinks({ can, isOwner, businessType = DEFAULT_BUSINESS_TYPE, approvalsOn = false }) {
+export function visibleLinks({ can, isOwner, businessType = DEFAULT_BUSINESS_TYPE, approvalsOn = false, isReferrer = false }) {
   const access = { can, isOwner, businessType };
   const top = topLinks
     .filter((l) => isShown(l, access))
@@ -165,9 +167,10 @@ export function visibleLinks({ can, isOwner, businessType = DEFAULT_BUSINESS_TYP
     .filter(hasMenuItems);
   const products = productLinks.filter((l) => isShown(l, access));
   // Settings is always the last item of the menu
-  const owner = isOwner ? [approvalsLink, teamLink, storesLink, dataLink, billingLink, settingsLink].filter((l) => isShown(l, access)) : [];
+  const referrals = isReferrer ? [referralsLink] : [];
+  const owner = isOwner ? [approvalsLink, teamLink, storesLink, dataLink, billingLink, ...referrals, settingsLink].filter((l) => isShown(l, access)) : [];
   // a staff has Settings too (their profile and alerts), and "My requests" once the administrator has switched a rule on
-  const account = isOwner ? [] : [...(approvalsOn ? [{ ...approvalsLink, label: 'My requests' }] : []), settingsLink];
+  const account = isOwner ? [] : [...(approvalsOn ? [{ ...approvalsLink, label: 'My requests' }] : []), ...referrals, settingsLink];
   return { top, products, owner, account };
 }
 
@@ -181,7 +184,7 @@ export function pageTitleFor(pathname, { can, isOwner }) {
   const { top, products, owner } = visibleLinks({ can, isOwner, businessType: null });
   const showsRecordItem = top.some((l) => l.label === 'Record sale');
   // (Purchases is also Sales > Buy: the page keeps the name Purchases)
-  const all = [...products, ...flattenLinks(top), ...owner, profileLink, settingsLink, approvalsLink, alertsLink];
+  const all = [...products, ...flattenLinks(top), ...owner, profileLink, settingsLink, approvalsLink, alertsLink, referralsLink];
   // the longest matching address wins, so /dashboard/sales/new beats /dashboard/sales
   const match = all
     .filter((l) => isActive(pathname, l, showsRecordItem))

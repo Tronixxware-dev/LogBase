@@ -166,6 +166,15 @@ export function resetPassword(token, password) {
   return apiRequest('/auth/reset-password', { method: 'POST', body: { token, password } });
 }
 
+// Changing the login email: step 1 (from the profile) sends a link to the new address; step 2 is opening that link.
+export function requestEmailChange(newEmail, password) {
+  return apiRequest('/auth/me/email', { method: 'POST', body: { newEmail, password }, auth: true });
+}
+
+export function confirmEmailChange(token) {
+  return apiRequest('/auth/confirm-email', { method: 'POST', body: { token } });
+}
+
 export function getMe() {
   return apiRequest('/auth/me', { auth: true });
 }
@@ -653,6 +662,11 @@ export function adminSendReset(userId) {
   return apiRequest(`/admin/users/${userId}/send-reset`, { method: 'POST', body: {}, auth: true });
 }
 
+// Changes the email a person logs in with, straight away (for someone who lost access to the old mailbox)
+export function adminChangeUserEmail(userId, email) {
+  return apiRequest(`/admin/users/${userId}/email`, { method: 'POST', body: { email }, auth: true });
+}
+
 export function adminSetUserActive(userId, isActive) {
   return apiRequest(`/admin/users/${userId}`, { method: 'PATCH', body: { isActive }, auth: true });
 }
@@ -663,12 +677,17 @@ export function adminReferrers(params) {
   return apiRequest(`/admin/referrers${query(params)}`, { auth: true });
 }
 
+// What a referrer sees in their own account: { referrer: null } for everyone else
+export function getMyReferrals() {
+  return apiRequest('/referral/me', { auth: true });
+}
+
 // People who already have a LogBase account (to pick a referrer from). params: { search }
 export function adminReferralPeople(params) {
   return apiRequest(`/admin/referrers/people${query(params)}`, { auth: true });
 }
 
-// payload: { name, phone?, email?, code? (empty = one is made), ratePercent?, notes? }
+// payload: { name, phone?, email?, code? (empty = one is made), ratePercent?, notes?, userId? (the LogBase account they sign in with) }
 export function adminCreateReferrer(payload) {
   return apiRequest('/admin/referrers', { method: 'POST', body: payload, auth: true });
 }
@@ -677,7 +696,7 @@ export function adminReferrer(id) {
   return apiRequest(`/admin/referrers/${id}`, { auth: true });
 }
 
-// payload: any of { name, phone, email, ratePercent, isActive, notes }
+// payload: any of { name, phone, email, ratePercent, isActive, notes, userId (null = unlink the LogBase account) }
 export function adminUpdateReferrer(id, payload) {
   return apiRequest(`/admin/referrers/${id}`, { method: 'PATCH', body: payload, auth: true });
 }
