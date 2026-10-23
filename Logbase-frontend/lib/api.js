@@ -658,6 +658,30 @@ export function adminSetUserActive(userId, isActive) {
 }
 
 // params: { status, search, page }
+// Referral codes: who may refer, who they referred and what they earned (the LogBase super admin only)
+export function adminReferrers(params) {
+  return apiRequest(`/admin/referrers${query(params)}`, { auth: true });
+}
+
+// payload: { name, phone?, email?, code? (empty = one is made), ratePercent?, notes? }
+export function adminCreateReferrer(payload) {
+  return apiRequest('/admin/referrers', { method: 'POST', body: payload, auth: true });
+}
+
+export function adminReferrer(id) {
+  return apiRequest(`/admin/referrers/${id}`, { auth: true });
+}
+
+// payload: any of { name, phone, email, ratePercent, isActive, notes }
+export function adminUpdateReferrer(id, payload) {
+  return apiRequest(`/admin/referrers/${id}`, { method: 'PATCH', body: payload, auth: true });
+}
+
+// Records that everything the referrer is owed has been paid to them
+export function adminPayReferrer(id, note = '') {
+  return apiRequest(`/admin/referrers/${id}/payout`, { method: 'POST', body: { note }, auth: true });
+}
+
 export function adminPayments(params) {
   return apiRequest(`/admin/payments${query(params)}`, { auth: true });
 }

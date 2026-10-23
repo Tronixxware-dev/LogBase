@@ -61,11 +61,11 @@ export default function LaundryHero({ name, message, children }) {
       <div className="pointer-events-none absolute -bottom-24 right-1/3 h-56 w-56 rounded-full bg-emerald-300/20 blur-3xl" aria-hidden="true" />
       <div className="relative flex flex-wrap items-end justify-between gap-5">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-teal-50/85">
+          <p className="text-xs font-medium text-teal-50/85 sm:text-sm">
             <span aria-hidden="true">{greet.emoji}</span> {greet.text} · {formatLongDate(now)} · <span className="tabular">{formatTime(now)}</span>
           </p>
-          <h1 className="mt-1.5 text-2xl font-semibold tracking-tight sm:text-3xl">{`Welcome back, ${name}`}</h1>
-          {message && <p className="mt-1.5 text-sm text-teal-50/85">{message}</p>}
+          <h1 className="mt-1 text-xl font-semibold tracking-tight sm:mt-1.5 sm:text-3xl">{`Welcome back, ${name}`}</h1>
+          {message && <p className="mt-1 text-xs text-teal-50/85 sm:mt-1.5 sm:text-sm">{message}</p>}
         </div>
         <div className="flex flex-wrap gap-2.5">{children}</div>
       </div>

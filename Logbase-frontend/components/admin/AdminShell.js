@@ -15,6 +15,7 @@ const LINKS = [
   { href: '/admin/businesses', label: 'Businesses', icon: 'store' },
   { href: '/admin/sales-stock', label: 'Sales & Stock', icon: 'sparkle' },
   { href: '/admin/payments', label: 'Payments', icon: 'billing' },
+  { href: '/admin/referrals', label: 'Referrals', icon: 'tag' },
   { href: '/admin/activity', label: 'Activity', icon: 'activity' },
   { href: '/admin/email', label: 'Email', icon: 'mail' },
   { href: '/admin/log', label: 'Admin log', icon: 'shield' },

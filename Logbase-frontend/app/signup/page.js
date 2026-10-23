@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { registerBusiness, setToken } from '@/lib/api';
 import AuthShell, { AuthButton, AuthError, AuthField } from '@/components/AuthShell';
@@ -16,9 +16,20 @@ export default function SignupPage() {
     ownerName: '',
     ownerEmail: '',
     password: '',
+    referralCode: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // a link that carries a code (…/signup?ref=ABC123) fills the code in
+  useEffect(() => {
+    try {
+      const ref = new URLSearchParams(window.location.search).get('ref');
+      if (ref) setForm((f) => (f.referralCode ? f : { ...f, referralCode: ref.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 20) }));
+    } catch {
+      // no address to read: the field stays empty
+    }
+  }, []);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -141,6 +152,16 @@ export default function SignupPage() {
           minLength={6}
           autoComplete="new-password"
           placeholder="At least 6 characters"
+        />
+
+        <AuthField
+          label="Referral code (optional)"
+          icon="tag"
+          name="referralCode"
+          value={form.referralCode}
+          onChange={(e) => setForm({ ...form, referralCode: e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 20) })}
+          autoComplete="off"
+          placeholder="If someone told you about LogBase"
         />
 
         <div className="pt-1">
