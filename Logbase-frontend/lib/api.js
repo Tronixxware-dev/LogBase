@@ -663,6 +663,11 @@ export function adminReferrers(params) {
   return apiRequest(`/admin/referrers${query(params)}`, { auth: true });
 }
 
+// People who already have a LogBase account (to pick a referrer from). params: { search }
+export function adminReferralPeople(params) {
+  return apiRequest(`/admin/referrers/people${query(params)}`, { auth: true });
+}
+
 // payload: { name, phone?, email?, code? (empty = one is made), ratePercent?, notes? }
 export function adminCreateReferrer(payload) {
   return apiRequest('/admin/referrers', { method: 'POST', body: payload, auth: true });
