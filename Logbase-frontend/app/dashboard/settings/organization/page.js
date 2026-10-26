@@ -7,35 +7,18 @@ import { Icon } from '@/components/Icons';
 import { SettingsSection, Toggle, SavedNote } from '@/components/SettingsParts';
 import { ErrorBanner, Field, inputClass, primaryButtonClass, secondaryButtonClass } from '@/components/ui';
 import { saveOrganization, uploadLogo, deleteLogo } from '@/lib/api';
-import { DEFAULT_CLOSING, closingOf, identityLines } from '@/lib/settings';
+import { DEFAULT_CLOSING } from '@/lib/settings';
+import { sampleDoc } from '@/lib/receiptDoc';
+import ReceiptPaper from '@/components/ReceiptPaper';
 import { notifySuccess } from '@/lib/feedback';
 
 const MAX_LOGO = 3 * 1024 * 1024;
 
-// A small picture of how the top of a receipt will look with the choices made so far
+// A picture of how a receipt will look with the choices made so far (the same paper as every receipt and slip)
 function ReceiptPreview({ org }) {
-  const lines = identityLines(org);
-  const r = org.receipt;
   return (
-    <div className="mx-auto w-full max-w-xs rounded-xl border border-gray-200 bg-white px-5 py-6 text-center shadow-sm" style={{ fontFamily: 'ui-monospace, Menlo, Consolas, monospace' }}>
-      {r.showLogo && org.logoUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={org.logoUrl} alt="" className="mx-auto mb-2 h-14 max-w-[8rem] object-contain" />
-      )}
-      <p className="text-lg font-extrabold uppercase leading-tight tracking-wide text-gray-900">{org.name || 'Your business'}</p>
-      {lines.map((l) => (
-        <p key={l} className="mt-0.5 text-[11px] leading-snug text-gray-500">{l}</p>
-      ))}
-      <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-gray-400">Sales receipt</p>
-      <div className="my-3 border-t border-dashed border-gray-300" />
-      <div className="space-y-1 text-left text-[11px] text-gray-500">
-        <div className="flex justify-between"><span>RECEIPT #</span><span className="font-semibold text-gray-800">A1B2C3</span></div>
-        {r.showSeller && <div className="flex justify-between"><span>SERVED BY</span><span className="text-gray-800">AMAKA</span></div>}
-        <div className="flex justify-between"><span>TOTAL</span><span className="font-bold text-gray-900">₦12,500</span></div>
-      </div>
-      <div className="my-3 border-t border-dashed border-gray-300" />
-      <p className="break-words text-[11px] font-extrabold uppercase text-gray-900">{closingOf(org)}</p>
-      {r.footer && <p className="mt-1.5 text-[11px] leading-snug text-gray-500">{r.footer}</p>}
+    <div className="py-3">
+      <ReceiptPaper doc={sampleDoc(org)} org={org} name={org.name || 'Your business'} />
     </div>
   );
 }

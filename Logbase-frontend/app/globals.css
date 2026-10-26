@@ -362,6 +362,90 @@ button.bg-primary:disabled {
   body { background: #fff !important; }
 }
 
+/* ------------------------------------------------------------------ */
+/* Receipt paper: one till-roll look for every receipt, slip and        */
+/* statement (components/ReceiptPaper.js). Fixed colours on purpose: it */
+/* is always black ink on white paper, in light and dark mode alike.    */
+/* ------------------------------------------------------------------ */
+.lbr {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 23rem;
+  margin: 0 auto;
+  padding: 38px 20px 34px;
+  background: #fff;
+  color: #111;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 10px 40px -12px rgba(15, 23, 42, 0.35);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.lbr::before,
+.lbr::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background-image: linear-gradient(135deg, transparent 50%, #fff 50%), linear-gradient(225deg, transparent 50%, #fff 50%);
+  background-size: 12px 12px, 12px 12px;
+  background-position: 0 0, 12px 0;
+  background-repeat: repeat-x;
+}
+.lbr::before { top: -11px; transform: scaleY(-1); }
+.lbr::after { bottom: -11px; }
+.lbr * { margin: 0; }
+.lbr-c { text-align: center; }
+.lbr-logo { display: block; height: 64px; max-width: 11rem; margin: 0 auto 10px; object-fit: contain; }
+.lbr-name { font-size: 20px; line-height: 1.15; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; overflow-wrap: anywhere; }
+.lbr-id { margin-top: 2px; font-size: 11.5px; line-height: 1.35; color: #555; overflow-wrap: anywhere; }
+.lbr-title { margin-top: 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; }
+.lbr-rule { border: 0; border-top: 1.5px dashed #8a8a8a; margin: 12px 0; height: 0; }
+.lbr-rule.lbr-solid { border-top: 2px solid #111; }
+.lbr-spread { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; text-transform: uppercase; }
+.lbr-spread > span { min-width: 0; overflow-wrap: anywhere; }
+.lbr-keep > span:first-child { flex: 0 0 auto; color: #555; }
+.lbr-keep > span:last-child { flex: 1 1 0; text-align: right; }
+.lbr-fill > span:first-child { flex: 1 1 0; }
+.lbr-fill > span:last-child { flex: 0 0 auto; text-align: right; }
+.lbr-info > * + * { margin-top: 3px; }
+.lbr-items { list-style: none; padding: 0; }
+.lbr-item + .lbr-item { margin-top: 10px; }
+.lbr-bold { font-weight: 700; }
+.lbr-sub, .lbr-note { padding-left: 2ch; font-size: 12px; color: #555; text-transform: uppercase; overflow-wrap: anywhere; }
+.lbr-note { font-size: 11.5px; }
+.lbr-totals > * + * { margin-top: 3px; }
+.lbr-totals .lbr-big { margin-top: 6px; margin-bottom: 2px; font-size: 18px; font-weight: 800; }
+.lbr-totals .lbr-strong { font-weight: 800; }
+.lbr-totals .lbr-muted { color: #555; }
+.lbr-totals .lbr-danger { font-weight: 800; color: #b91c1c; }
+.lbr-text { margin-top: 10px; overflow-wrap: anywhere; }
+.lbr-text.lbr-tight { margin-top: 8px; }
+.lbr-text.lbr-tight + .lbr-text { margin-top: 0; }
+.lbr-text p + p { margin-top: 2px; }
+.lbr-text.lbr-muted { font-size: 11.5px; color: #555; }
+.lbr-text.lbr-bold { font-weight: 700; }
+.lbr-upper { text-transform: uppercase; }
+.lbr-stamp-wrap { display: flex; justify-content: center; margin: 14px 0 2px; }
+.lbr-stamp { display: inline-block; padding: 4px 16px; border: 3px solid #15803d; border-radius: 8px; color: #15803d; font-size: 16px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; transform: rotate(-2deg); }
+.lbr-code { margin-top: 4px; }
+.lbr-barcode { display: block; width: 16rem; max-width: 100%; height: 56px; margin: 0 auto; }
+.lbr-code p { margin-top: 6px; font-size: 12px; letter-spacing: 0.25em; color: #333; }
+.lbr-foot { margin-top: 16px; }
+.lbr-closing { font-size: 13px; font-weight: 800; text-transform: uppercase; overflow-wrap: anywhere; }
+.lbr-footer { margin-top: 6px; font-size: 12px; color: #555; white-space: pre-wrap; overflow-wrap: anywhere; }
+.lbr-powered { margin-top: 14px; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #777; }
+
+/* printed: the roll width (80 mm, like a till printer), no shadow or torn edges */
+@media print {
+  body { background: #fff !important; }
+  .lbr { max-width: 80mm; padding: 0; box-shadow: none; }
+  .lbr::before, .lbr::after { display: none; }
+}
+
 /* bars that grow in from the left, and a soft pulse for "live" dots */
 @keyframes grow-x {
   from { transform: scaleX(0); }

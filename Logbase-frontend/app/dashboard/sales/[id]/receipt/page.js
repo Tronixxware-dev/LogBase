@@ -4,47 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getSale } from '@/lib/api';
-import { formatMoney, formatDate } from '@/lib/format';
-import { describePhone } from '@/lib/phone';
-import { buildReceipt, receiptDateTime, receiptText, whatsappLink } from '@/lib/receipt';
+import { buildReceipt, receiptText, whatsappLink } from '@/lib/receipt';
+import { saleDoc } from '@/lib/receiptDoc';
 import { receiptToPng } from '@/lib/receiptImage';
-import { closingOf } from '@/lib/settings';
 import { useUser } from '@/components/UserProvider';
-import IdentityHeader from '@/components/Identity';
+import ReceiptPaper from '@/components/ReceiptPaper';
 import { ErrorBanner, LoadingState } from '@/components/ui';
-
-const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace';
-
-// A decorative barcode drawn from the receipt number.
-function Barcode({ code }) {
-  const bars = [];
-  let x = 0;
-  const text = String(code || '000000');
-  for (let i = 0; x < 300; i++) {
-    const c = text.charCodeAt(i % text.length) + i * 7;
-    const w = 2 + (c % 4);
-    bars.push(<rect key={i} x={x} y="0" width={w} height="64" fill="#111827" />);
-    x += w + 2 + ((c >> 2) % 4);
-  }
-  return (
-    <svg viewBox={`0 0 ${x} 64`} preserveAspectRatio="none" className="mx-auto h-16 w-64 max-w-full" aria-hidden="true">
-      {bars}
-    </svg>
-  );
-}
-
-function Row({ label, children, strong }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4">
-      <span className="shrink-0 text-gray-500">{label}</span>
-      <span className={`min-w-0 break-words text-right uppercase text-gray-900 ${strong ? 'font-bold' : ''}`}>{children}</span>
-    </div>
-  );
-}
-
-function Divider() {
-  return <div className="my-5 border-t-2 border-dashed border-gray-300" />;
-}
 
 function ActionButton({ children, onClick, href, primary, disabled }) {
   const cls = primary
@@ -65,7 +30,7 @@ function ActionButton({ children, onClick, href, primary, disabled }) {
   );
 }
 
-// A receipt for one sale, drawn like a till receipt from a supermarket or a chemist.
+// A receipt for one sale, drawn like a till receipt from a supermarket or a chemist (the same paper as every slip and statement).
 // Print it (or save it as a PDF), send it on WhatsApp as a picture, or copy it as text.
 export default function ReceiptPage() {
   const { id } = useParams();
@@ -110,9 +75,7 @@ export default function ReceiptPage() {
   }
 
   const text = receiptText(receipt, businessName, org);
-  const phone = describePhone(receipt.customerPhone);
-  const itemCount = receipt.items.reduce((n, i) => n + i.quantity, 0);
-  const paidInFull = receipt.balance <= 0 && receipt.total > 0;
+  const doc = saleDoc(receipt);
 
   function flash(message) {
     setNotice(message);
@@ -120,7 +83,7 @@ export default function ReceiptPage() {
   }
 
   async function makeFile() {
-    const blob = await receiptToPng(receipt, businessName, org);
+    const blob = await receiptToPng(doc, businessName, org);
     return new File([blob], `receipt-${receipt.number}.png`, { type: 'image/png' });
   }
 
@@ -183,18 +146,6 @@ export default function ReceiptPage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <style>{`
-        .lb-paper { position: relative; background: #fff; }
-        .lb-paper::before, .lb-paper::after { content: ''; position: absolute; left: 0; right: 0; height: 12px;
-          background-size: 24px 12px; background-repeat: repeat-x; }
-        .lb-paper::before { top: -11px; background-image: linear-gradient(135deg, transparent 50%, #fff 50%), linear-gradient(225deg, transparent 50%, #fff 50%); background-size: 12px 12px, 12px 12px; background-position: 0 0, 12px 0; transform: scaleY(-1); }
-        .lb-paper::after { bottom: -11px; background-image: linear-gradient(135deg, transparent 50%, #fff 50%), linear-gradient(225deg, transparent 50%, #fff 50%); background-size: 12px 12px, 12px 12px; background-position: 0 0, 12px 0; }
-        @media print {
-          .lb-paper { box-shadow: none !important; }
-          .lb-paper::before, .lb-paper::after { display: none; }
-        }
-      `}</style>
-
       <div className="mb-5 print:hidden">
         <Link href={`/dashboard/sales/${id}`} className="mb-3 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary">
           ← Back to sale
@@ -216,136 +167,7 @@ export default function ReceiptPage() {
       </div>
 
       <div className="py-3 print:py-0">
-        <article
-          data-receipt
-          className="lb-paper px-6 pb-9 pt-10 text-[15px] leading-relaxed text-gray-800 shadow-[0_10px_40px_-12px_rgba(15,23,42,0.35)] sm:px-10 print:px-2 print:pt-2"
-          style={{ fontFamily: MONO }}
-        >
-          <IdentityHeader org={org} name={businessName} title="Sales receipt" />
-
-          <Divider />
-
-          <div className="space-y-1.5">
-            <Row label="RECEIPT #" strong>
-              {receipt.number}
-            </Row>
-            <Row label="DATE">{receiptDateTime(receipt.date)}</Row>
-            {receipt.servedBy && <Row label="SERVED BY">{receipt.servedBy}</Row>}
-            <Row label="CUSTOMER">{receipt.customerName}</Row>
-            {phone.display && <Row label="PHONE">{phone.display}</Row>}
-            {receipt.paymentMethod && <Row label="PAYMENT">{receipt.paymentMethod}</Row>}
-          </div>
-
-          <Divider />
-
-          <div className="mb-2 flex justify-between text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
-            <span>Item</span>
-            <span>Amount</span>
-          </div>
-          <ul className="space-y-4">
-            {receipt.items.map((item) => (
-              <li key={item.id}>
-                <p className="break-words text-base font-bold uppercase text-gray-900">{item.name}</p>
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className="text-gray-500">
-                    {item.quantity} x {formatMoney(item.unitPrice)}
-                  </span>
-                  <span className="text-base font-bold text-gray-900">{formatMoney(item.amount)}</span>
-                </div>
-                {item.serials.length > 0 && (
-                  <p className="mt-0.5 break-all text-xs uppercase text-gray-500">IMEI / serial: {item.serials.join(', ')}</p>
-                )}
-                {item.warrantyEndsAt && (
-                  <p className="mt-0.5 text-xs uppercase text-gray-500">Warranty until {formatDate(item.warrantyEndsAt)}</p>
-                )}
-                {item.returnedQuantity > 0 && (
-                  <p className="mt-0.5 text-xs uppercase text-gray-500">
-                    Returned {item.returnedQuantity}: -{formatMoney(item.returnedAmount)}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-
-          <Divider />
-
-          <div className="space-y-1.5">
-            {receipt.returned > 0 && (
-              <>
-                <div className="flex justify-between text-gray-500">
-                  <span>SUBTOTAL</span>
-                  <span>{formatMoney(receipt.subtotal)}</span>
-                </div>
-                <div className="flex justify-between text-gray-500">
-                  <span>RETURNED</span>
-                  <span>-{formatMoney(receipt.returned)}</span>
-                </div>
-              </>
-            )}
-            <div className="flex justify-between text-sm text-gray-500">
-              <span>ITEMS SOLD</span>
-              <span>{itemCount}</span>
-            </div>
-            <div className="flex items-baseline justify-between pt-2 text-2xl font-extrabold text-gray-900 sm:text-[28px]">
-              <span>TOTAL</span>
-              <span>{formatMoney(receipt.total)}</span>
-            </div>
-            {receipt.tradeIn ? (
-              <>
-                <div className="flex justify-between gap-4 text-base text-gray-800">
-                  <span className="min-w-0 break-words uppercase">Item handed in: {receipt.tradeIn.description}</span>
-                  <span className="shrink-0 font-semibold">-{formatMoney(receipt.tradeIn.credit)}</span>
-                </div>
-                {receipt.tradeIn.imei && <p className="break-all text-xs uppercase text-gray-500">IMEI / serial: {receipt.tradeIn.imei}</p>}
-                <div className="flex justify-between text-base text-gray-800">
-                  <span>CUSTOMER ADDED</span>
-                  <span className="font-semibold">{formatMoney(receipt.tradeIn.cashTopUp)}</span>
-                </div>
-                {receipt.tradeIn.refund > 0 && (
-                  <div className="flex justify-between text-base text-gray-800">
-                    <span>GIVEN BACK</span>
-                    <span className="font-semibold">{formatMoney(receipt.tradeIn.refund)}</span>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="flex justify-between text-base text-gray-800">
-                <span>AMOUNT PAID</span>
-                <span className="font-semibold">{formatMoney(receipt.paid)}</span>
-              </div>
-            )}
-            {receipt.balance > 0 && (
-              <div className="flex items-baseline justify-between pt-1 text-lg font-extrabold text-red-700">
-                <span>BALANCE DUE</span>
-                <span>{formatMoney(receipt.balance)}</span>
-              </div>
-            )}
-          </div>
-
-          {paidInFull && (
-            <div className="mt-5 flex justify-center">
-              <span className="-rotate-2 rounded-lg border-[3px] border-green-700 px-5 py-2 text-lg font-extrabold uppercase tracking-[0.25em] text-green-700">
-                Paid in full
-              </span>
-            </div>
-          )}
-
-          <Divider />
-
-          <div className="text-center">
-            <Barcode code={receipt.number} />
-            <p className="mt-2 text-sm font-semibold tracking-[0.4em] text-gray-500">{receipt.number}</p>
-          </div>
-
-          <div className="mt-7 text-center">
-            <p className="break-words text-base font-extrabold uppercase text-gray-900">{closingOf(org)}</p>
-            {org.receipt.footer && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-gray-600">{org.receipt.footer}</p>}
-            {receipt.hasWarranty && (
-              <p className="mt-2 text-xs text-gray-500">Keep this receipt. It is your proof of purchase for the warranty.</p>
-            )}
-            <p className="mt-4 text-[11px] uppercase tracking-widest text-gray-400">Powered by LogBase | mylogbase.com</p>
-          </div>
-        </article>
+        <ReceiptPaper doc={doc} org={org} name={businessName} />
       </div>
     </div>
   );

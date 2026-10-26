@@ -4,23 +4,13 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getRepair } from '@/lib/api';
-import { formatDate, formatDateTime, formatMoney } from '@/lib/format';
-import { describePhone } from '@/lib/phone';
+import { formatDate, formatMoney } from '@/lib/format';
 import { whatsappLink } from '@/lib/receipt';
-import { methodLabel } from '@/lib/jobs';
+import { repairDoc } from '@/lib/receiptDoc';
 import { useUser } from '@/components/UserProvider';
-import IdentityHeader from '@/components/Identity';
+import ReceiptPaper from '@/components/ReceiptPaper';
 import { identityLines } from '@/lib/settings';
 import { ErrorBanner, LoadingState, primaryButtonClass, secondaryButtonClass } from '@/components/ui';
-
-function Row({ label, children, strong }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4 py-1">
-      <span className="shrink-0 text-gray-500">{label}</span>
-      <span className={`min-w-0 break-words text-right text-gray-900 ${strong ? 'font-bold' : ''}`}>{children}</span>
-    </div>
-  );
-}
 
 function slipText(repair, businessName, org) {
   const lines = [`*${businessName || 'Repair job slip'}*`, ...identityLines(org), `Repair job ${repair.code}`, `Received: ${formatDate(repair.receivedAt)}`, `Customer: ${repair.customerName}`, `Device: ${repair.device}`];
@@ -67,8 +57,7 @@ export default function RepairSlipPage() {
     );
   }
 
-  const phone = describePhone(repair.customerPhone);
-  const deposits = (repair.payments || []).filter((p) => p.kind === 'deposit');
+  const doc = repairDoc(repair, org);
 
   async function copy() {
     try {
@@ -101,75 +90,9 @@ export default function RepairSlipPage() {
         <ErrorBanner message={error} />
       </div>
 
-      <article className="rounded-2xl border border-gray-200 bg-white px-6 py-8 text-[15px] leading-relaxed text-gray-800 shadow-sm sm:px-10 print:rounded-none print:border-0 print:px-2 print:py-2 print:shadow-none">
-        <IdentityHeader org={org} name={businessName} title="Repair job slip" />
-
-        <div className="my-5 border-t-2 border-dashed border-gray-300" />
-
-        <Row label="Job number" strong>
-          {repair.code}
-        </Row>
-        <Row label="Date received">{formatDateTime(repair.receivedAt)}</Row>
-        {repair.promisedDate && <Row label="Promised for">{formatDate(repair.promisedDate)}</Row>}
-        <Row label="Customer">{repair.customerName}</Row>
-        {phone.display && <Row label="Phone">{phone.display}</Row>}
-
-        <div className="my-5 border-t-2 border-dashed border-gray-300" />
-
-        <Row label="Device" strong>
-          {repair.device}
-        </Row>
-        {repair.imei && (
-          <Row label="IMEI / serial">
-            <span className="font-mono">{repair.imei}</span>
-          </Row>
-        )}
-        {repair.accessories && <Row label="Left with it">{repair.accessories}</Row>}
-        <div className="py-1">
-          <p className="text-gray-500">Fault reported</p>
-          <p className="whitespace-pre-wrap text-gray-900">{repair.fault}</p>
-        </div>
-
-        <div className="my-5 border-t-2 border-dashed border-gray-300" />
-
-        {repair.quote > 0 ? (
-          <>
-            <Row label="Repair price (quote)">{formatMoney(repair.quote)}</Row>
-            {deposits.map((d) => (
-              <Row key={d._id} label={`Deposit (${methodLabel(d.method)})`}>
-                {formatMoney(d.amount)}
-              </Row>
-            ))}
-            <Row label="Paid so far">{formatMoney(repair.amountPaid)}</Row>
-            <div className="mt-2 flex items-baseline justify-between text-xl font-extrabold text-gray-900">
-              <span>Balance to pay</span>
-              <span className={repair.balance > 0 ? 'text-red-700' : 'text-green-700'}>{repair.balance > 0 ? formatMoney(repair.balance) : 'Nil'}</span>
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="text-gray-600">The price will be confirmed after the fault is checked.</p>
-            {repair.amountPaid > 0 && <Row label="Deposit paid">{formatMoney(repair.amountPaid)}</Row>}
-          </>
-        )}
-
-        <div className="my-5 border-t-2 border-dashed border-gray-300" />
-
-        <p className="text-xs text-gray-500">
-          Please bring this slip when you come for your device.
-        </p>
-
-        <div className="mt-10 grid grid-cols-2 gap-8 text-xs text-gray-500">
-          <div>
-            <div className="border-t border-gray-400 pt-1">Customer&apos;s signature</div>
-          </div>
-          <div>
-            <div className="border-t border-gray-400 pt-1">Received by{repair.recordedByName ? `: ${repair.recordedByName}` : ''}</div>
-          </div>
-        </div>
-
-        <p className="mt-8 text-center text-[11px] uppercase tracking-widest text-gray-400">Powered by LogBase | mylogbase.com</p>
-      </article>
+      <div className="py-3 print:py-0">
+        <ReceiptPaper doc={doc} org={org} name={businessName} />
+      </div>
     </div>
   );
 }

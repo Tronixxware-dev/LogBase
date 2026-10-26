@@ -4,23 +4,14 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getLaundryOrder } from '@/lib/api';
-import { formatDate, formatDateTime, formatMoney } from '@/lib/format';
-import { describePhone } from '@/lib/phone';
+import { formatDate, formatMoney } from '@/lib/format';
 import { whatsappLink } from '@/lib/receipt';
+import { laundryDoc } from '@/lib/receiptDoc';
 import { serviceLabel } from '@/lib/laundry';
 import { useUser } from '@/components/UserProvider';
-import IdentityHeader from '@/components/Identity';
+import ReceiptPaper from '@/components/ReceiptPaper';
 import { identityLines } from '@/lib/settings';
 import { ErrorBanner, LoadingState, primaryButtonClass, secondaryButtonClass } from '@/components/ui';
-
-function Row({ label, children, strong }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4 py-1">
-      <span className="shrink-0 text-gray-500">{label}</span>
-      <span className={`min-w-0 break-words text-right text-gray-900 ${strong ? 'font-bold' : ''}`}>{children}</span>
-    </div>
-  );
-}
 
 function slipText(order, businessName, org) {
   const lines = [`*${businessName || 'Laundry slip'}*`, ...identityLines(org), `Laundry order ${order.code}`, `Date in: ${formatDate(order.dateIn)}`];
@@ -72,10 +63,7 @@ export default function LaundrySlipPage() {
     );
   }
 
-  const phone = describePhone(order.customerPhone);
-  const showColour = order.lines.some((l) => l.colour);
-  const showStain = order.lines.some((l) => l.stain);
-  const showRemarks = order.lines.some((l) => l.remarks);
+  const doc = laundryDoc(order, org);
 
   async function copy() {
     try {
@@ -88,7 +76,7 @@ export default function LaundrySlipPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-xl">
       <div className="mb-5 print:hidden">
         <Link href={`/dashboard/laundry/${id}`} className="mb-3 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary">
           ← Back to the order
@@ -108,87 +96,9 @@ export default function LaundrySlipPage() {
         <ErrorBanner message={error} />
       </div>
 
-      <article className="rounded-2xl border border-gray-200 bg-white px-6 py-8 text-[15px] leading-relaxed text-gray-800 shadow-sm sm:px-10 print:rounded-none print:border-0 print:px-2 print:py-2 print:shadow-none">
-        <IdentityHeader org={org} name={businessName} title="Laundry slip" />
-
-        <div className="my-5 border-t-2 border-dashed border-gray-300" />
-
-        <Row label="Order number" strong>
-          {order.code}
-        </Row>
-        <Row label="Date in">{formatDateTime(order.dateIn)}</Row>
-        {order.deliveryDate && <Row label="Date out">{formatDate(order.deliveryDate)}</Row>}
-        <Row label="Customer">{order.customerName}</Row>
-        {phone.display && <Row label="Phone">{phone.display}</Row>}
-        <Row label="Hand-over">{order.handover === 'delivery' ? `Delivery${order.deliveryAddress ? ` to ${order.deliveryAddress}` : ''}` : 'Pick-up'}</Row>
-        {order.express && <Row label="Speed">Express / same-day</Row>}
-
-        <div className="my-5 border-t-2 border-dashed border-gray-300" />
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-gray-300 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
-              <tr>
-                <th className="py-1.5 pr-2">Qty</th>
-                <th className="py-1.5 pr-2">Item</th>
-                {showColour && <th className="py-1.5 pr-2">Colour / description</th>}
-                {showStain && <th className="py-1.5 pr-2">Stain / special care</th>}
-                {showRemarks && <th className="py-1.5 pr-2">Remarks</th>}
-                <th className="py-1.5 text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {order.lines.map((l, i) => (
-                <tr key={l._id || i} className="align-top">
-                  <td className="py-1.5 pr-2">{l.quantity}</td>
-                  <td className="py-1.5 pr-2 font-semibold text-gray-900">
-                    {l.itemName}
-                    {l.service && l.service !== 'wash' && <span className="block text-xs font-normal text-gray-500">{serviceLabel(l.service)}</span>}
-                  </td>
-                  {showColour && <td className="py-1.5 pr-2">{l.colour || ''}</td>}
-                  {showStain && <td className="py-1.5 pr-2">{l.stain || ''}</td>}
-                  {showRemarks && <td className="py-1.5 pr-2">{l.remarks || ''}</td>}
-                  <td className="tabular py-1.5 text-right">{formatMoney(l.quantity * l.price)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="my-5 border-t-2 border-dashed border-gray-300" />
-
-        <Row label="Total pieces">{order.totalItems}</Row>
-        {(order.deliveryFee > 0 || order.expressFee > 0 || order.discount > 0) && <Row label="Items">{formatMoney(order.subtotal)}</Row>}
-        {order.express && order.expressFee > 0 && <Row label={`Express / same-day (+${order.expressPercent}%)`}>{formatMoney(order.expressFee)}</Row>}
-        {order.discount > 0 && <Row label={`Discount${order.discountType === 'percent' ? ` (${order.discountValue}%)` : ''}`}>−{formatMoney(order.discount)}</Row>}
-        {order.deliveryFee > 0 && <Row label="Delivery fee">{formatMoney(order.deliveryFee)}</Row>}
-        <div className="mt-1 flex items-baseline justify-between text-xl font-extrabold text-gray-900">
-          <span>Total</span>
-          <span>{formatMoney(order.totalAmount)}</span>
-        </div>
-        <Row label="Paid so far">{formatMoney(order.amountPaid)}</Row>
-        <div className="flex items-baseline justify-between text-lg font-extrabold">
-          <span className="text-gray-900">Balance to pay</span>
-          <span className={order.balance > 0 ? 'text-red-700' : 'text-green-700'}>{order.balance > 0 ? formatMoney(order.balance) : 'Nil'}</span>
-        </div>
-
-        <div className="my-5 border-t-2 border-dashed border-gray-300" />
-
-        <p className="text-xs text-gray-500">
-          {order.handover === 'delivery' ? 'We will deliver your clothes to the address above. Please check your items when they arrive.' : 'Please bring this slip when you come for your clothes. Check your items before you leave.'}
-        </p>
-
-        <div className="mt-10 grid grid-cols-2 gap-8 text-xs text-gray-500">
-          <div>
-            <div className="border-t border-gray-400 pt-1">Customer&apos;s signature</div>
-          </div>
-          <div>
-            <div className="border-t border-gray-400 pt-1">Received by{order.recordedByName ? `: ${order.recordedByName}` : ''}</div>
-          </div>
-        </div>
-
-        <p className="mt-8 text-center text-[11px] uppercase tracking-widest text-gray-400">Powered by LogBase | mylogbase.com</p>
-      </article>
+      <div className="py-3 print:py-0">
+        <ReceiptPaper doc={doc} org={org} name={businessName} />
+      </div>
     </div>
   );
 }

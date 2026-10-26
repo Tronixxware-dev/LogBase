@@ -1,55 +1,57 @@
-// Draws a receipt as a picture (PNG), in the same paper-receipt style as the receipt page,
-// so it can be sent on WhatsApp or saved. Runs in the browser only (it uses a <canvas>).
+// Draws a receipt as a picture (PNG), in the same till-roll style as the receipt page (components/ReceiptPaper.js),
+// so it can be sent on WhatsApp or saved. Takes a doc from lib/receiptDoc.js. Runs in the browser only (it uses a <canvas>).
 
-import { formatMoney, formatDate } from '@/lib/format';
-import { describePhone } from '@/lib/phone';
-import { receiptDateTime } from '@/lib/receipt';
 import { closingOf, identityLines } from '@/lib/settings';
 
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace';
-const W = 760; // picture width in CSS pixels (it is drawn at 2x for sharpness)
-const MARGIN = 26; // grey space around the paper
-const PAD = 52; // paper edge to text
-const INK = '#111827';
-const MUTED = '#6b7280';
-const LINE = '#9ca3af';
+const W = 560; // picture width in CSS pixels (it is drawn at 2x for sharpness)
+const MARGIN = 24; // grey space around the paper
+const PAD = 34; // paper edge to text
+const INK = '#111111';
+const MUTED = '#555555';
+const LINE = '#8a8a8a';
+const RED = '#b91c1c';
+const GREEN = '#15803d';
+const BODY = 17; // text size of the body, in px
 
 function wrap(ctx, text, maxWidth) {
-  const words = String(text).split(/\s+/);
   const out = [];
-  let line = '';
-  for (const word of words) {
-    // a single word longer than the line (an IMEI list, say) is cut where it overflows
-    let w = word;
-    while (ctx.measureText(w).width > maxWidth) {
-      let cut = w.length - 1;
-      while (cut > 1 && ctx.measureText(w.slice(0, cut)).width > maxWidth) cut--;
-      if (line) {
-        out.push(line);
-        line = '';
+  for (const paragraph of String(text ?? '').split('\n')) {
+    const words = paragraph.split(/\s+/).filter(Boolean);
+    let line = '';
+    for (const word of words) {
+      // a single word longer than the line (an IMEI list, say) is cut where it overflows
+      let w = word;
+      while (ctx.measureText(w).width > maxWidth) {
+        let cut = w.length - 1;
+        while (cut > 1 && ctx.measureText(w.slice(0, cut)).width > maxWidth) cut--;
+        if (line) {
+          out.push(line);
+          line = '';
+        }
+        out.push(w.slice(0, cut));
+        w = w.slice(cut);
       }
-      out.push(w.slice(0, cut));
-      w = w.slice(cut);
+      const test = line ? `${line} ${w}` : w;
+      if (line && ctx.measureText(test).width > maxWidth) {
+        out.push(line);
+        line = w;
+      } else {
+        line = test;
+      }
     }
-    const test = line ? `${line} ${w}` : w;
-    if (line && ctx.measureText(test).width > maxWidth) {
-      out.push(line);
-      line = w;
-    } else {
-      line = test;
-    }
+    out.push(line);
   }
-  if (line) out.push(line);
   return out;
 }
 
 // Draws everything. With dry = true nothing is painted: it only measures, so the picture can be made the right height.
-function paint(ctx, receipt, businessName, dry, height, extra = {}) {
+function paint(ctx, doc, businessName, dry, extra) {
   const left = MARGIN + PAD;
   const right = W - MARGIN - PAD;
   const inner = right - left;
   const mid = W / 2;
-  let y = MARGIN + 54;
+  let y = MARGIN + 50;
 
   const set = (size, weight = 400, color = INK, spacing = '0px') => {
     ctx.font = `${weight} ${size}px ${MONO}`;
@@ -65,195 +67,189 @@ function paint(ctx, receipt, businessName, dry, height, extra = {}) {
     ctx.textAlign = align;
     ctx.fillText(value, x, y);
   };
-  const dashed = () => {
-    y += 10;
+  const rule = (solid) => {
+    y += 4;
     if (!dry) {
-      ctx.strokeStyle = LINE;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([9, 7]);
+      ctx.strokeStyle = solid ? INK : LINE;
+      ctx.lineWidth = solid ? 2 : 1.5;
+      ctx.setLineDash(solid ? [] : [8, 6]);
       ctx.beginPath();
       ctx.moveTo(left, y);
       ctx.lineTo(right, y);
       ctx.stroke();
       ctx.setLineDash([]);
     }
-    y += 30;
+    y += 22;
   };
-  const row = (a, b, opts = {}) => {
-    const { size = 22, weight = 400, color = INK, valueWeight = weight, valueColor = color } = opts;
-    set(size, weight, color);
-    text(a, left);
-    set(size, valueWeight, valueColor);
-    text(b, right, 'right');
-    y += size + 12;
-  };
-  const centered = (value, size, weight, color, spacing = '0px', gap = 10) => {
+  const centered = (value, size, weight, color, spacing = '0px', gap = 6) => {
     set(size, weight, color, spacing);
     for (const line of wrap(ctx, value, inner)) {
+      y += size;
       text(line, mid, 'center');
-      y += size + gap;
+      y += gap;
+    }
+  };
+  // label on the left, value on the right; `fill` lets the label take the room (items, totals), otherwise the value wraps
+  const spread = (label, value, { size = BODY, weight = 400, color = INK, labelColor = color, fill = false } = {}) => {
+    const lab = String(label).toUpperCase();
+    const val = String(value ?? '').toUpperCase();
+    set(size, weight, color);
+    const gap = 14;
+    let labelLines;
+    let valueLines;
+    if (fill) {
+      const vw = val ? ctx.measureText(val).width : 0;
+      labelLines = wrap(ctx, lab, inner - vw - (val ? gap : 0));
+      valueLines = [val];
+    } else {
+      const lw = ctx.measureText(lab).width;
+      labelLines = [lab];
+      valueLines = wrap(ctx, val, inner - lw - gap);
+    }
+    const n = Math.max(labelLines.length, valueLines.length);
+    for (let i = 0; i < n; i++) {
+      y += size;
+      if (labelLines[i] !== undefined) {
+        set(size, weight, labelColor);
+        text(labelLines[i], left);
+      }
+      if (valueLines[i]) {
+        set(size, weight, color);
+        text(valueLines[i], right, 'right');
+      }
+      y += 5;
     }
   };
 
-  // header: the logo (when there is one), the name, and the address / phone lines
+  // header: the logo (when there is one), the name, the address / phone lines and what kind of paper this is
   if (extra.logo) {
-    const box = { w: 300, h: 96 };
-    const k = Math.min(box.w / extra.logo.width, box.h / extra.logo.height, 1);
+    const k = Math.min(300 / extra.logo.width, 90 / extra.logo.height, 1);
     const w = extra.logo.width * k;
     const h = extra.logo.height * k;
-    if (!dry) ctx.drawImage(extra.logo, mid - w / 2, y - 18, w, h);
-    y += h + 6;
+    if (!dry) ctx.drawImage(extra.logo, mid - w / 2, y - 10, w, h);
+    y += h + 8;
   }
-  centered(String(businessName || 'Receipt').toUpperCase(), 36, 800, INK, '1px', 8);
-  for (const line of extra.lines || []) centered(line, 18, 400, MUTED, '0px', 6);
+  centered(String(businessName || 'Receipt').toUpperCase(), 28, 800, INK, '1px', 6);
+  for (const line of extra.lines || []) centered(line, 15, 400, MUTED, '0px', 3);
   y += 6;
-  centered('SALES RECEIPT', 20, 600, MUTED, '5px', 8);
-  dashed();
-
-  // who, when
-  const phone = describePhone(receipt.customerPhone).display;
-  row('RECEIPT #', receipt.number, { valueWeight: 700 });
-  row('DATE', receiptDateTime(receipt.date));
-  if (receipt.servedBy) row('SERVED BY', String(receipt.servedBy).toUpperCase());
-  row('CUSTOMER', String(receipt.customerName || 'Walk-in').toUpperCase());
-  if (phone) row('PHONE', phone);
-  if (receipt.paymentMethod) row('PAYMENT', String(receipt.paymentMethod).toUpperCase());
-  dashed();
-
-  // items
-  set(18, 600, MUTED, '2px');
-  text('ITEM', left);
-  text('AMOUNT', right, 'right');
-  y += 34;
-  let count = 0;
-  for (const item of receipt.items) {
-    count += item.quantity;
-    set(24, 700, INK);
-    const nameLines = wrap(ctx, item.name.toUpperCase(), inner);
-    for (const line of nameLines) {
-      text(line, left);
-      y += 32;
-    }
-    set(21, 400, MUTED);
-    text(`${item.quantity} x ${formatMoney(item.unitPrice)}`, left);
-    set(24, 700, INK);
-    text(formatMoney(item.amount), right, 'right');
-    y += 30;
-    if (item.serials.length > 0) {
-      set(17, 400, MUTED);
-      for (const line of wrap(ctx, `IMEI / SERIAL: ${item.serials.join(', ')}`, inner)) {
-        text(line, left);
-        y += 24;
-      }
-    }
-    if (item.warrantyEndsAt) {
-      set(17, 400, MUTED);
-      text(`WARRANTY UNTIL ${formatDate(item.warrantyEndsAt)}`, left);
-      y += 24;
-    }
-    if (item.returnedQuantity > 0) {
-      set(17, 400, MUTED);
-      text(`RETURNED ${item.returnedQuantity}: -${formatMoney(item.returnedAmount)}`, left);
-      y += 24;
-    }
-    y += 12;
-  }
-  dashed();
-
-  // totals
-  if (receipt.returned > 0) {
-    row('SUBTOTAL', formatMoney(receipt.subtotal), { color: MUTED });
-    row('RETURNED', `-${formatMoney(receipt.returned)}`, { color: MUTED });
-  }
-  row(`ITEMS SOLD`, String(count), { color: MUTED, size: 21 });
-  y += 8;
-  row('TOTAL', formatMoney(receipt.total), { size: 36, weight: 800 });
+  if (doc.title) centered(String(doc.title).toUpperCase(), 16, 700, INK, '4px', 4);
   y += 4;
-  if (receipt.tradeIn) {
-    const t = receipt.tradeIn;
-    set(22, 400, INK);
-    const handed = wrap(ctx, `ITEM HANDED IN: ${t.description.toUpperCase()}`, inner - 170);
-    handed.forEach((line, i) => {
-      text(line, left);
-      if (i === 0) {
-        set(22, 700, INK);
-        text(`-${formatMoney(t.credit)}`, right, 'right');
-        set(22, 400, INK);
-      }
-      y += 34;
-    });
-    if (t.imei) {
-      set(17, 400, MUTED);
-      for (const line of wrap(ctx, `IMEI / SERIAL: ${t.imei}`, inner)) {
-        text(line, left);
-        y += 24;
-      }
-    }
-    row('CUSTOMER ADDED', formatMoney(t.cashTopUp), { size: 24, valueWeight: 700 });
-    if (t.refund > 0) row('GIVEN BACK', formatMoney(t.refund), { size: 24, valueWeight: 700 });
-  } else {
-    row('AMOUNT PAID', formatMoney(receipt.paid), { size: 24 });
-  }
-  if (receipt.balance > 0) {
-    y += 2;
-    row('BALANCE DUE', formatMoney(receipt.balance), { size: 28, weight: 800, color: '#b91c1c' });
-  } else if (receipt.total > 0) {
-    y += 14;
-    const label = 'PAID IN FULL';
-    set(26, 800, '#15803d', '4px');
-    const w = (dry ? 300 : ctx.measureText(label).width) + 56;
-    if (!dry) {
-      ctx.save();
-      ctx.translate(mid, y + 22);
-      ctx.rotate(-0.04);
-      ctx.strokeStyle = '#15803d';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.roundRect ? ctx.roundRect(-w / 2, -30, w, 60, 10) : ctx.rect(-w / 2, -30, w, 60);
-      ctx.stroke();
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(label, 2, 2);
-      ctx.restore();
-    }
-    y += 64;
-  }
-  dashed();
+  rule();
 
-  // barcode (decorative, drawn from the receipt number)
-  const code = String(receipt.number || '000000');
-  const barTop = y;
-  if (!dry) {
-    ctx.fillStyle = INK;
-    let x = left + 40;
-    const end = right - 40;
-    let i = 0;
-    while (x < end) {
-      const c = code.charCodeAt(i % code.length) + i * 7;
-      const w = 2 + (c % 4);
-      ctx.fillRect(x, barTop, w, 74);
-      x += w + 2 + ((c >> 2) % 4);
-      i++;
+  for (const block of doc.blocks) {
+    if (block.t === 'rule') {
+      rule(block.solid);
+    } else if (block.t === 'info') {
+      for (const [label, value] of block.rows) spread(label, value, { labelColor: MUTED, color: INK });
+      y += 2;
+    } else if (block.t === 'items') {
+      block.items.forEach((item, idx) => {
+        if (idx > 0) y += 8;
+        spread(item.name, item.amount, { weight: 700, fill: true });
+        if (item.sub) {
+          set(BODY - 1, 400, MUTED);
+          for (const line of wrap(ctx, item.sub.toUpperCase(), inner - 24)) {
+            y += BODY - 1;
+            text(line, left + 24);
+            y += 4;
+          }
+        }
+        for (const note of item.notes || []) {
+          set(BODY - 2, 400, MUTED);
+          for (const line of wrap(ctx, note.toUpperCase(), inner - 24)) {
+            y += BODY - 2;
+            text(line, left + 24);
+            y += 4;
+          }
+        }
+      });
+      y += 2;
+    } else if (block.t === 'totals') {
+      for (const row of block.rows) {
+        if (row.tone === 'big') {
+          y += 4;
+          spread(row.label, row.value, { size: 26, weight: 800, fill: true });
+          y += 2;
+        } else if (row.tone === 'danger') {
+          spread(row.label, row.value, { weight: 800, color: RED, fill: true });
+        } else if (row.tone === 'strong') {
+          spread(row.label, row.value, { weight: 800, fill: true });
+        } else if (row.tone === 'muted') {
+          spread(row.label, row.value, { color: MUTED, fill: true });
+        } else {
+          spread(row.label, row.value, { fill: true });
+        }
+      }
+      y += 2;
+    } else if (block.t === 'text') {
+      y += 8;
+      const size = block.tone === 'muted' ? BODY - 2 : BODY;
+      const center = block.align !== 'left';
+      set(size, block.bold ? 700 : 400, block.tone === 'muted' ? MUTED : INK);
+      for (const raw of block.lines) {
+        for (const line of wrap(ctx, block.upper ? String(raw).toUpperCase() : raw, inner)) {
+          y += size;
+          text(line, center ? mid : left, center ? 'center' : 'left');
+          y += 4;
+        }
+      }
+      if (block.tight) y -= 6;
+    } else if (block.t === 'stamp') {
+      y += 14;
+      const label = String(block.text).toUpperCase();
+      set(22, 800, GREEN, '4px');
+      const w = (dry ? 260 : ctx.measureText(label).width) + 44;
+      if (!dry) {
+        ctx.save();
+        ctx.translate(mid, y + 20);
+        ctx.rotate(-0.035);
+        ctx.strokeStyle = GREEN;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(-w / 2, -26, w, 52, 9);
+        else ctx.rect(-w / 2, -26, w, 52);
+        ctx.stroke();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, 2, 2);
+        ctx.restore();
+        ctx.textBaseline = 'alphabetic';
+      }
+      y += 52 + 10;
+    } else if (block.t === 'barcode') {
+      y += 6;
+      const code = String(block.code || '000000');
+      if (!dry) {
+        ctx.fillStyle = INK;
+        let x = left + 30;
+        const end = right - 30;
+        let i = 0;
+        while (x < end) {
+          const c = code.charCodeAt(i % code.length) + i * 7;
+          const w = 2 + (c % 4);
+          ctx.fillRect(x, y, Math.min(w, end - x), 62);
+          x += w + 2 + ((c >> 2) % 4);
+          i++;
+        }
+      }
+      y += 62 + 8;
+      set(BODY - 4, 400, '#333333', '4px');
+      y += BODY - 4;
+      text(`${block.label ? `${block.label} ` : ''}${code}`, mid, 'center');
+      y += 8;
     }
   }
-  y += 74 + 28;
-  set(20, 600, MUTED, '6px');
-  text(code, mid, 'center');
-  y += 50;
 
-  // thank you
-  centered(extra.closing.toUpperCase(), 23, 800, INK, '0px', 8);
-  if (receipt.hasWarranty) {
-    y += 4;
-    centered('Keep this receipt. It is your proof of purchase for the warranty.', 18, 400, MUTED, '0px', 6);
-  }
+  // thank you, the footer message, powered by
+  y += 12;
+  centered(extra.closing.toUpperCase(), 17, 800, INK, '0px', 5);
   if (extra.footer) {
-    y += 6;
-    centered(extra.footer, 18, 400, MUTED, '0px', 6);
+    y += 4;
+    centered(extra.footer, 15, 400, MUTED, '0px', 4);
   }
-  y += 8;
-  centered('Powered by LogBase  |  mylogbase.com', 17, 400, MUTED, '0px', 6);
-  y += 36;
+  y += 10;
+  centered('POWERED BY LOGBASE  |  MYLOGBASE.COM', 13, 400, '#777777', '1px', 4);
+  y += 30;
   return y + MARGIN;
 }
 
@@ -264,7 +260,7 @@ function paper(ctx, height) {
   const x1 = W - MARGIN;
   const top = MARGIN;
   const bottom = height - MARGIN;
-  const tooth = 12;
+  const tooth = 10;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,.18)';
   ctx.shadowBlur = 22;
@@ -305,8 +301,9 @@ function loadLogo(url) {
   });
 }
 
-// Resolves with a PNG Blob of the receipt. `org` is the business identity from Settings (logo, address, phone, message).
-export async function receiptToPng(receipt, businessName, org) {
+// Resolves with a PNG Blob of the receipt. `doc` is from lib/receiptDoc.js; `org` is the business identity from Settings
+// (logo, address, phone, message).
+export async function receiptToPng(doc, businessName, org) {
   const choices = (org && org.receipt) || {};
   const extra = {
     logo: org && org.logoUrl && choices.showLogo !== false ? await loadLogo(org.logoUrl) : null,
@@ -321,7 +318,7 @@ export async function receiptToPng(receipt, businessName, org) {
   }
   const scale = 2;
   const probe = document.createElement('canvas').getContext('2d');
-  const height = Math.ceil(paint(probe, receipt, businessName, true, 0, extra));
+  const height = Math.ceil(paint(probe, doc, businessName, true, extra));
   const canvas = document.createElement('canvas');
   canvas.width = W * scale;
   canvas.height = height * scale;
@@ -329,7 +326,7 @@ export async function receiptToPng(receipt, businessName, org) {
   ctx.scale(scale, scale);
   paper(ctx, height);
   ctx.textBaseline = 'alphabetic';
-  paint(ctx, receipt, businessName, false, height, extra);
+  paint(ctx, doc, businessName, false, extra);
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not make the picture'))), 'image/png');
   });
