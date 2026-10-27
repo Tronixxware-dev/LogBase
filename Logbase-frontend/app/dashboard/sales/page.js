@@ -11,7 +11,6 @@ import { Icon } from '@/components/Icons';
 import FilterBar, { DateRange, inDateRange, optionsFrom } from '@/components/FilterBar';
 import { ErrorBanner, LoadingState, EmptyState, ListTotal, PrimaryLink, StatusBadge } from '@/components/ui';
 import { PersonChip } from '@/components/Avatar';
-import OrdersTabs from '@/components/OrdersTabs';
 import { useShops } from '@/lib/shops';
 
 const columns = [
@@ -109,7 +108,6 @@ export default function SalesPage() {
 
   return (
     <>
-      <OrdersTabs />
       <PageHeader
         title={seesAll ? 'Sales' : 'My sales'}
         subtitle={seesAll ? undefined : 'The sales you have recorded'}

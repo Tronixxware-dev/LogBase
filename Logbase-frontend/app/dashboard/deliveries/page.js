@@ -9,7 +9,6 @@ import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
 import FilterBar from '@/components/FilterBar';
 import { ErrorBanner, LoadingState, EmptyState, cardClass } from '@/components/ui';
-import OrdersTabs from '@/components/OrdersTabs';
 
 const PERIODS = [
   { days: 7, label: '7 days' },
@@ -129,7 +128,6 @@ export default function DeliveriesPage() {
 
   return (
     <>
-      <OrdersTabs />
       <PageHeader
         title="Deliveries"
         subtitle="What you paid for deliveries, to customers on sales and to get stock on purchases. Newest first."

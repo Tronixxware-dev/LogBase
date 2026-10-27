@@ -27,7 +27,7 @@ const salesActive = (showsRecordItem) => (pathname) =>
 
 // the sub-menu under Sales
 const salesChildren = [
-  { href: '/dashboard/sales', label: 'Orders & Deliveries', icon: 'sales', salesLike: true, feature: 'sales', perms: SALES_PERMS },
+  { href: '/dashboard/sales', label: 'Orders', icon: 'sales', salesLike: true, feature: 'sales', perms: SALES_PERMS },
   // what you paid for deliveries (the administrator only)
   { href: '/dashboard/deliveries', label: 'Deliveries', icon: 'deliveries', ownerOnly: true, feature: 'deliveries' },
   {
