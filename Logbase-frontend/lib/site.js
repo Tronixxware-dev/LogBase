@@ -27,7 +27,7 @@ export const PLANS = [
     tagline: 'To try LogBase with a small business',
     monthly: 0,
     yearly: 0,
-    features: ['Up to 50 stocks', 'Owner account only (no staff accounts)'],
+    features: ['Up to 50 units in stock', 'Owner account only (no staff accounts)'],
   },
   {
     key: 'starter',
@@ -35,7 +35,7 @@ export const PLANS = [
     tagline: 'For a business with a few helpers',
     monthly: 2000,
     yearly: 20000,
-    features: ['Up to 300 stocks', 'Up to 3 staff accounts with their own permissions'],
+    features: ['Up to 300 units in stock', 'Up to 3 staff accounts with their own permissions'],
   },
   {
     key: 'business',
@@ -44,7 +44,7 @@ export const PLANS = [
     monthly: 5000,
     yearly: 50000,
     popular: true,
-    features: ['Unlimited stocks', 'Unlimited staff accounts with their own permissions', 'Full activity log of who did what'],
+    features: ['Unlimited stock', 'Unlimited staff accounts with their own permissions', 'Full activity log of who did what'],
   },
 ];
 

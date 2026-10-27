@@ -11,6 +11,7 @@ import PhotosPicker from '@/components/PhotosPicker';
 import BrandInput from '@/components/BrandInput';
 import CategoryPicker from '@/components/CategoryPicker';
 import TrackingFields from '@/components/TrackingFields';
+import SerialsInput from '@/components/SerialsInput';
 import VariantsEditor, { newVariantRow } from '@/components/VariantsEditor';
 import { ErrorBanner, Field, cardClass, inputClass, primaryButtonClass } from '@/components/ui';
 
@@ -31,6 +32,8 @@ export default function NewProductPage() {
   });
   const [hasVariants, setHasVariants] = useState(false);
   const [variants, setVariants] = useState([]);
+  const [serials, setSerials] = useState([]); // IMEI / serial numbers of the opening stock (a product without colours / sizes)
+  const [variantSerials, setVariantSerials] = useState({}); // the same, per colour / size row (by the row's key)
   const [photos, setPhotos] = useState([]);
   const [savedProductId, setSavedProductId] = useState('');
   const [error, setError] = useState('');
@@ -60,7 +63,17 @@ export default function NewProductPage() {
         color: v.color,
         size: v.size,
         quantity: Number(v.quantity || 0),
+        ...(form.tracksSerials && (variantSerials[v.key] || []).length > 0 ? { serials: variantSerials[v.key] } : {}),
       }));
+      for (const v of variantPayload) {
+        if (v.serials && v.serials.length > v.quantity) {
+          setError(`${[v.color, v.size].filter(Boolean).join(' / ')}: you entered ${v.serials.length} IMEI / serial numbers but only ${v.quantity} piece${v.quantity === 1 ? '' : 's'}. Raise the quantity or remove some numbers.`);
+          return;
+        }
+      }
+    } else if (form.tracksSerials && serials.length > Number(form.quantity || 0)) {
+      setError(`You entered ${serials.length} IMEI / serial numbers but the starting quantity is ${Number(form.quantity || 0)}. Raise the quantity or remove some numbers.`);
+      return;
     }
 
     setSaving(true);
@@ -75,7 +88,9 @@ export default function NewProductPage() {
         reorderThreshold: Number(form.reorderThreshold || 0),
         tracksSerials: Boolean(form.tracksSerials),
         warrantyMonths: Number(form.warrantyMonths || 0),
-        ...(hasVariants ? { variants: variantPayload } : { quantity: Number(form.quantity || 0) }),
+        ...(hasVariants
+          ? { variants: variantPayload }
+          : { quantity: Number(form.quantity || 0), ...(form.tracksSerials && serials.length > 0 ? { serials } : {}) }),
       });
       const productId = data.product._id;
 
@@ -216,6 +231,39 @@ export default function NewProductPage() {
         </div>
 
         <TrackingFields form={form} onChange={(name, value) => setForm((prev) => ({ ...prev, [name]: value }))} />
+
+        {form.tracksSerials && (
+          <div className="rounded-lg border border-gray-200 p-4">
+            <p className="text-sm font-medium text-gray-900">IMEI / serial numbers of the stock you are adding (optional)</p>
+            <p className="mb-3 mt-0.5 text-xs text-gray-500">
+              Add the numbers now for as many pieces as you like, up to the quantity. You can add or correct the rest later from the product page, and every purchase can bring its own numbers.
+            </p>
+            {hasVariants ? (
+              <div className="space-y-4">
+                {variants
+                  .filter((v) => v.color.trim() || v.size.trim())
+                  .map((v) => (
+                    <div key={v.key}>
+                      <p className="mb-1 text-xs font-medium text-gray-700">
+                        {[v.color, v.size].filter(Boolean).join(' / ')} ({Number(v.quantity || 0)} piece{Number(v.quantity || 0) === 1 ? '' : 's'})
+                      </p>
+                      <SerialsInput
+                        value={variantSerials[v.key] || []}
+                        onChange={(list) => setVariantSerials((prev) => ({ ...prev, [v.key]: list }))}
+                        label={`IMEI / serial numbers for ${[v.color, v.size].filter(Boolean).join(' / ')}`}
+                        disabled={saving}
+                      />
+                    </div>
+                  ))}
+                {variants.every((v) => !v.color.trim() && !v.size.trim()) && (
+                  <p className="text-xs text-gray-400">Fill in a colour or size above, and its box for numbers appears here.</p>
+                )}
+              </div>
+            ) : (
+              <SerialsInput value={serials} onChange={setSerials} disabled={saving} />
+            )}
+          </div>
+        )}
 
         <Field label="Product photos" hint="Take or choose several pictures. The first one becomes the cover photo.">
           <PhotosPicker

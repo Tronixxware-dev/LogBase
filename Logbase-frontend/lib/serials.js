@@ -67,4 +67,5 @@ export const EVENT_LABEL = {
   sold: 'Sold',
   returned: 'Returned and back in stock',
   written_off: 'Returned and written off',
+  edited: 'Corrected',
 };

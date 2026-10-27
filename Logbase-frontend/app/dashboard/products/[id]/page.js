@@ -18,6 +18,7 @@ import { forShop } from '@/lib/shopStorage';
 import PageHeader from '@/components/PageHeader';
 import ProductEditForm from '@/components/ProductEditForm';
 import ProductPhotosEditor from '@/components/ProductPhotosEditor';
+import ProductSerials from '@/components/ProductSerials';
 import VariantsManager from '@/components/VariantsManager';
 import { newVariantRow } from '@/components/VariantsEditor';
 import { ErrorBanner, LoadingState, cardClass, primaryButtonClass } from '@/components/ui';
@@ -26,6 +27,8 @@ function formFromProduct(p) {
   return {
     name: p.name || '',
     sku: p.sku || '',
+    barcode: p.barcode || '',
+    description: p.description || '',
     brand: p.brand || '',
     category: p.category || '',
     costPrice: p.costPrice ?? '',
@@ -43,6 +46,9 @@ function rowsFromProduct(p) {
     color: v.color || '',
     size: v.size || '',
     quantity: String(v.quantity),
+    sku: v.sku || '',
+    sellingPrice: v.sellingPrice ?? '',
+    costPrice: v.costPrice ?? '',
     removed: false,
   }));
 }
@@ -96,6 +102,8 @@ export default function ProductDetailPage() {
     form &&
     (form.name.trim() !== product.name ||
       (form.sku || '') !== (product.sku || '') ||
+      (form.barcode || '').trim() !== (product.barcode || '') ||
+      (form.description || '').trim() !== (product.description || '') ||
       (form.brand || '').trim() !== (product.brand || '') ||
       (form.category || '') !== (product.category || '') ||
       (isOwner && Number(form.costPrice) !== product.costPrice) ||
@@ -113,6 +121,9 @@ export default function ProductDetailPage() {
       v &&
       (r.color.trim() !== (v.color || '') ||
         r.size.trim() !== (v.size || '') ||
+        (r.sku || '').trim() !== (v.sku || '') ||
+        String(r.sellingPrice ?? '') !== String(v.sellingPrice ?? '') ||
+        (isOwner && String(r.costPrice ?? '') !== String(v.costPrice ?? '')) ||
         Number(r.quantity) !== v.quantity)
     );
   });
@@ -187,6 +198,16 @@ export default function ProductDetailPage() {
         return;
       }
     }
+    for (const r of [...changedRows, ...addedRows]) {
+      if ((r.sellingPrice ?? '') !== '' && Number(r.sellingPrice) < 0) {
+        setError('A price cannot be below 0');
+        return;
+      }
+      if (isOwner && (r.costPrice ?? '') !== '' && Number(r.costPrice) < 0) {
+        setError('A price cannot be below 0');
+        return;
+      }
+    }
 
     setSaving(true);
     let anySaved = false; // did at least one step reach the server?
@@ -198,6 +219,8 @@ export default function ProductDetailPage() {
         const payload = {
           name: form.name.trim(),
           sku: form.sku,
+          barcode: (form.barcode || '').trim(),
+          description: (form.description || '').trim(),
           brand: form.brand,
           category: form.category,
           sellingPrice: Number(form.sellingPrice),
@@ -221,6 +244,10 @@ export default function ProductDetailPage() {
           await updateVariant(id, r.id, {
             color: r.color,
             size: r.size,
+            sku: (r.sku || '').trim(),
+            // an emptied price box goes back to the product's own price
+            sellingPrice: (r.sellingPrice ?? '') === '' ? '' : Number(r.sellingPrice),
+            ...(isOwner ? { costPrice: (r.costPrice ?? '') === '' ? '' : Number(r.costPrice) } : {}),
             ...(multiple ? {} : { quantity: Number(r.quantity) }),
           })
         ).product;
@@ -228,6 +255,9 @@ export default function ProductDetailPage() {
       }
       for (const r of addedRows) {
         const payload = { color: r.color, size: r.size };
+        if ((r.sku || '').trim()) payload.sku = r.sku.trim();
+        if ((r.sellingPrice ?? '') !== '') payload.sellingPrice = Number(r.sellingPrice);
+        if (isOwner && (r.costPrice ?? '') !== '') payload.costPrice = Number(r.costPrice);
         if (r.quantity !== '' && !multiple) payload.quantity = Number(r.quantity);
         latest = (await addVariant(id, payload)).product;
         anySaved = true;
@@ -339,6 +369,10 @@ export default function ProductDetailPage() {
           }}
         />
       </div>
+
+      {product.tracksSerials && (
+        <ProductSerials product={product} refreshKey={product.updatedAt} />
+      )}
 
       <div className={`${cardClass} p-6`}>
         <h2 className="mb-4 text-lg font-medium text-gray-900">Photo gallery</h2>

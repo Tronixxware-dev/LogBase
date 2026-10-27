@@ -194,7 +194,7 @@ function Actions({ business, plan, run, id }) {
             go('Trial extended', () => adminExtendTrial(id, Number(days)));
           }}
         >
-          <Field label="Days to add" hint="Added to the end of the trial (or counted from today if it already ended). They get every Business feature while it runs.">
+          <Field label="Days to add" hint="Added to the end of the trial (or counted from today if it already ended). They get every Business feature while it runs. A laundromat also gets at least 50 more orders to take.">
             <input type="number" min="1" max="365" value={days} onChange={(e) => setDays(e.target.value)} className={inputClass} required />
           </Field>
           <div className="flex flex-wrap gap-2">
@@ -250,7 +250,7 @@ function Actions({ business, plan, run, id }) {
       {mode === 'end' && (
         <div className="mt-4 max-w-lg space-y-3">
           <p className="text-sm text-gray-600">
-            This moves {business.name} to the Free plan right now (50 stocks, no staff accounts) and switches automatic renewal off. Nothing is deleted, and you can give a plan again later.
+            This moves {business.name} to the Free plan right now (50 units in stock, no staff accounts) and switches automatic renewal off. Nothing is deleted, and you can give a plan again later.
           </p>
           <button
             type="button"
@@ -293,6 +293,11 @@ function OverviewTab({ data, run }) {
             </Line>
             <Line label="Plan" icon="sparkle" color="violet">{plan.planName}</Line>
             {plan.planState === 'trialing' && <Line label="Trial ends">{formatDate(plan.trialEndsAt)} ({endsText(plan)})</Line>}
+            {plan.trialOrders && (
+              <Line label="Trial orders" icon="clock" color="amber">
+                {plan.trialOrders.used} of {plan.trialOrders.limit} laundry orders taken
+              </Line>
+            )}
             {plan.planState === 'active' && (
               <>
                 <Line label="Billed" icon="calendar" color="sky">{plan.interval}</Line>
@@ -302,7 +307,7 @@ function OverviewTab({ data, run }) {
             )}
             {(plan.planState === 'expired' || plan.planState === 'trial_ended') && (
               <Line label="History" icon="clock" color="amber">
-                {plan.planState === 'expired' ? `Was on ${plan.lastPaidPlan || 'a paid plan'}, ended ${formatDate(plan.currentPeriodEnd)}` : `Trial ended ${formatDate(plan.trialEndsAt)}`}
+                {plan.planState === 'expired' ? `Was on ${plan.lastPaidPlan || 'a paid plan'}, ended ${formatDate(plan.currentPeriodEnd)}` : plan.trialEndedBy === 'orders' && plan.trialOrders ? `Trial ended after ${plan.trialOrders.limit} laundry orders (days were left until ${formatDate(plan.trialEndsAt)})` : `Trial ended ${formatDate(plan.trialEndsAt)}`}
               </Line>
             )}
             <Line label="Last payment" icon="wallet" color="teal">{plan.lastPaymentAt ? formatDateTime(plan.lastPaymentAt) : 'none'}</Line>

@@ -159,7 +159,7 @@ export default function LaundryPage() {
             value: handover,
             onChange: setHandover,
             options: [
-              { value: 'all', label: 'Pick-up and delivery' },
+              { value: 'all', label: 'Any hand-over' },
               { value: 'pickup', label: 'Pick-up' },
               { value: 'delivery', label: 'Delivery' },
             ],

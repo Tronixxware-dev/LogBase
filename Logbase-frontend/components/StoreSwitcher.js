@@ -31,14 +31,14 @@ export default function StoreSwitcher() {
   if (!hasFeature(businessTypeOf(user), 'products') || !multiple || !active) return null;
 
   return (
-    <div className="relative" ref={box}>
+    <div className="relative min-w-0" ref={box}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`Store: ${active.name}. Change store`}
-        className="flex h-10 max-w-[9rem] items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 shadow-xs transition hover:border-gray-300 hover:shadow-sm sm:max-w-[15rem]"
+        className="flex h-10 w-full min-w-0 max-w-[9rem] items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 shadow-xs transition hover:border-gray-300 hover:shadow-sm sm:max-w-[15rem]"
       >
         <Icon name="store" className="h-4 w-4 shrink-0 text-primary" />
         <span className="hidden text-gray-400 sm:inline">Store:</span>

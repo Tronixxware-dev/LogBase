@@ -74,6 +74,7 @@ export default function NewLaundryOrderPage() {
   const [depositMethod, setDepositMethod] = useState(settings.preferences.defaultPaymentMethod);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
+  const [planBlocked, setPlanBlocked] = useState(false); // the plan (free trial or paid) does not allow new orders
   const [saving, setSaving] = useState(false);
   // this order's own id: kept while the form is filled in and retried, so one that reached the server is not saved twice
   const orderId = useRef(null);
@@ -126,6 +127,7 @@ export default function NewLaundryOrderPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    setPlanBlocked(false);
 
     if (filled.length === 0) return setError('Enter the quantity for at least one item');
     for (let i = 0; i < filled.length; i += 1) {
@@ -190,6 +192,7 @@ export default function NewLaundryOrderPage() {
       router.push(`/dashboard/laundry/${data.order._id}`);
     } catch (err) {
       setError(saveErrorMessage(err, 'order'));
+      setPlanBlocked(Boolean(err && err.status === 402));
     } finally {
       setSaving(false);
     }
@@ -207,6 +210,17 @@ export default function NewLaundryOrderPage() {
       />
 
       <ErrorBanner message={error || loadError || picker.loadError} />
+      {planBlocked && (
+        <p className="-mt-2 mb-4 text-sm text-gray-600">
+          {isOwner ? (
+            <Link href="/dashboard/billing" className="font-medium text-primary hover:underline">
+              See plans on the Billing page
+            </Link>
+          ) : (
+            'Ask the owner of the business to choose a plan.'
+          )}
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
@@ -372,7 +386,7 @@ export default function NewLaundryOrderPage() {
                   <div className="flex items-center gap-3">
                     <span className="w-6 text-xs text-gray-400">{index + 1}</span>
                     <ClothTile name={r.name} size="sm" />
-                    <div className="min-w-0 flex-1 font-medium text-gray-900">
+                    <div className="min-w-0 flex-1 break-words font-medium text-gray-900">
                       {r.item || !r.extra ? (
                         r.name
                       ) : (
@@ -489,8 +503,8 @@ export default function NewLaundryOrderPage() {
 
             <div className="rounded-xl border border-gray-200 p-3">
               <p className="mb-2 text-sm font-medium text-gray-800">Discount</p>
-              <div className="flex items-center gap-2">
-                <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} aria-label="Discount type" className={`${cell} !w-28`}>
+              <div className="flex flex-wrap items-center gap-2">
+                <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} aria-label="Discount type" className={`${cell} !w-36`}>
                   <option value="amount">Amount (₦)</option>
                   <option value="percent">Percent (%)</option>
                 </select>

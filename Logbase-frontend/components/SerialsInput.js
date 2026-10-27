@@ -45,7 +45,7 @@ export default function SerialsInput({ value, onChange, expected, suggestions = 
 
   return (
     <div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <input
           type="text"
           inputMode="text"
@@ -73,8 +73,8 @@ export default function SerialsInput({ value, onChange, expected, suggestions = 
             }
           }}
           onBlur={() => commit(text)}
-          placeholder="Scan or type, then press Enter"
-          className={inputClass}
+          placeholder="Type or scan a number"
+          className={`${inputClass} min-w-[11rem] flex-1`}
           aria-label={label}
         />
         <ScanButton continuous disabled={disabled} onScan={commit} />

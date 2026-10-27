@@ -2,7 +2,10 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { listProducts } from '@/lib/api';
+import Link from 'next/link';
+import { deleteProduct, listProducts } from '@/lib/api';
+import { notifySuccess } from '@/lib/feedback';
+import { Icon } from '@/components/Icons';
 import { useShops } from '@/lib/shops';
 import { forShop } from '@/lib/shopStorage';
 import { formatMoney, variantLabel } from '@/lib/format';
@@ -35,6 +38,7 @@ function ProductsList() {
   const [lowOnly, setLowOnly] = useState(searchParams.get('lowStock') === 'true');
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [brand, setBrand] = useState('');
+  const [deletingId, setDeletingId] = useState('');
 
   // The Overview's "Low stock" card links here with ?lowStock=true,
   // and the Categories page links here with ?category=Name
@@ -78,6 +82,25 @@ function ProductsList() {
       return [p.name, p.brand, p.sku, p.category].some((v) => v && v.toLowerCase().includes(q));
     });
   }, [products, search, lowOnly, category, brand]);
+
+  // Delete = archive: the product leaves this list, its sales and purchases stay, and it can be brought back from Inventory > Archive
+  async function handleDelete(p) {
+    const ok = window.confirm(
+      `Delete "${p.name}"? It will be removed from your products list. Past sales and purchases are kept, and you can bring it back from Inventory > Archive.`
+    );
+    if (!ok) return;
+    setError('');
+    setDeletingId(p._id);
+    try {
+      await deleteProduct(p._id);
+      setProducts((prev) => prev.filter((x) => x._id !== p._id));
+      notifySuccess('Product deleted', p.name);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingId('');
+    }
+  }
 
   const totalUnits = filtered.reduce((sum, p) => sum + (Number(p.quantity) || 0), 0);
 
@@ -190,6 +213,33 @@ function ProductsList() {
           rows={filtered}
           // only people who manage products can open one (that page is where products are edited)
           onRowClick={canManage ? (p) => router.push(`/dashboard/products/${p._id}`) : undefined}
+          // the Edit and Delete buttons are for people who manage products
+          rowActions={
+            canManage
+              ? (p) => (
+                  <>
+                    <Link
+                      href={`/dashboard/products/${p._id}`}
+                      aria-label={`Edit ${p.name}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-primary hover:text-primary"
+                    >
+                      <Icon name="edit" className="h-4 w-4" />
+                      Edit
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(p)}
+                      disabled={deletingId === p._id}
+                      aria-label={`Delete ${p.name}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      <Icon name="trash" className="h-4 w-4" />
+                      {deletingId === p._id ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </>
+                )
+              : undefined
+          }
         />
       )}
     </>

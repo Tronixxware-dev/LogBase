@@ -11,7 +11,7 @@ import { Field, inputClass } from '@/components/ui';
 // The cost price is only shown to the owner.
 // It only shows the inputs; the product page owns the values and the Save button.
 //
-// form:        { name, sku, brand, category, costPrice, sellingPrice, quantity, reorderThreshold, tracksSerials, warrantyMonths }
+// form:        { name, sku, barcode, description, brand, category, costPrice, sellingPrice, quantity, reorderThreshold, tracksSerials, warrantyMonths }
 // onChange:    called with (fieldName, newValue)
 // hasVariants: true when stock is tracked per colour / size
 // totalStock:  total shown for products with colours / sizes
@@ -38,8 +38,17 @@ export default function ProductEditForm({ form, onChange, hasVariants, totalStoc
         </Field>
       </div>
 
-      <Field label="SKU (optional)">
-        <input name="sku" value={form.sku} onChange={handle} className={inputClass} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="SKU (optional)">
+          <input name="sku" value={form.sku} onChange={handle} className={inputClass} />
+        </Field>
+        <Field label="Barcode (optional)" hint="The number printed under the product's barcode (not the IMEI).">
+          <input name="barcode" value={form.barcode || ''} onChange={handle} maxLength={60} className={inputClass} />
+        </Field>
+      </div>
+
+      <Field label="Description (optional)">
+        <textarea name="description" value={form.description || ''} onChange={handle} rows={3} maxLength={1000} className={inputClass} />
       </Field>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

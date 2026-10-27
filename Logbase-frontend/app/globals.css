@@ -534,3 +534,19 @@ button.bg-primary:disabled {
 .bg-black\/50 { background-color: rgb(0 0 0 / 0.5); }
 .bg-black\/60 { background-color: rgb(0 0 0 / 0.6); }
 .shadow-black\/20 { --tw-shadow-color: rgb(0 0 0 / 0.2); }
+
+/* A long placeholder or value that does not fit its box ends in "…" instead of running past the edge */
+input,
+textarea {
+  text-overflow: ellipsis;
+}
+
+/* Phones and tablets zoom the whole page in when a field with text smaller than 16px is tapped, and then leave it zoomed.
+   Fields use 16px on those screens so the page stays exactly as it is when a form is opened. */
+@media (max-width: 1023px), (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="hidden"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

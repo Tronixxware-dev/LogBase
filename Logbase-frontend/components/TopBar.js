@@ -28,20 +28,22 @@ export default function TopBar() {
   const title = pageTitleFor(pathname, { can, isOwner });
 
   return (
-    <header className="glass sticky top-0 z-30 border-b border-gray-200 print:hidden">
+    <>
+    {/* Pinned to the top of the screen on every size (on large screens it starts after the side menu). The spacer below keeps the page from sliding under it. */}
+    <header className="glass fixed inset-x-0 top-0 z-30 border-b border-gray-200 print:hidden lg:left-64">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
         <button
           type="button"
           onClick={openMenu}
           aria-label="Open menu"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-xs transition active:scale-95 lg:hidden"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-xs transition active:scale-95 lg:hidden"
         >
           <Icon name="menu" />
         </button>
 
-        <Link href="/dashboard" className="flex items-center gap-2 lg:hidden" aria-label="LogBase home">
+        <Link href="/dashboard" className={`items-center gap-2 lg:hidden ${switcherShown ? 'hidden min-[420px]:flex' : 'flex'}`} aria-label="LogBase home">
           <BrandMark className="h-8 w-8" />
-          <span className={`text-lg font-semibold tracking-tight text-gray-900 ${switcherShown ? 'hidden sm:inline' : ''}`}>LogBase</span>
+          <span className={`text-lg font-semibold tracking-tight text-gray-900 ${switcherShown ? 'hidden sm:inline' : 'hidden min-[360px]:inline'}`}>LogBase</span>
         </Link>
 
         {/* the page name, large screens */}
@@ -51,7 +53,7 @@ export default function TopBar() {
           <span className="truncate font-medium text-gray-900">{title}</span>
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex min-w-0 items-center gap-2">
           <StoreSwitcher />
           <button
             type="button"
@@ -67,7 +69,7 @@ export default function TopBar() {
             type="button"
             onClick={openSearch}
             aria-label="Search"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-xs transition active:scale-95 md:hidden"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-xs transition active:scale-95 md:hidden"
           >
             <Icon name="search" className="h-5 w-5" />
           </button>
@@ -78,5 +80,7 @@ export default function TopBar() {
       </div>
       <CommandPalette />
     </header>
+    <div className="h-[65px] print:hidden" aria-hidden="true" />
+    </>
   );
 }

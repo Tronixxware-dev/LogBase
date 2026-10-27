@@ -513,8 +513,8 @@ function EditOrder({ order, busy, onSave, onCancel }) {
             </div>
             <div className="rounded-xl border border-gray-200 p-3">
               <p className="mb-2 text-sm font-medium text-gray-800">Discount</p>
-              <div className="flex items-center gap-2">
-                <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} aria-label="Discount type" className={`${cell} !w-28`}>
+              <div className="flex flex-wrap items-center gap-2">
+                <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} aria-label="Discount type" className={`${cell} !w-36`}>
                   <option value="amount">Amount (₦)</option>
                   <option value="percent">Percent (%)</option>
                 </select>

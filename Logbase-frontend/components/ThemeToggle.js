@@ -46,7 +46,7 @@ export function ThemeIconButton({ className = '' }) {
       onClick={() => change(dark ? 'light' : 'dark')}
       aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={dark ? 'Light mode' : 'Dark mode'}
-      className={`relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-xs transition hover:text-gray-900 hover:shadow-sm active:scale-95 ${className}`}
+      className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-xs transition hover:text-gray-900 hover:shadow-sm active:scale-95 ${className}`}
     >
       <span className="relative block h-5 w-5">
         <Icon

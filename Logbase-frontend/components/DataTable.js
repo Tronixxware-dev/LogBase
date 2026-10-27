@@ -10,7 +10,9 @@ import { Icon } from '@/components/Icons';
 // rows:    array of objects (each needs a unique `_id`)
 // onRowClick(row): optional, makes rows clickable
 // Every row is numbered (1, 2, 3 …) in a first "#" column. Pass numbered={false} to turn that off.
-export default function DataTable({ columns, rows, onRowClick, numbered = true }) {
+// rowActions(row): optional, buttons shown at the end of each row (a bar at the bottom of the card on phones).
+//   Clicking inside them does not open the row.
+export default function DataTable({ columns, rows, onRowClick, numbered = true, rowActions }) {
   const [primary, ...rest] = columns;
 
   function cell(col, row) {
@@ -32,7 +34,7 @@ export default function DataTable({ columns, rows, onRowClick, numbered = true }
             className={`${cardClass} overflow-hidden border-l-4 border-l-primary !border-gray-300 p-4 transition active:scale-[0.99] ${clickable}`}
           >
             <div className="flex items-start justify-between gap-2 text-base font-bold text-gray-900">
-              <span className="min-w-0">
+              <span className="min-w-0 break-words">
                 {numbered && (
                   <span className="mr-2 inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-gray-100 px-1.5 align-middle text-xs font-bold text-gray-600">
                     {index + 1}
@@ -44,12 +46,20 @@ export default function DataTable({ columns, rows, onRowClick, numbered = true }
             </div>
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-gray-200 pt-3 text-sm">
               {rest.map((col) => (
-                <div key={col.key}>
+                <div key={col.key} className="min-w-0">
                   <dt className="text-[11px] font-bold uppercase tracking-wide text-gray-500">{col.label}</dt>
-                  <dd className="mt-0.5 font-medium text-gray-900">{cell(col, row)}</dd>
+                  <dd className="mt-0.5 min-w-0 break-words font-medium text-gray-900">{cell(col, row)}</dd>
                 </div>
               ))}
             </dl>
+            {rowActions && (
+              <div
+                className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-200 pt-3"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {rowActions(row)}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -69,6 +79,7 @@ export default function DataTable({ columns, rows, onRowClick, numbered = true }
                     {col.label}
                   </th>
                 ))}
+                {rowActions && <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wide text-gray-700">Actions</th>}
                 {onRowClick && <th className="w-8 px-2" aria-hidden="true" />}
               </tr>
             </thead>
@@ -96,6 +107,11 @@ export default function DataTable({ columns, rows, onRowClick, numbered = true }
                       {cell(col, row)}
                     </td>
                   ))}
+                  {rowActions && (
+                    <td className="px-4 py-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-2">{rowActions(row)}</div>
+                    </td>
+                  )}
                   {onRowClick && (
                     <td className="px-2">
                       <Icon

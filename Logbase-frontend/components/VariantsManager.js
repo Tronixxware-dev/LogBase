@@ -1,12 +1,70 @@
 'use client';
 
+import { useState } from 'react';
+import { useUser } from '@/components/UserProvider';
 import { inputClass } from '@/components/ui';
+
+// The colour / size's own code and prices, tucked under its row. An empty price means "use the product's price".
+function RowExtras({ row, onChange, tone = '' }) {
+  const { isOwner } = useUser();
+  const filled = Boolean(row.sku) || (row.sellingPrice ?? '') !== '' || (row.costPrice ?? '') !== '';
+  const [open, setOpen] = useState(filled);
+  return (
+    <div className="col-span-full">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="text-xs font-medium text-gray-500 hover:text-primary"
+      >
+        {open ? '▾' : '▸'} Code &amp; price{filled && !open ? ' (set)' : ''}
+      </button>
+      {open && (
+        <div className={`mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3`}>
+          <label className="block text-xs text-gray-500">
+            Code (SKU)
+            <input
+              type="text"
+              value={row.sku ?? ''}
+              onChange={(e) => onChange('sku', e.target.value)}
+              className={`${inputClass} mt-1 ${tone}`}
+            />
+          </label>
+          <label className="block text-xs text-gray-500">
+            Selling price (₦)
+            <input
+              type="number"
+              min="0"
+              value={row.sellingPrice ?? ''}
+              onChange={(e) => onChange('sellingPrice', e.target.value)}
+              placeholder="Same as the product"
+              className={`${inputClass} mt-1 ${tone}`}
+            />
+          </label>
+          {isOwner && (
+            <label className="block text-xs text-gray-500">
+              Cost price (₦)
+              <input
+                type="number"
+                min="0"
+                value={row.costPrice ?? ''}
+                onChange={(e) => onChange('costPrice', e.target.value)}
+                placeholder="Same as the product"
+                className={`${inputClass} mt-1 ${tone}`}
+              />
+            </label>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Colour / size rows for the product page. Nothing is sent to the server from here;
 // the product page's Save button saves every change at once.
 //
-// rows:          existing variants  [{ id, color, size, quantity, removed }]
-// newRows:       rows added but not saved yet  [{ key, color, size, quantity }]
+// rows:          existing variants  [{ id, color, size, quantity, sku, sellingPrice, costPrice, removed }]
+// newRows:       rows added but not saved yet  [{ key, color, size, quantity, sku, sellingPrice, costPrice }]
 // onRowChange:   (id, field, value)
 // onRowRemove:   (id, removed)   mark / unmark an existing row for removal
 // onNewChange:   (key, field, value)
@@ -91,6 +149,7 @@ export default function VariantsManager({
               >
                 ×
               </button>
+              <RowExtras row={row} onChange={(field, value) => onRowChange(row.id, field, value)} />
             </div>
           )
         )}
@@ -131,6 +190,7 @@ export default function VariantsManager({
             >
               ×
             </button>
+            <RowExtras row={row} tone="border-primary" onChange={(field, value) => onNewChange(row.key, field, value)} />
           </div>
         ))}
       </div>

@@ -19,12 +19,14 @@ export default function BillingBanner() {
   const pathname = usePathname();
   const [sub, setSub] = useState(null);
   const [autoRenew, setAutoRenew] = useState(null);
+  const [usage, setUsage] = useState(null);
 
   const load = useCallback(() => {
     getBilling()
       .then((data) => {
         setSub(data.subscription);
         setAutoRenew(data.autoRenew || null);
+        setUsage(data.usage || null);
       })
       .catch(() => setSub(null)); // a banner is never worth an error message
   }, []);
@@ -36,8 +38,14 @@ export default function BillingBanner() {
     return () => window.removeEventListener('logbase:billing-changed', load);
   }, [isOwner, load]);
 
+  // a plan that holds a limited number of units: look again as the person moves around, so what they just added is counted
+  const limited = Boolean(sub && sub.limits && sub.limits.stocks != null);
+  useEffect(() => {
+    if (isOwner && limited) load();
+  }, [pathname, isOwner, limited, load]);
+
   if (!isOwner || pathname.startsWith('/dashboard/billing')) return null;
-  const banner = bannerFor(sub, autoRenew);
+  const banner = bannerFor(sub, autoRenew, usage);
   if (!banner) return null;
 
   return (

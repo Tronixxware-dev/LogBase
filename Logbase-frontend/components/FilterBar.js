@@ -23,7 +23,7 @@ export function FilterSelect({ label, value, onChange, options, className = '' }
   const list = (options || []).map(asOption);
   return (
     <label className={`block min-w-0 ${className}`}>
-      <span className="mb-1 block text-xs font-medium text-gray-500">{label}</span>
+      <span className="mb-1 block truncate text-xs font-medium text-gray-500">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -130,7 +130,7 @@ export default function FilterBar({ search, filters = [], panel, panelCount = 0,
 
       {(inline.length > 0 || hasPanel || right || anyOn) && (
         <div className="flex flex-wrap items-end gap-3">
-          {inline.length > 0 && <div className="grid min-w-0 flex-1 grid-cols-2 gap-3 sm:flex sm:flex-none sm:flex-wrap">{inline.map(select)}</div>}
+          {inline.length > 0 && <div className="grid w-full min-w-0 grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-3 sm:flex sm:w-auto sm:flex-none sm:flex-wrap">{inline.map(select)}</div>}
           {hasPanel && (
             <button
               type="button"

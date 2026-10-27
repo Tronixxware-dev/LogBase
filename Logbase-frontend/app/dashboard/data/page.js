@@ -333,7 +333,7 @@ function ImportSection() {
               onChange={chooseFile}
               disabled={phase === 'importing'}
               aria-label="Choose a CSV file"
-              className="block text-sm text-gray-600 file:mr-3 file:rounded-lg file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-gray-700"
+              className="block w-full min-w-0 max-w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-gray-700"
             />
             <button type="button" onClick={() => downloadCsv(`logbase-${kind}-template.csv`, templateText(kind))} className={secondaryButton}>
               Download a template

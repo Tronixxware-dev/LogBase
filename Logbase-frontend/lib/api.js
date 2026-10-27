@@ -256,6 +256,26 @@ export function availableSerials(productId, variantId) {
   return apiRequest(`/serials/available?${query}`, { auth: true });
 }
 
+// Every IMEI / serial number recorded for a product (on the shelf, sold, written off), and how many of the pieces have one.
+export function listProductSerials(productId) {
+  return apiRequest(`/serials/product/${productId}`, { auth: true });
+}
+
+// Records numbers for pieces the shop already holds. body: { serials: 'text or list', variant? }
+export function addProductSerials(productId, body) {
+  return apiRequest(`/serials/product/${productId}`, { method: 'POST', body, auth: true });
+}
+
+// Corrects a number (or the colour / size it is under) of a unit that is not sold. body: { serial?, variant? }
+export function updateSerialUnit(unitId, body) {
+  return apiRequest(`/serials/${unitId}`, { method: 'PUT', body, auth: true });
+}
+
+// Takes a number off the record (the stock count does not change)
+export function removeSerialUnit(unitId) {
+  return apiRequest(`/serials/${unitId}`, { method: 'DELETE', auth: true });
+}
+
 // Owner + staff of the business (used for the "Sold by" suggestions)
 export function listTeam() {
   return apiRequest('/auth/team', { auth: true });
