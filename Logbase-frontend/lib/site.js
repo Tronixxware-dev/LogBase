@@ -8,9 +8,9 @@ export const SITE = {
   description:
     'LogBase helps any business track stock, record sales and know who owes them, even without internet. Free 14-day trial.',
   // what Google shows in search results for the home page (the title stays under about 60 characters and the description under about 155)
-  seoTitle: 'LogBase | Inventory & Sales App for Businesses in Nigeria',
+  seoTitle: 'LogBase | Inventory & Sales App for Any Business',
   seoDescription:
-    'LogBase helps Nigerian businesses track stock, record sales and see who owes them, even without internet. Free for 14 days, no card needed.',
+    'LogBase helps any business track stock, record sales and see who owes them, even without internet. Free for 14 days, no card needed.',
   email: 'tronixxware01@gmail.com',
   // the public web address, used for the sitemap and link previews (set NEXT_PUBLIC_SITE_URL in the frontend .env when you deploy)
   url: (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/+$/, ''),
@@ -24,7 +24,7 @@ export const PLANS = [
   {
     key: 'free',
     name: 'Free',
-    tagline: 'To try LogBase with a small business',
+    tagline: 'To try LogBase for yourself',
     monthly: 0,
     yearly: 0,
     features: ['Up to 50 units in stock', 'Owner account only (no staff accounts)'],

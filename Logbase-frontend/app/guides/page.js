@@ -18,7 +18,7 @@ export default function GuidesPage() {
       <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-14 sm:px-6 sm:pt-20">
         <h1 className="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl">Guides for shop and business owners</h1>
         <p className="mt-6 text-lg leading-relaxed text-gray-600">
-          Plain-language help for running a business in Nigeria: keeping stock right, collecting what you are owed, selling when the network is bad and tracking phones by IMEI.
+          Plain-language help for running a business: keeping stock right, collecting what you are owed, selling when the network is bad and tracking phones by IMEI.
         </p>
         <ul className="mt-10 space-y-4">
           {GUIDES.map((g) => (

@@ -5,10 +5,10 @@
 export const GUIDES = [
   {
     slug: 'inventory-app-for-shops-in-nigeria',
-    title: 'How to manage stock in your shop in Nigeria (and the app that does it for you)',
+    title: 'How to manage stock in your shop (and the app that does it for you)',
     short: 'Stop guessing what is on your shelf. A simple way to track stock, sales and profit.',
     description:
-      'A simple guide for Nigerian shop owners: what to record, a daily routine that keeps your stock count right, and what to look for in an inventory and sales app.',
+      'A simple guide for shop owners: what to record, a daily routine that keeps your stock count right, and what to look for in an inventory and sales app.',
     published: '2026-10-11',
     intro:
       'If your stock count never matches what is on the shelf, or you only find out something finished when a customer asks for it, the problem is almost never your staff. It is the way the records are kept. This guide shows a simple routine that works in any shop, whether you sell provisions, phones, drugs, building materials or clothes.',
@@ -43,18 +43,18 @@ export const GUIDES = [
         title: 'What to look for in an inventory and sales app',
         items: [
           'It works when the network is bad. A sale should never be lost because the signal dropped.',
-          'It handles customers who pay later or pay in parts, because that is how many Nigerian businesses actually trade.',
+          'It handles customers who pay later or pay in parts, because that is how many businesses actually trade.',
           'Prices in naira and receipts you can send to a customer on WhatsApp.',
           'Staff accounts with limits, so a cashier can record sales without seeing your profit.',
           'You can download your records at any time. Your data should never be locked in.',
-          'A price that makes sense for a small business.',
+          'A price that makes sense for your business.',
         ],
       },
       {
         title: 'How LogBase helps',
         paras: [
           'LogBase is built around this routine. You add your products with their prices and opening stock (or import them from a spreadsheet), then record sales and purchases every day. Stock goes down when you sell and up when you buy, and the dashboard shows what is low, what you sold today and how your business is doing.',
-          'It keeps recording without internet and sends everything to your account when the connection returns. Customers who owe you, suppliers you owe and staff permissions are all built in. You can try it free for 14 days with no card, and keep using the free plan after that for a small business.',
+          'It keeps recording without internet and sends everything to your account when the connection returns. Customers who owe you, suppliers you owe and staff permissions are all built in. You can try it free for 14 days with no card, and keep using the free plan after that while you are small.',
         ],
       },
     ],
@@ -65,7 +65,7 @@ export const GUIDES = [
     title: 'How to track customers who owe you money in your shop',
     short: 'A simple system so no debt is forgotten, and a polite way to remind people.',
     description:
-      'Customers who pay later are normal in Nigerian business, but forgotten debts cost real money. Learn a simple way to record, track and politely collect what you are owed.',
+      'Customers who pay later are normal in business, but forgotten debts cost real money. Learn a simple way to record, track and politely collect what you are owed.',
     published: '2026-10-11',
     intro:
       'Selling on credit builds loyal customers, but every unrecorded debt is money you may never see again. Most shop owners who lose money to debts have not been cheated; they just could not remember who owed what. Here is a simple system that fixes that.',

@@ -36,7 +36,7 @@ export default function Contact() {
 
       <Section title="About us">
         <p>
-          {SITE.name} is a product of {SITE.company}, a software business building tools for small and growing businesses.
+          {SITE.name} is a product of {SITE.company}, a software business building tools for businesses of every kind.
         </p>
       </Section>
     </LegalPage>
