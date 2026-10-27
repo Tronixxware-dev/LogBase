@@ -34,9 +34,9 @@ function NavItem({ link, pathname, showsRecordItem, label, onNavigate, nested = 
       href={link.href}
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
-      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200 ${
+      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200 active:scale-[0.97] active:bg-primary/15 ${
         active
-          ? 'bg-primary/10 font-medium text-primary'
+          ? 'animate-nav-pop bg-primary/10 font-medium text-primary'
           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
       } ${className}`}
     >
@@ -79,7 +79,7 @@ function NavGroup({ link, pathname, showsRecordItem, label, onNavigate }) {
           onClick={() => setOpen((v) => !v)}
           aria-expanded={showChildren}
           aria-label={toggleLabel}
-          className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-all duration-200 hover:bg-gray-100 hover:text-gray-900 ${
+          className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-all duration-200 hover:bg-gray-100 hover:text-gray-900 active:scale-[0.97] active:bg-primary/15 ${
             childActive ? 'font-medium text-gray-900' : 'text-gray-600'
           }`}
         >
@@ -98,14 +98,14 @@ function NavGroup({ link, pathname, showsRecordItem, label, onNavigate }) {
             onClick={() => setOpen((v) => !v)}
             aria-expanded={showChildren}
             aria-label={toggleLabel}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-200/60 hover:text-gray-700"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-200/60 hover:text-gray-700 active:scale-90"
           >
             <Icon name="chevron" className={`h-4 w-4 transition-transform duration-200 ${showChildren ? '' : '-rotate-90'}`} />
           </button>
         </div>
       )}
       {showChildren && (
-        <div className="animate-fade-in ml-5 mt-0.5 space-y-0.5 border-l border-gray-200 pl-2">
+        <div className="animate-fade-in ml-7 mt-0.5 space-y-0.5 border-l border-gray-200 pl-3">
           {items.map((child) => (
             <NavItem
               key={child.href}
@@ -134,9 +134,8 @@ function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
   const { top: visibleTop, products: visibleProducts, owner: visibleOwner, account: visibleAccount } = visibleLinks({ can, isOwner, businessType, approvalsOn, isReferrer: Boolean(user && user.isReferrer) });
   const showsRecordItem = visibleTop.some((l) => l.label === 'Record sale');
 
-  const sectionHasActive = visibleProducts.some((l) => isActive(pathname, l, showsRecordItem));
-  const [open, setOpen] = useState(false); // folded until the arrow is clicked (stays open while you are on one of its pages)
-  const showSection = open || sectionHasActive;
+  // (the pages that are only in the quick search, like Inventory, have no menu item)
+  const menuProducts = visibleProducts.filter((l) => !l.searchOnly);
   const businessName = businessNameOf(user);
 
   return (
@@ -165,34 +164,19 @@ function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
           );
         })}
 
-        {visibleProducts.length > 0 && (
-          <div className="pt-4">
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              aria-expanded={showSection}
-              className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400 transition hover:text-gray-600"
-            >
-              {productsSectionLabel(businessType)}
-              <Icon
-                name="chevron"
-                className={`h-4 w-4 transition-transform duration-200 ${showSection ? '' : '-rotate-90'}`}
+        {menuProducts.length > 0 && (
+          <div className="space-y-0.5 pt-4">
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{productsSectionLabel(businessType)}</p>
+            {menuProducts.map((link) => (
+              <NavItem
+                key={link.href}
+                link={link}
+                label={labelFor(link, can, businessType)}
+                pathname={pathname}
+                showsRecordItem={showsRecordItem}
+                onNavigate={onNavigate}
               />
-            </button>
-            {showSection && (
-              <div className="animate-fade-in mt-1 space-y-0.5">
-                {visibleProducts.map((link) => (
-                  <NavItem
-                    key={link.href}
-                    link={link}
-                    label={labelFor(link, can, businessType)}
-                    pathname={pathname}
-                    showsRecordItem={showsRecordItem}
-                    onNavigate={onNavigate}
-                  />
-                ))}
-              </div>
-            )}
+            ))}
           </div>
         )}
 

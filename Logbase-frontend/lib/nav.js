@@ -74,12 +74,10 @@ export const topLinks = [
 ];
 
 export const productLinks = [
-  // the whole stock of the store you work in, with filters, low stock and the archive
-  { href: '/dashboard/inventory', label: 'Inventory', icon: 'inventory', perms: ['viewStock', 'manageProducts'], feature: 'products' },
-  // stock sent between stores
-  { href: '/dashboard/transfers', label: 'Transfers', icon: 'transfer', perms: ['adjustStock', 'manageProducts', 'managePurchases', 'viewStock', 'viewInsights'], feature: 'products' },
   // products and stock are one page: anyone who may see stock sees the list, only managers can add or edit
   { href: '/dashboard/products', label: 'Products', icon: 'products', perms: ['viewStock', 'manageProducts'], feature: 'products', typeLabels: { repair: 'Spare parts' } },
+  // stock sent between stores
+  { href: '/dashboard/transfers', label: 'Transfers', icon: 'transfer', perms: ['adjustStock', 'manageProducts', 'managePurchases', 'viewStock', 'viewInsights'], feature: 'products' },
   { href: '/dashboard/categories', label: 'Categories', icon: 'categories', perms: ['manageProducts'], feature: 'products' },
   {
     href: '/dashboard/stock-activities',
@@ -101,6 +99,8 @@ export const productLinks = [
     feature: 'imei',
     perms: ['recordSales', 'viewAllSales', 'viewInsights', 'viewStock', 'managePurchases', 'processReturns'],
   },
+  // the whole stock of the store you work in: no menu item (it is reachable from the quick search and the Products page)
+  { href: '/dashboard/inventory', label: 'Inventory', icon: 'inventory', perms: ['viewStock', 'manageProducts'], feature: 'products', searchOnly: true },
 ];
 
 export const teamLink = { href: '/dashboard/staffs', label: 'Staffs', icon: 'team' };
