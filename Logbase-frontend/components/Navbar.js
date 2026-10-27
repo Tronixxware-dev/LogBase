@@ -67,7 +67,8 @@ function NavItem({ link, pathname, showsRecordItem, label, onNavigate, nested = 
 function NavGroup({ link, pathname, showsRecordItem, label, onNavigate }) {
   const items = link.children.filter((c) => !c.searchOnly);
   const childActive = items.some((c) => isActive(pathname, c, showsRecordItem));
-  const [open, setOpen] = useState(true);
+  // sub-menus start folded; the arrow opens them (the one holding the page you are on stays open)
+  const [open, setOpen] = useState(false);
   const showChildren = open || childActive;
   const toggleLabel = `${showChildren ? 'Hide' : 'Show'} ${label || link.label} sub-menu`;
   return (
@@ -134,7 +135,7 @@ function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
   const showsRecordItem = visibleTop.some((l) => l.label === 'Record sale');
 
   const sectionHasActive = visibleProducts.some((l) => isActive(pathname, l, showsRecordItem));
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false); // folded until the arrow is clicked (stays open while you are on one of its pages)
   const showSection = open || sectionHasActive;
   const businessName = businessNameOf(user);
 

@@ -61,12 +61,11 @@ const icons = {
       <circle cx="17" cy="19.5" r="1.3" />
     </>
   ),
+  // a supplier is a maker / wholesaler, so a factory (the delivery truck is the Deliveries icon)
   suppliers: (
     <>
-      <path d="M2 6h12v10H2z" />
-      <path d="M14 10h4l4 3v3h-8" />
-      <circle cx="6.5" cy="17.5" r="1.8" />
-      <circle cx="17.5" cy="17.5" r="1.8" />
+      <path d="M3 20V10l6 4v-4l6 4V5h3.5a1.5 1.5 0 0 1 1.5 1.5V20z" />
+      <path d="M7 20v-3M12 20v-3M17 20v-3" />
     </>
   ),
   record: (

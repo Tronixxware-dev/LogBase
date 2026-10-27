@@ -10,7 +10,7 @@ import { DEFAULT_BUSINESS_TYPE, hasFeature } from '@/lib/businessTypes';
 //   children:    sub-menu items shown under the item (they follow the same rules)
 //   group:       a heading that only opens and closes its sub-menu (Sales); it is shown when at least one sub-menu item is
 //   excludePaths: pages under this item's address that belong to another menu item (Laundry orders vs. its Overview)
-//   searchOnly:  a page that is reachable in the quick search but has no menu item of its own (Deliveries is a tab of Orders & Deliveries)
+//   searchOnly:  a page that is reachable in the quick search but has no menu item of its own
 //   unlessFeature: hidden for the business types that have this feature (Purchases moves under Sales > Buy for them)
 //   hideWhen:    hide the item when the user has any of these (so "My sales" disappears once they see all sales)
 //   ownerHidden: not shown to the owner (who records sales from the Overview buttons)
@@ -18,10 +18,9 @@ import { DEFAULT_BUSINESS_TYPE, hasFeature } from '@/lib/businessTypes';
 const SWAPS_PATH = '/dashboard/sales/swaps';
 const SALES_PERMS = ['recordSales', 'viewAllSales', 'viewInsights'];
 
-// The Sales pages: the list, a sale and its receipt, and the Deliveries tab. Swaps have their own sub-menu item.
+// The Sales pages: the list, a sale and its receipt. Swaps and Deliveries have their own sub-menu items.
 const salesActive = (showsRecordItem) => (pathname) =>
   pathname === '/dashboard/sales' ||
-  pathname.startsWith('/dashboard/deliveries') ||
   (pathname.startsWith('/dashboard/sales/') &&
     !pathname.startsWith(SWAPS_PATH) &&
     !(showsRecordItem && pathname.startsWith('/dashboard/sales/new')));
@@ -29,6 +28,8 @@ const salesActive = (showsRecordItem) => (pathname) =>
 // the sub-menu under Sales
 const salesChildren = [
   { href: '/dashboard/sales', label: 'Orders & Deliveries', icon: 'sales', salesLike: true, feature: 'sales', perms: SALES_PERMS },
+  // what you paid for deliveries (the administrator only)
+  { href: '/dashboard/deliveries', label: 'Deliveries', icon: 'deliveries', ownerOnly: true, feature: 'deliveries' },
   {
     href: SWAPS_PATH,
     label: 'Swaps',
@@ -41,7 +42,6 @@ const salesChildren = [
   { href: '/dashboard/purchases', label: 'Buy', icon: 'buy', feature: 'sales', perms: ['managePurchases'] },
   // what customers still owe
   { href: '/dashboard/credit', label: 'Credit', icon: 'credit', feature: 'sales', perms: ['manageCustomers'] },
-  { href: '/dashboard/deliveries', label: 'Deliveries', icon: 'deliveries', ownerOnly: true, feature: 'deliveries', searchOnly: true },
 ];
 
 export const topLinks = [
