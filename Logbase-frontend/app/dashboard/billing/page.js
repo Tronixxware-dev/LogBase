@@ -18,7 +18,7 @@ import {
 } from '@/lib/billing';
 import PageHeader from '@/components/PageHeader';
 import { useUser } from '@/components/UserProvider';
-import { businessTypeOf } from '@/lib/businessTypes';
+import { businessTypeOf, isOrderBased } from '@/lib/businessTypes';
 import { ErrorBanner, LoadingState, cardClass, primaryButtonClass } from '@/components/ui';
 
 const PLAN_ORDER = ['free', 'starter', 'business'];
@@ -56,7 +56,7 @@ function Meter({ label, used, limit }) {
 // Your plan, what you use, the plans on offer (paid on Paystack) and your payments. Administrator only.
 export default function BillingPage() {
   const { user } = useUser();
-  const laundromat = businessTypeOf(user) === 'laundromat';
+  const orderBased = isOrderBased(businessTypeOf(user));
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -148,6 +148,7 @@ export default function BillingPage() {
   if (loading) return <LoadingState label="Loading billing…" />;
 
   const sub = data && data.subscription;
+  const noun = (sub && sub.orderNoun) || 'orders'; // what a trial counts: laundry orders or tailoring orders
   const renew = data && data.autoRenew; // missing on an older server: then there is simply no automatic renewal to show
   // the box starts ticked (with the wording next to the plans); once a card is saved it follows the saved setting
   const renewOn = !renew ? false : renewChoice !== null ? renewChoice : renew.card ? renew.enabled : true;
@@ -192,16 +193,16 @@ export default function BillingPage() {
           <p className="mt-1 text-sm text-gray-600">{status.detail}</p>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {laundromat ? (
-              sub.trialOrders && <Meter label="Orders in your free trial" used={sub.trialOrders.used} limit={sub.trialOrders.limit} />
+            {orderBased ? (
+              sub.trialOrders && <Meter label={`${noun.charAt(0).toUpperCase()}${noun.slice(1)} in your free trial`} used={sub.trialOrders.used} limit={sub.trialOrders.limit} />
             ) : (
               <Meter label="Units in stock" used={data.usage.stocks} limit={sub.limits.stocks} />
             )}
             <Meter label="Staff accounts" used={data.usage.staff} limit={sub.limits.staff} />
           </div>
           <p className="mt-3 text-xs text-gray-400">
-            {laundromat
-              ? 'When the free trial ends (after 50 orders or 14 days, whichever comes first) you need a plan to take new orders. Starter and Business have no limit on orders. Orders you already took stay here, and you can keep working on them.'
+            {orderBased
+              ? `When the free trial ends (after 50 ${noun} or 14 days, whichever comes first) you need a plan to take new ones. Starter and Business have no limit. What you already took stays here, and you can keep working on it.`
               : 'If you go over a limit, you can still sell and use everything you already have. You just cannot add more stock or staff until you upgrade. Selling stock makes room again.'}
           </p>
 
@@ -330,7 +331,7 @@ export default function BillingPage() {
               <p className="h-5 text-xs text-green-700">{paid && period === 'yearly' && saving > 0 ? `You save ${formatMoney(saving)} a year` : ''}</p>
 
               <ul className="mt-3 flex-1 space-y-2 text-sm">
-                {planLines(plan, { laundromat }).map((line) => (
+                {planLines(plan, { orderNoun: orderBased ? noun : undefined }).map((line) => (
                   <li key={line.text} className={`flex gap-2 ${line.included ? 'text-gray-700' : 'text-gray-400 line-through'}`}>
                     <span aria-hidden="true" className={line.included ? 'text-green-600' : 'text-gray-300'}>
                       {line.included ? '✓' : '–'}

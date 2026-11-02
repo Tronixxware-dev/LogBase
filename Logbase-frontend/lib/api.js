@@ -972,3 +972,176 @@ export function saveNotificationPrefs(payload) {
 }
 
 export { getToken, setToken, clearToken };
+
+/* ------------------------------------------------------------------ */
+/* Workers: tailors, what they earned and were paid                   */
+/* ------------------------------------------------------------------ */
+
+// params: { kind: 'tailor', active: '1', search }
+export function listWorkers(params) {
+  return apiRequest(`/workers${query(params)}`, { auth: true });
+}
+
+export function getWorker(id) {
+  return apiRequest(`/workers/${id}`, { auth: true });
+}
+
+export function createWorker(payload) {
+  return apiRequest('/workers', { method: 'POST', body: payload, auth: true });
+}
+
+export function updateWorker(id, payload) {
+  return apiRequest(`/workers/${id}`, { method: 'PATCH', body: payload, auth: true });
+}
+
+export function deleteWorker(id) {
+  return apiRequest(`/workers/${id}`, { method: 'DELETE', auth: true });
+}
+
+// payload: { kind: 'payout' | 'bonus' | 'deduction', amount, description, method, key, advance }
+export function addWorkerEntry(id, payload) {
+  return apiRequest(`/workers/${id}/entries`, { method: 'POST', body: payload, auth: true });
+}
+
+export function deleteWorkerEntry(id, entryId) {
+  return apiRequest(`/workers/${id}/entries/${entryId}`, { method: 'DELETE', auth: true });
+}
+
+/* ------------------------------------------------------------------ */
+/* Tailor orders, price list of garments, customers' measurements     */
+/* ------------------------------------------------------------------ */
+
+// params: { status, search, customer, shop }
+export function listTailorOrders(params) {
+  return apiRequest(`/tailor${query(params)}`, { auth: true });
+}
+
+export function getTailorOverview() {
+  return apiRequest(`/tailor/overview${query({ today: localDay() })}`, { auth: true });
+}
+
+export function getTailorOrder(id) {
+  return apiRequest(`/tailor/${id}`, { auth: true });
+}
+
+export function createTailorOrder(payload) {
+  return apiRequest('/tailor', { method: 'POST', body: payload, auth: true, timeoutMs: SALE_TIMEOUT_MS });
+}
+
+export function updateTailorOrder(id, payload) {
+  return apiRequest(`/tailor/${id}`, { method: 'PATCH', body: payload, auth: true });
+}
+
+export function setTailorStatus(id, status, note, extra) {
+  return apiRequest(`/tailor/${id}/status`, { method: 'POST', body: { ...(extra || {}), status, note }, auth: true });
+}
+
+export function addTailorPayment(id, payload) {
+  return apiRequest(`/tailor/${id}/payments`, { method: 'POST', body: payload, auth: true });
+}
+
+export function addTailorPiece(id, payload) {
+  return apiRequest(`/tailor/${id}/pieces`, { method: 'POST', body: payload, auth: true });
+}
+
+export function updateTailorPiece(id, pieceId, payload) {
+  return apiRequest(`/tailor/${id}/pieces/${pieceId}`, { method: 'PATCH', body: payload, auth: true });
+}
+
+export function removeTailorPiece(id, pieceId) {
+  return apiRequest(`/tailor/${id}/pieces/${pieceId}`, { method: 'DELETE', auth: true });
+}
+
+export function setTailorPieceDone(id, pieceId, done) {
+  return apiRequest(`/tailor/${id}/pieces/${pieceId}/done`, { method: 'POST', body: { done }, auth: true });
+}
+
+export function addTailorMaterial(id, payload) {
+  return apiRequest(`/tailor/${id}/materials`, { method: 'POST', body: payload, auth: true });
+}
+
+export function removeTailorMaterial(id, materialId) {
+  return apiRequest(`/tailor/${id}/materials/${materialId}`, { method: 'DELETE', auth: true });
+}
+
+export function addTailorFitting(id, payload) {
+  return apiRequest(`/tailor/${id}/fittings`, { method: 'POST', body: payload, auth: true });
+}
+
+export function updateTailorFitting(id, fittingId, payload) {
+  return apiRequest(`/tailor/${id}/fittings/${fittingId}`, { method: 'PATCH', body: payload, auth: true });
+}
+
+export function removeTailorFitting(id, fittingId) {
+  return apiRequest(`/tailor/${id}/fittings/${fittingId}`, { method: 'DELETE', auth: true });
+}
+
+export function deleteTailorOrder(id) {
+  return apiRequest(`/tailor/${id}`, { method: 'DELETE', auth: true });
+}
+
+// Style pictures on a tailor order (`path` is /tailor/<id>)
+async function uploadJobPhotos(path, files, extra = '') {
+  const formData = new FormData();
+  Array.from(files).forEach((file) => formData.append('images', file));
+  const res = await send(`${API_URL}${path}/photos${extra}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getToken()}` },
+    body: formData,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (res.status === 401) handleUnauthorized();
+    throw new Error(data.message || 'Upload failed');
+  }
+  return data;
+}
+
+export function uploadTailorPhotos(id, files) {
+  return uploadJobPhotos(`/tailor/${id}`, files);
+}
+
+export function deleteTailorPhoto(id, photoId) {
+  return apiRequest(`/tailor/${id}/photos/${photoId}`, { method: 'DELETE', auth: true });
+}
+
+export function listTailorStyles() {
+  return apiRequest('/tailor/styles', { auth: true });
+}
+
+export function createTailorStyle(payload) {
+  return apiRequest('/tailor/styles', { method: 'POST', body: payload, auth: true });
+}
+
+export function updateTailorStyle(id, payload) {
+  return apiRequest(`/tailor/styles/${id}`, { method: 'PATCH', body: payload, auth: true });
+}
+
+export function deleteTailorStyle(id) {
+  return apiRequest(`/tailor/styles/${id}`, { method: 'DELETE', auth: true });
+}
+
+// params: { customer, search }
+export function listMeasurements(params) {
+  return apiRequest(`/tailor/measurements${query(params)}`, { auth: true });
+}
+
+// payload: { customer, label, unit, values: [{ name, value }], notes }
+export function saveMeasurements(payload) {
+  return apiRequest('/tailor/measurements', { method: 'PUT', body: payload, auth: true });
+}
+
+export function deleteMeasurements(id) {
+  return apiRequest(`/tailor/measurements/${id}`, { method: 'DELETE', auth: true });
+}
+
+/* ------------------------------------------------------------------ */
+/* Dates                                                              */
+/* ------------------------------------------------------------------ */
+
+// The person's own today ("2026-10-05"), so "late" and "today" mean their day, not the server's
+function localDay() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}

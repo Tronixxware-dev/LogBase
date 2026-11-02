@@ -39,6 +39,11 @@ const RULES = [
   // repair jobs (taking one in needs "Record sales")
   [/^\/dashboard\/repairs\/new\/?$/, ['recordSales']],
   [/^\/dashboard\/repairs(\/.*)?$/, ['recordSales', 'viewAllSales', 'viewInsights']],
+  // tailor orders (taking one needs "Record sales"); the price list of garments is for the owner only (no rule = owner only)
+  [/^\/dashboard\/tailor\/styles\/?$/, []],
+  [/^\/dashboard\/tailor\/new\/?$/, ['recordSales']],
+  [/^\/dashboard\/tailor(\/.*)?$/, ['recordSales', 'viewAllSales', 'viewInsights']],
+  // a worker's account (what they earned and were paid) is for the owner only: no rule
   // the laundry register; the list of clothing items and prices is for the owner only (no rule = owner only)
   [/^\/dashboard\/laundry\/items\/?$/, []],
   [/^\/dashboard\/laundry\/new\/?$/, ['recordSales']],

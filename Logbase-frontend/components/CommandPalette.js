@@ -53,6 +53,7 @@ export default function CommandPalette() {
       has('swaps') && can('recordSales') && { id: 'a-swap', label: 'Record an item swap', icon: 'swap', href: '/dashboard/sales/swaps/new', group: 'Quick actions' },
       has('repairs') && can('recordSales') && { id: 'a-repair', label: 'Take in a repair', icon: 'wrench', href: '/dashboard/repairs/new', group: 'Quick actions' },
       has('laundry') && can('recordSales') && { id: 'a-laundry', label: 'New laundry order', icon: 'shirt', href: '/dashboard/laundry/new', group: 'Quick actions' },
+      has('tailor') && can('recordSales') && { id: 'a-tailor', label: 'New tailoring order', icon: 'scissors', href: '/dashboard/tailor/new', group: 'Quick actions' },
       has('products') && can('managePurchases') && { id: 'a-purchase', label: 'Record a purchase', icon: 'purchases', href: '/dashboard/purchases/new', group: 'Quick actions' },
       has('products') && can('manageProducts') && { id: 'a-product', label: businessType === 'repair' ? 'Add a spare part' : 'Add a product', icon: 'products', href: '/dashboard/products/new', group: 'Quick actions' },
       has('products') && can('adjustStock') && { id: 'a-transfer', label: 'Transfer stock to another store', icon: 'transfer', href: '/dashboard/transfers/new', group: 'Quick actions' },

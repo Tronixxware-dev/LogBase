@@ -6,6 +6,7 @@ export const BUSINESS_TYPES = [
   { key: 'retail', label: 'General shop / retail', icon: 'store', blurb: 'Products, stock, sales, customers and debts.' },
   { key: 'laundromat', label: 'Laundromat', icon: 'shirt', blurb: 'A laundry register: clothes in, price, pick-up and delivery.' },
   { key: 'repair', label: 'Repair workshop', icon: 'wrench', blurb: 'Repair jobs with deposits, status, spare parts and job slips.' },
+  { key: 'tailor', label: 'Tailor / fashion designer', icon: 'scissors', blurb: 'Customer measurements, orders, fittings, tailors’ pay and ready-made sales.' },
 ];
 
 // Businesses created before types existed are phone & gadget shops, so nothing changes for them.
@@ -17,17 +18,25 @@ const FEATURES = {
   retail: ['overview', 'sales', 'products', 'deliveries'],
   laundromat: ['laundry'],
   repair: ['repairs', 'products'],
+  // a tailor also sells ready-made clothes and fabric (sales and products)
+  tailor: ['tailor', 'sales', 'products'],
 };
 
 // The first page a type opens on (the Overview shows sales, which a laundromat or a workshop does not have).
 const HOME = {
   laundromat: '/dashboard/laundry/overview',
   repair: '/dashboard/repairs',
+  tailor: '/dashboard/tailor/overview',
 };
 
 export function businessTypeOf(user) {
   const type = user && user.businessType;
   return BUSINESS_TYPES.some((t) => t.key === type) ? type : DEFAULT_BUSINESS_TYPE;
+}
+
+// These kinds of business hold no stock, so their free trial is counted in orders (laundry orders, tailoring orders)
+export function isOrderBased(type) {
+  return type === 'laundromat' || type === 'tailor';
 }
 
 export function hasFeature(type, feature) {

@@ -23,6 +23,8 @@ const CATEGORIES = [
   { key: 'swap', label: 'Item swaps', feature: 'swaps' },
   { key: 'repair', label: 'Repairs', feature: 'repairs' },
   { key: 'laundry', label: 'Laundry', feature: 'laundry' },
+  { key: 'tailor', label: 'Tailoring orders', feature: 'tailor' },
+  { key: 'worker', label: 'Tailors & their pay', feature: 'tailor' },
   { key: 'transfer', label: 'Stock transfers', feature: 'products' },
   { key: 'store', label: 'Stores', feature: 'products' },
   { key: 'staff', label: 'Staff and roles' },
@@ -41,6 +43,8 @@ const TAG_STYLE = {
   swap: 'bg-teal-50 text-teal-700',
   repair: 'bg-blue-50 text-blue-700',
   laundry: 'bg-cyan-50 text-cyan-700',
+  tailor: 'bg-fuchsia-50 text-fuchsia-700',
+  worker: 'bg-amber-50 text-amber-700',
   transfer: 'bg-indigo-50 text-indigo-700',
   store: 'bg-indigo-50 text-indigo-700',
 };
@@ -74,7 +78,7 @@ export default function ActivityPage() {
   const { user } = useUser();
   // the activity types that belong to this kind of business (a laundromat has no item swaps)
   const businessType = businessTypeOf(user);
-  const categories = CATEGORIES.filter((c) => !c.feature || hasFeature(businessType, c.feature));
+  const categories = CATEGORIES.filter((c) => !c.feature || [].concat(c.feature).some((f) => hasFeature(businessType, f)));
   const [items, setItems] = useState([]);
   const [nextBefore, setNextBefore] = useState(null);
   const [category, setCategory] = useState('');

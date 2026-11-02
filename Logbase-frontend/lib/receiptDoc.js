@@ -176,6 +176,68 @@ export function repairDoc(repair, org) {
   return { title: 'Repair job slip', blocks };
 }
 
+// A tailor's order slip: what was ordered, the measurements taken, the price, the deposit and the day to collect
+export function tailorDoc(order, org) {
+  const phone = describePhone(order.customerPhone).display;
+  const unit = order.unit === 'cm' ? 'cm' : 'in';
+  const deposits = (order.payments || []).filter((p) => p.kind === 'deposit');
+
+  const info = [
+    ['Order #', order.code],
+    ['Received', formatDateTime(order.receivedAt)],
+  ];
+  if (order.dueDate) info.push(['Collect on', formatDate(order.dueDate)]);
+  if (order.recordedByName && showSeller(org)) info.push(['Taken by', order.recordedByName]);
+  info.push(['Customer', order.customerName]);
+  if (phone) info.push(['Phone', phone]);
+  if (order.occasion) info.push(['Occasion', order.occasion]);
+
+  const items = (order.pieces || []).map((p) => {
+    const notes = [];
+    if (p.fabricFrom === 'shop') notes.push(`Cloth: ours${p.fabric ? ` (${p.fabric})` : ''}`);
+    else notes.push(`Cloth: yours${p.fabric ? ` (${p.fabric})` : ''}`);
+    if (p.details) notes.push(p.details);
+    if ((p.measurements || []).length > 0) notes.push(p.measurements.map((m) => `${m.name} ${m.value}`).join(', ') + ` (${unit})`);
+    return {
+      name: `${p.quantity > 1 ? `${p.quantity} × ` : ''}${p.style}`,
+      sub: p.price > 0 ? `${p.quantity} @ ${formatMoney(p.price)}` : undefined,
+      amount: p.price > 0 ? formatMoney((p.price || 0) * (p.quantity || 1)) : '',
+      notes,
+    };
+  });
+
+  const blocks = [{ t: 'info', rows: info }, rule, { t: 'items', items }, rule];
+
+  if (order.total > 0) {
+    const totals = [];
+    if (order.discount > 0) totals.push({ label: 'Discount', value: `-${formatMoney(order.discount)}`, tone: 'muted' });
+    totals.push({ label: 'Total price', value: formatMoney(order.total), tone: 'big' });
+    for (const d of deposits) totals.push({ label: `Deposit (${methodLabel(d.method)})`, value: formatMoney(d.amount), tone: 'muted' });
+    totals.push({ label: 'Paid so far', value: formatMoney(order.amountPaid) });
+    totals.push({ label: 'Balance due', value: order.balance > 0 ? formatMoney(order.balance) : 'Nil', tone: order.balance > 0 ? 'danger' : 'strong' });
+    blocks.push({ t: 'totals', rows: totals });
+    if (order.balance <= 0) blocks.push({ t: 'stamp', text: 'Paid in full' });
+  } else {
+    blocks.push({ t: 'text', lines: ['The price will be confirmed with you.'], align: 'left' });
+    if (order.amountPaid > 0) blocks.push({ t: 'totals', rows: [{ label: 'Deposit paid', value: formatMoney(order.amountPaid) }] });
+  }
+
+  const fittings = (order.fittings || []).filter((f) => f.status === 'scheduled');
+  if (fittings.length > 0) {
+    blocks.push(rule, { t: 'text', lines: ['Fitting'], tone: 'muted', upper: true, align: 'left', tight: true });
+    blocks.push({ t: 'text', lines: fittings.map((f) => formatDate(f.at)), align: 'left' });
+  }
+
+  blocks.push(rule, { t: 'barcode', code: order.code, label: 'ORDER #' });
+  blocks.push({ t: 'text', lines: ['Please bring this slip when you come for your clothes.'], tone: 'muted', align: 'center' });
+  return { title: 'Tailoring order slip', blocks };
+}
+
+
+function serviceLabel2(value) {
+  return value === 'same_day' ? 'Same day' : value === 'express' ? 'Express' : 'Standard';
+}
+
 const CUSTOMER_TYPE = { sale: 'Sale', payment: 'Payment', return: 'Return', earlier: 'Earlier' };
 const SUPPLIER_TYPE = { purchase: 'Purchase', payment: 'Payment', opening: 'Earlier' };
 

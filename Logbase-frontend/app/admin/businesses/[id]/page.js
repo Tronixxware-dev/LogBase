@@ -194,7 +194,7 @@ function Actions({ business, plan, run, id }) {
             go('Trial extended', () => adminExtendTrial(id, Number(days)));
           }}
         >
-          <Field label="Days to add" hint="Added to the end of the trial (or counted from today if it already ended). They get every Business feature while it runs. A laundromat also gets at least 50 more orders to take.">
+          <Field label="Days to add" hint="Added to the end of the trial (or counted from today if it already ended). They get every Business feature while it runs. A laundry or tailoring business also gets at least 50 more orders to take.">
             <input type="number" min="1" max="365" value={days} onChange={(e) => setDays(e.target.value)} className={inputClass} required />
           </Field>
           <div className="flex flex-wrap gap-2">
@@ -295,7 +295,7 @@ function OverviewTab({ data, run }) {
             {plan.planState === 'trialing' && <Line label="Trial ends">{formatDate(plan.trialEndsAt)} ({endsText(plan)})</Line>}
             {plan.trialOrders && (
               <Line label="Trial orders" icon="clock" color="amber">
-                {plan.trialOrders.used} of {plan.trialOrders.limit} laundry orders taken
+                {plan.trialOrders.used} of {plan.trialOrders.limit} {plan.orderNoun || 'orders'} taken
               </Line>
             )}
             {plan.planState === 'active' && (
@@ -307,7 +307,7 @@ function OverviewTab({ data, run }) {
             )}
             {(plan.planState === 'expired' || plan.planState === 'trial_ended') && (
               <Line label="History" icon="clock" color="amber">
-                {plan.planState === 'expired' ? `Was on ${plan.lastPaidPlan || 'a paid plan'}, ended ${formatDate(plan.currentPeriodEnd)}` : plan.trialEndedBy === 'orders' && plan.trialOrders ? `Trial ended after ${plan.trialOrders.limit} laundry orders (days were left until ${formatDate(plan.trialEndsAt)})` : `Trial ended ${formatDate(plan.trialEndsAt)}`}
+                {plan.planState === 'expired' ? `Was on ${plan.lastPaidPlan || 'a paid plan'}, ended ${formatDate(plan.currentPeriodEnd)}` : plan.trialEndedBy === 'orders' && plan.trialOrders ? `Trial ended after ${plan.trialOrders.limit} ${plan.orderNoun || 'orders'} (days were left until ${formatDate(plan.trialEndsAt)})` : `Trial ended ${formatDate(plan.trialEndsAt)}`}
               </Line>
             )}
             <Line label="Last payment" icon="wallet" color="teal">{plan.lastPaymentAt ? formatDateTime(plan.lastPaymentAt) : 'none'}</Line>

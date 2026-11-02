@@ -46,6 +46,20 @@ const salesChildren = [
 
 export const topLinks = [
   { href: '/dashboard', label: 'Overview', icon: 'overview', exact: true, feature: 'overview' },
+  // a tailor's own Overview, orders, customers' measurements, tailors and price list
+  { href: '/dashboard/tailor/overview', label: 'Overview', icon: 'overview', exact: true, feature: 'tailor', perms: SALES_PERMS },
+  {
+    href: '/dashboard/tailor',
+    label: 'Orders',
+    icon: 'scissors',
+    feature: 'tailor',
+    perms: SALES_PERMS,
+    // (these have their own menu items)
+    excludePaths: ['/dashboard/tailor/overview', '/dashboard/tailor/measurements', '/dashboard/tailor/workers', '/dashboard/tailor/styles'],
+  },
+  { href: '/dashboard/tailor/measurements', label: 'Measurements', icon: 'ruler', feature: 'tailor', perms: SALES_PERMS },
+  { href: '/dashboard/tailor/workers', label: 'Tailors', icon: 'team', feature: 'tailor', perms: SALES_PERMS },
+  { href: '/dashboard/tailor/styles', label: 'Styles & prices', icon: 'tag', feature: 'tailor', ownerOnly: true },
   { href: '/dashboard/sales/new', label: 'Record sale', icon: 'record', exact: true, perms: ['recordSales'], ownerHidden: true, feature: 'sales' },
   // "My sales" for someone who only records sales; see labelFor
   { href: '/dashboard/sales', label: 'Sales', icon: 'sales', group: true, salesLike: true, children: salesChildren },
@@ -75,7 +89,7 @@ export const topLinks = [
 
 export const productLinks = [
   // products and stock are one page: anyone who may see stock sees the list, only managers can add or edit
-  { href: '/dashboard/products', label: 'Products', icon: 'products', perms: ['viewStock', 'manageProducts'], feature: 'products', typeLabels: { repair: 'Spare parts' } },
+  { href: '/dashboard/products', label: 'Products', icon: 'products', perms: ['viewStock', 'manageProducts'], feature: 'products', typeLabels: { repair: 'Spare parts', tailor: 'Fabric & ready-made' } },
   // stock sent between stores
   { href: '/dashboard/transfers', label: 'Transfers', icon: 'transfer', perms: ['adjustStock', 'manageProducts', 'managePurchases', 'viewStock', 'viewInsights'], feature: 'products' },
   { href: '/dashboard/categories', label: 'Categories', icon: 'categories', perms: ['manageProducts'], feature: 'products' },
@@ -142,6 +156,7 @@ export function labelFor(link, can, businessType) {
 
 // What the Products section is called in the sidebar
 export function productsSectionLabel(businessType) {
+  if (businessType === 'tailor') return 'Fabric & ready-made';
   return businessType === 'repair' ? 'Spare parts' : 'Products';
 }
 

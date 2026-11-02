@@ -20,10 +20,15 @@ export function daysText(days) {
   return `${days} day${days === 1 ? '' : 's'}`;
 }
 
-// Why a laundromat's free trial or plan ended (the server says: sub.trialEndedBy is 'orders' or 'days'; an ended paid plan has neither)
+// Why a laundry or tailoring business's free trial or plan ended (the server says: sub.trialEndedBy is 'orders' or 'days'; an ended paid plan has neither)
+// What the orders are called for this business ("laundry orders", "tailoring orders")
+export function orderNounOf(sub) {
+  return (sub && sub.orderNoun) || 'orders';
+}
+
 function ordersEndedText(sub) {
   if (sub.state === 'expired') return `Your ${sub.lastPaidPlan ? `${sub.lastPaidPlan.charAt(0).toUpperCase()}${sub.lastPaidPlan.slice(1)} ` : ''}plan has ended.`;
-  if (sub.trialEndedBy === 'orders' && sub.trialOrders) return `Your free trial has ended: you have taken ${sub.trialOrders.limit} orders.`;
+  if (sub.trialEndedBy === 'orders' && sub.trialOrders) return `Your free trial has ended: you have taken ${sub.trialOrders.limit} ${orderNounOf(sub)}.`;
   return 'Your free trial has ended.';
 }
 
@@ -38,7 +43,7 @@ export function statusOf(sub) {
       return {
         tone: sub.daysLeft <= 5 || left <= 10 ? 'warn' : 'good',
         label: 'Free trial',
-        detail: `You are trying the ${sub.planName} plan free. The trial ends after ${orders.limit} orders or ${daysText(sub.daysLeft)} (${formatDate(sub.endsAt)}), whichever comes first. You have taken ${orders.used} of ${orders.limit} orders.`,
+        detail: `You are trying the ${sub.planName} plan free. The trial ends after ${orders.limit} ${orderNounOf(sub)} or ${daysText(sub.daysLeft)} (${formatDate(sub.endsAt)}), whichever comes first. You have taken ${orders.used} of ${orders.limit} ${orderNounOf(sub)}.`,
       };
     }
     return {
@@ -58,7 +63,7 @@ export function statusOf(sub) {
     return {
       tone: 'bad',
       label: 'Ended',
-      detail: `${ordersEndedText(sub)} You cannot take new laundry orders until you choose a plan. Your existing orders are all still here.`,
+      detail: `${ordersEndedText(sub)} You cannot take new ${orderNounOf(sub)} until you choose a plan. What you already have is all still here.`,
     };
   }
   if (sub.state === 'expired') {
@@ -91,16 +96,16 @@ export function bannerFor(sub, autoRenew, usage) {
   if (sub.state !== 'active' && autoRenew && !autoRenew.enabled && autoRenew.failedAttempts >= 3) {
     return { tone: 'bad', text: 'Automatic renewal was switched off after your card was declined three times, so your plan was not renewed.', cta: 'Renew' };
   }
-  // a laundromat: the free trial is counted in orders, and when it is over no new orders can be taken
+  // laundry and tailoring: the free trial is counted in orders, and when it is over no new orders can be taken
   if (sub.ordersBlocked) {
-    return { tone: 'bad', text: `${ordersEndedText(sub)} Choose a plan to take new laundry orders. Your existing orders stay here.`, cta: 'Choose a plan' };
+    return { tone: 'bad', text: `${ordersEndedText(sub)} Choose a plan to take new ${orderNounOf(sub)}. What you already have stays here.`, cta: 'Choose a plan' };
   }
   if (sub.state === 'trialing' && sub.trialOrders) {
     const left = Math.max(0, sub.trialOrders.limit - sub.trialOrders.used);
     if (left <= 10) {
       return {
         tone: 'warn',
-        text: `Your free trial ends after ${sub.trialOrders.limit} orders (or in ${daysText(sub.daysLeft)}, if that comes first). You have taken ${sub.trialOrders.used}, so ${left === 1 ? '1 order is' : `${left} orders are`} left.`,
+        text: `Your free trial ends after ${sub.trialOrders.limit} ${orderNounOf(sub)} (or in ${daysText(sub.daysLeft)}, if that comes first). You have taken ${sub.trialOrders.used}, so ${left} ${left === 1 ? 'is' : 'are'} left.`,
         cta: 'Choose a plan',
       };
     }
@@ -156,10 +161,10 @@ export function bannerFor(sub, autoRenew, usage) {
 }
 
 // What the plan card says about its limits
-// For a laundromat (opts.laundromat) the stock line is about orders instead, since a laundromat holds no stock.
+// For a business that counts orders (opts.orderNoun, e.g. 'laundry orders') the stock line is about orders instead, since it holds no stock.
 export function planLines(plan, opts = {}) {
-  if (opts.laundromat) {
-    const orders = plan.key === 'free' ? 'Free trial: 50 orders or 14 days, then upgrade' : 'Unlimited laundry orders';
+  if (opts.orderNoun) {
+    const orders = plan.key === 'free' ? `Free trial: 50 ${opts.orderNoun} or 14 days, then upgrade` : `Unlimited ${opts.orderNoun}`;
     let staffLine;
     if (plan.limits.staff === 0) staffLine = 'No staff accounts (just you)';
     else if (plan.limits.staff == null) staffLine = 'Unlimited staff accounts';

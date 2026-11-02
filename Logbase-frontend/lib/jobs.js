@@ -30,6 +30,17 @@ export const LAUNDRY_STATUSES = [
   { value: 'collected', label: 'Collected / delivered', tone: 'gray' },
 ];
 
+// Tailor orders go received -> cutting -> sewing -> fitting -> finishing -> ready -> delivered.
+export const TAILOR_STATUSES = [
+  { value: 'received', label: 'Received', tone: 'blue' },
+  { value: 'cutting', label: 'Cutting', tone: 'amber' },
+  { value: 'sewing', label: 'Sewing', tone: 'amber' },
+  { value: 'fitting', label: 'Fitting', tone: 'teal' },
+  { value: 'finishing', label: 'Finishing', tone: 'teal' },
+  { value: 'ready', label: 'Ready for pick-up', tone: 'green' },
+  { value: 'delivered', label: 'Delivered', tone: 'gray' },
+];
+
 export function statusInfo(list, value) {
   return list.find((s) => s.value === value) || { value, label: value || '', tone: 'gray' };
 }
@@ -37,7 +48,7 @@ export function statusInfo(list, value) {
 // A short word for the status filter buttons
 export function shortStatus(list, value) {
   const label = statusInfo(list, value).label;
-  return label === 'Ready for collection' ? 'Ready' : label === 'Collected / delivered' ? 'Collected' : label;
+  return label === 'Ready for collection' || label === 'Ready for pick-up' ? 'Ready' : label === 'Collected / delivered' ? 'Collected' : label === 'Delivery failed' ? 'Failed' : label === 'Out for delivery' ? 'Out' : label;
 }
 
 // "2026-10-21" for an <input type="date"> from a date the server sent (or today when none)
