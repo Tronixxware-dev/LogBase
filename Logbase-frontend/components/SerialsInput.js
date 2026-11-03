@@ -73,7 +73,7 @@ export default function SerialsInput({ value, onChange, expected, suggestions = 
             }
           }}
           onBlur={() => commit(text)}
-          placeholder="Type or scan a number"
+          placeholder="IMEI or serial number"
           className={`${inputClass} min-w-[11rem] flex-1`}
           aria-label={label}
         />
