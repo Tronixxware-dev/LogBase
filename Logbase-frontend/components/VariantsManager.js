@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
+import { Suggestions, useHints } from '@/components/HintLists';
 import { useUser } from '@/components/UserProvider';
 import { inputClass } from '@/components/ui';
 
 // The colour / size's own code and prices, tucked under its row. An empty price means "use the product's price".
 function RowExtras({ row, onChange, tone = '' }) {
   const { isOwner } = useUser();
+  const { hints } = useHints();
   const filled = Boolean(row.sku) || (row.sellingPrice ?? '') !== '' || (row.costPrice ?? '') !== '';
   const [open, setOpen] = useState(filled);
   return (
@@ -27,6 +29,7 @@ function RowExtras({ row, onChange, tone = '' }) {
               type="text"
               value={row.sku ?? ''}
               onChange={(e) => onChange('sku', e.target.value)}
+              placeholder={hints.skuPlaceholder}
               className={`${inputClass} mt-1 ${tone}`}
             />
           </label>
@@ -81,6 +84,9 @@ export default function VariantsManager({
   onAddRow,
   stockLocked = false,
 }) {
+  const { hints } = useHints();
+  const colourListId = useId();
+  const sizeListId = useId();
   const total =
     rows.filter((r) => !r.removed).reduce((sum, r) => sum + (Number(r.quantity) || 0), 0) +
     newRows.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0);
@@ -113,23 +119,27 @@ export default function VariantsManager({
           ) : (
             <div
               key={row.id}
-              className="grid grid-cols-[1fr_1fr_5rem_auto] items-center gap-2"
+              className="grid grid-cols-2 items-center gap-2 sm:grid-cols-[1fr_1fr_5rem_auto]"
             >
               <input
                 type="text"
                 value={row.color}
                 onChange={(e) => onRowChange(row.id, 'color', e.target.value)}
-                placeholder="Colour"
+                placeholder={hints.colourPlaceholder}
                 aria-label="Colour"
-                className={inputClass}
+                list={colourListId}
+                autoComplete="off"
+                className={`${inputClass} col-span-2 sm:col-span-1`}
               />
               <input
                 type="text"
                 value={row.size}
                 onChange={(e) => onRowChange(row.id, 'size', e.target.value)}
-                placeholder="Size"
+                placeholder={hints.sizePlaceholder}
                 aria-label="Size"
-                className={inputClass}
+                list={sizeListId}
+                autoComplete="off"
+                className={`${inputClass} col-span-2 sm:col-span-1`}
               />
               <input
                 type="number"
@@ -145,7 +155,7 @@ export default function VariantsManager({
                 type="button"
                 onClick={() => onRowRemove(row.id, true)}
                 aria-label="Remove colour / size"
-                className="h-8 w-8 rounded-full text-gray-400 hover:bg-gray-100 hover:text-red-600"
+                className="h-8 w-8 justify-self-end rounded-full text-gray-400 hover:bg-gray-100 hover:text-red-600 sm:justify-self-auto"
               >
                 ×
               </button>
@@ -155,22 +165,26 @@ export default function VariantsManager({
         )}
 
         {newRows.map((row) => (
-          <div key={row.key} className="grid grid-cols-[1fr_1fr_5rem_auto] items-center gap-2">
+          <div key={row.key} className="grid grid-cols-2 items-center gap-2 sm:grid-cols-[1fr_1fr_5rem_auto]">
             <input
               type="text"
               value={row.color}
               onChange={(e) => onNewChange(row.key, 'color', e.target.value)}
-              placeholder="New colour"
+              placeholder={hints.colourPlaceholder}
               aria-label="Colour"
-              className={`${inputClass} border-primary`}
+              list={colourListId}
+              autoComplete="off"
+              className={`${inputClass} border-primary col-span-2 sm:col-span-1`}
             />
             <input
               type="text"
               value={row.size}
               onChange={(e) => onNewChange(row.key, 'size', e.target.value)}
-              placeholder="Size"
+              placeholder={hints.sizePlaceholder}
               aria-label="Size"
-              className={`${inputClass} border-primary`}
+              list={sizeListId}
+              autoComplete="off"
+              className={`${inputClass} border-primary col-span-2 sm:col-span-1`}
             />
             <input
               type="number"
@@ -186,7 +200,7 @@ export default function VariantsManager({
               type="button"
               onClick={() => onNewRemove(row.key)}
               aria-label="Cancel new row"
-              className="h-8 w-8 rounded-full text-gray-400 hover:bg-gray-100 hover:text-red-600"
+              className="h-8 w-8 justify-self-end rounded-full text-gray-400 hover:bg-gray-100 hover:text-red-600 sm:justify-self-auto"
             >
               ×
             </button>
@@ -194,6 +208,9 @@ export default function VariantsManager({
           </div>
         ))}
       </div>
+
+      <Suggestions id={colourListId} options={hints.colourOptions} />
+      <Suggestions id={sizeListId} options={hints.sizeOptions} />
 
       <div className="mt-3 flex items-center justify-between">
         <button type="button" onClick={onAddRow} className="text-sm text-primary hover:text-primary-dark">

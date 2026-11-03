@@ -1,6 +1,8 @@
 'use client';
 
+import { useId } from 'react';
 import BrandInput from '@/components/BrandInput';
+import { Suggestions, useHints } from '@/components/HintLists';
 import CategoryPicker from '@/components/CategoryPicker';
 import { useUser } from '@/components/UserProvider';
 import { useShops } from '@/lib/shops';
@@ -18,6 +20,8 @@ import { Field, inputClass } from '@/components/ui';
 export default function ProductEditForm({ form, onChange, hasVariants, totalStock }) {
   const { isOwner } = useUser();
   const { multiple } = useShops();
+  const { hints } = useHints();
+  const nameListId = useId();
 
   function handle(e) {
     onChange(e.target.name, e.target.value);
@@ -26,7 +30,8 @@ export default function ProductEditForm({ form, onChange, hasVariants, totalStoc
   return (
     <div className="space-y-4">
       <Field label="Product name">
-        <input name="name" value={form.name} onChange={handle} required className={inputClass} />
+        <input name="name" value={form.name} onChange={handle} required list={nameListId} autoComplete="off" className={inputClass} placeholder={hints.namePlaceholder} />
+        <Suggestions id={nameListId} options={hints.nameOptions} />
       </Field>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -40,7 +45,7 @@ export default function ProductEditForm({ form, onChange, hasVariants, totalStoc
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="SKU (optional)">
-          <input name="sku" value={form.sku} onChange={handle} className={inputClass} />
+          <input name="sku" value={form.sku} onChange={handle} className={inputClass} placeholder={hints.skuPlaceholder} />
         </Field>
         <Field label="Barcode (optional)" hint="The number printed under the product's barcode (not the IMEI).">
           <input name="barcode" value={form.barcode || ''} onChange={handle} maxLength={60} className={inputClass} />

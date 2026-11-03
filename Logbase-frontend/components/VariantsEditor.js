@@ -1,5 +1,7 @@
 'use client';
 
+import { useId } from 'react';
+import { Suggestions, useHints } from '@/components/HintLists';
 import { inputClass } from '@/components/ui';
 
 let counter = 0;
@@ -14,6 +16,9 @@ export function newVariantRow() {
 // rows:     [{ key, color, size, quantity }]
 // onChange: called with the new rows array
 export default function VariantsEditor({ rows, onChange }) {
+  const { hints } = useHints();
+  const colourListId = useId();
+  const sizeListId = useId();
   function update(key, field, value) {
     onChange(rows.map((r) => (r.key === key ? { ...r, [field]: value } : r)));
   }
@@ -27,20 +32,24 @@ export default function VariantsEditor({ rows, onChange }) {
   return (
     <div className="space-y-3">
       {rows.map((row) => (
-        <div key={row.key} className="grid grid-cols-[1fr_1fr_5rem_auto] items-center gap-2">
+        <div key={row.key} className="grid grid-cols-2 items-center gap-2 sm:grid-cols-[1fr_1fr_5rem_auto]">
           <input
             type="text"
             value={row.color}
             onChange={(e) => update(row.key, 'color', e.target.value)}
-            placeholder="Colour (e.g. Red)"
-            className={inputClass}
+            placeholder={hints.colourPlaceholder}
+            list={colourListId}
+            autoComplete="off"
+            className={`${inputClass} col-span-2 sm:col-span-1`}
           />
           <input
             type="text"
             value={row.size}
             onChange={(e) => update(row.key, 'size', e.target.value)}
-            placeholder="Size (optional)"
-            className={inputClass}
+            placeholder={hints.sizePlaceholder}
+            list={sizeListId}
+            autoComplete="off"
+            className={`${inputClass} col-span-2 sm:col-span-1`}
           />
           <input
             type="number"
@@ -54,12 +63,15 @@ export default function VariantsEditor({ rows, onChange }) {
             type="button"
             onClick={() => remove(row.key)}
             aria-label="Remove variant"
-            className="h-8 w-8 rounded-full text-gray-400 hover:bg-gray-100 hover:text-red-600"
+            className="h-8 w-8 justify-self-end rounded-full text-gray-400 hover:bg-gray-100 hover:text-red-600 sm:justify-self-auto"
           >
             ×
           </button>
         </div>
       ))}
+
+      <Suggestions id={colourListId} options={hints.colourOptions} />
+      <Suggestions id={sizeListId} options={hints.sizeOptions} />
 
       <div className="flex items-center justify-between">
         <button
@@ -67,7 +79,7 @@ export default function VariantsEditor({ rows, onChange }) {
           onClick={() => onChange([...rows, newVariantRow()])}
           className="text-sm text-primary hover:text-primary-dark"
         >
-          + Add another colour / size
+          + Add another colour / {hints.sizeLabel.toLowerCase().replace(' / size', '')}
         </button>
         <span className="text-sm text-gray-500">
           Total stock: <span className="font-medium text-gray-900">{total}</span>

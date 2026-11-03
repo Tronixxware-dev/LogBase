@@ -1,7 +1,7 @@
 'use client';
 
 import { notifySuccess } from '@/lib/feedback';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createProduct, uploadProductImages } from '@/lib/api';
@@ -13,11 +13,15 @@ import CategoryPicker from '@/components/CategoryPicker';
 import TrackingFields from '@/components/TrackingFields';
 import SerialsInput from '@/components/SerialsInput';
 import VariantsEditor, { newVariantRow } from '@/components/VariantsEditor';
+import { Suggestions, useHints } from '@/components/HintLists';
+import { brandForName } from '@/lib/productHints';
 import { ErrorBanner, Field, cardClass, inputClass, primaryButtonClass } from '@/components/ui';
 
 export default function NewProductPage() {
   const router = useRouter();
   const { isOwner } = useUser(); // only the owner sets the cost price
+  const { type, hints } = useHints();
+  const nameListId = useId();
   const [form, setForm] = useState({
     name: '',
     sku: '',
@@ -41,6 +45,15 @@ export default function NewProductPage() {
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
+  }
+
+  // Picking a model from the suggestions also fills in its brand (iPhone 15 -> Apple), unless a brand is already typed.
+  function handleNameChange(e) {
+    const name = e.target.value;
+    setForm((prev) => {
+      const brand = !prev.brand.trim() ? brandForName(type, name) : '';
+      return { ...prev, name, ...(brand ? { brand } : {}) };
+    });
   }
 
   function toggleVariants(checked) {
@@ -125,15 +138,18 @@ export default function NewProductPage() {
       <ErrorBanner message={error} />
 
       <form onSubmit={handleSubmit} className={`${cardClass} space-y-5 p-6`}>
-        <Field label="Product name">
+        <Field label="Product name" hint={hints.nameHint || undefined}>
           <input
             name="name"
             value={form.name}
-            onChange={handleChange}
+            onChange={handleNameChange}
             required
+            list={nameListId}
+            autoComplete="off"
             className={inputClass}
-            placeholder="Ankara gown"
+            placeholder={hints.namePlaceholder}
           />
+          <Suggestions id={nameListId} options={hints.nameOptions} />
         </Field>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -151,7 +167,7 @@ export default function NewProductPage() {
             value={form.sku}
             onChange={handleChange}
             className={inputClass}
-            placeholder="GOWN-01"
+            placeholder={hints.skuPlaceholder}
           />
         </Field>
 
@@ -191,10 +207,8 @@ export default function NewProductPage() {
               className="mt-0.5"
             />
             <span>
-              <span className="font-medium">This product comes in different colours or sizes</span>
-              <span className="block text-xs text-gray-400">
-                Each colour / size gets its own stock count, so you always know what is left.
-              </span>
+              <span className="font-medium">{hints.variantTitle}</span>
+              <span className="block text-xs text-gray-400">{hints.variantHint}</span>
             </span>
           </label>
 
