@@ -245,6 +245,11 @@ export async function changePassword(payload) {
   return data;
 }
 
+// Delete your own account. A staff: their login. The owner: the whole business (also needs confirm: 'DELETE').
+export async function deleteMyAccount(payload) {
+  return apiRequest('/auth/me/delete', { method: 'POST', body: payload, auth: true });
+}
+
 // Find an item by its IMEI / serial number (or the last digits of it): where it came from, who bought it, the warranty.
 export function lookupSerial(q) {
   return apiRequest(`/serials/lookup?q=${encodeURIComponent(q)}`, { auth: true });

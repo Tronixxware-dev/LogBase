@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login, setToken } from '@/lib/api';
 import AuthShell, { AuthButton, AuthError, AuthField } from '@/components/AuthShell';
@@ -10,6 +10,18 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [deleted, setDeleted] = useState(false); // sent here right after deleting the account
+
+  useEffect(() => {
+    let flagged = false;
+    try {
+      flagged = sessionStorage.getItem('logbase_account_deleted') === '1';
+      sessionStorage.removeItem('logbase_account_deleted');
+    } catch {
+      /* no saved flag */
+    }
+    if (flagged || new URLSearchParams(window.location.search).get('deleted') === '1') setDeleted(true);
+  }, []);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -43,6 +55,11 @@ export default function LoginPage() {
         </>
       }
     >
+      {deleted && (
+        <p role="status" className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+          Your account has been deleted.
+        </p>
+      )}
       <AuthError>{error}</AuthError>
 
       <form onSubmit={handleSubmit} className="space-y-5">

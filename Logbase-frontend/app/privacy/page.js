@@ -25,7 +25,7 @@ export default function Privacy() {
           items={[
             'Account details: your name, email address, business name and a password. Passwords are stored only in scrambled (hashed) form; we cannot read them.',
             'Business records you enter: products, stock, sales, purchases, expenses, customers and suppliers (which may include names and phone numbers), staff accounts and the activity on your account.',
-            'Pictures you upload, such as product photos.',
+            'Pictures you upload, such as product photos, and pictures taken with your camera when you choose to take a photo or scan a barcode or IMEI number. The camera is only used when you press the button for it, and only the picture you choose to save is kept.',
             'Billing information: your plan, payment history and Paystack payment references. If you choose automatic renewal, we keep a token from Paystack that lets us charge your saved card, together with the card brand, last four digits and expiry date. We never see or store your full card number or security code.',
             'Technical information needed to run the service, such as the device and browser type and when you signed in, and error information that helps us fix problems.',
           ]}
@@ -65,7 +65,7 @@ export default function Privacy() {
       </Section>
 
       <Section title="6. How long we keep it">
-        <p>We keep your information while your account is open. If you ask us to delete your account we will remove your business data, except for what we must keep to meet legal or accounting duties (such as payment records) or to settle a dispute, and then only for as long as needed. Backups are overwritten in the normal course.</p>
+        <p>We keep your information while your account is open. You can delete your account yourself at any time in the app: open Profile and choose Delete account. When the owner does this, the whole business is deleted straight away: its records, pictures and every login. A staff member who does it has their own login removed, while the sales and records they made stay in the business&apos;s history. You can also ask us to do it by email. We keep only what we must to meet legal or accounting duties (such as records of plan payments), or to settle a dispute, and then only for as long as needed. Backups are overwritten in the normal course.</p>
       </Section>
 
       <Section title="7. Keeping it safe">
@@ -73,7 +73,7 @@ export default function Privacy() {
       </Section>
 
       <Section title="8. Your rights">
-        <p>Under the Nigeria Data Protection Act you may ask to see the personal information we hold about you, correct it, have it deleted, object to or limit how it is used, or receive a copy of it. You can export your business data from the app. To use any of these rights, email <Mail />. You also have the right to complain to the Nigeria Data Protection Commission.</p>
+        <p>Under the Nigeria Data Protection Act you may ask to see the personal information we hold about you, correct it, have it deleted, object to or limit how it is used, or receive a copy of it. You can export your business data from the app and delete your account in the app (Profile, then Delete account). To use any of these rights in another way, email <Mail />. You also have the right to complain to the Nigeria Data Protection Commission.</p>
         <p>If your information is in a business&apos;s records because you are one of its customers, please contact that business first, since it decides how that information is used.</p>
       </Section>
 

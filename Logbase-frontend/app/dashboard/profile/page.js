@@ -15,6 +15,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { BUSINESS_TYPES, businessTypeOf } from '@/lib/businessTypes';
 import { useUser } from '@/components/UserProvider';
 import PageHeader from '@/components/PageHeader';
+import DeleteAccountCard from '@/components/DeleteAccountCard';
 import Avatar from '@/components/Avatar';
 import CoverBanner from '@/components/CoverBanner';
 import { ErrorBanner, Field, cardClass, inputClass, primaryButtonClass } from '@/components/ui';
@@ -496,6 +497,8 @@ export default function ProfilePage() {
           <SuccessNote message={passwordDone} />
         </div>
       </form>
+
+      <DeleteAccountCard />
     </div>
   );
 }

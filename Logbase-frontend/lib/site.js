@@ -15,7 +15,7 @@ export const SITE = {
   // the public web address, used for the sitemap and link previews (set NEXT_PUBLIC_SITE_URL in the frontend .env when you deploy)
   url: (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/+$/, ''),
   trialDays: 14,
-  updated: '7 October 2026', // when the Terms, Privacy and Refund pages were last reviewed
+  updated: '9 November 2026', // when the Terms, Privacy and Refund pages were last reviewed
 };
 
 // What the plans cost, in naira. Keep this the same as the backend's config/plans.js
