@@ -11,6 +11,7 @@ import { newClientId } from '@/lib/outbox';
 import { dayInputValue, saveErrorMessage } from '@/lib/jobs';
 import { SERVICES, laundryTotals, servicePrice } from '@/lib/laundry';
 import { useUser } from '@/components/UserProvider';
+import { useNativeApp } from '@/lib/nativeApp';
 import PageHeader from '@/components/PageHeader';
 import CustomerPicker, { useCustomerPicker } from '@/components/CustomerPicker';
 import { PaymentMethodSelect } from '@/components/JobParts';
@@ -57,6 +58,7 @@ function amountOf(row) {
 export default function NewLaundryOrderPage() {
   const router = useRouter();
   const { user, isOwner, settings } = useUser();
+  const inApp = useNativeApp(); // no plans or Pay buttons inside the store app
   const picker = useCustomerPicker();
 
   const [rows, setRows] = useState(null);
@@ -212,7 +214,9 @@ export default function NewLaundryOrderPage() {
       <ErrorBanner message={error || loadError || picker.loadError} />
       {planBlocked && (
         <p className="-mt-2 mb-4 text-sm text-gray-600">
-          {isOwner ? (
+          {inApp ? (
+            'New orders cannot be added on this account right now.'
+          ) : isOwner ? (
             <Link href="/dashboard/billing" className="font-medium text-primary hover:underline">
               See plans on the Billing page
             </Link>
@@ -585,7 +589,7 @@ function RowButtons({ row, onAdd, onRemove }) {
   );
 }
 
-// Wash / Wash & iron / Iron only / Dry clean
+// Wash / Wash & iron / Iron only / Dry clean / Starch / Starch & iron
 function ServiceSelect({ value, onChange, label, className = '', placeholder }) {
   return (
     <select value={value} onChange={(e) => e.target.value && onChange(e.target.value)} aria-label={label} className={`${cell} ${className}`}>

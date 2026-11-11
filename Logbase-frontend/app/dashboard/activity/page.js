@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { listActivity } from '@/lib/api';
 import { useUser } from '@/components/UserProvider';
+import { useNativeApp } from '@/lib/nativeApp';
 import { businessTypeOf, hasFeature } from '@/lib/businessTypes';
 import PageHeader from '@/components/PageHeader';
 import { PersonChip } from '@/components/Avatar';
@@ -76,6 +77,7 @@ function timeLabel(value) {
 // Who did what, newest first. Administrator only.
 export default function ActivityPage() {
   const { user } = useUser();
+  const inApp = useNativeApp(); // no plans or Pay buttons inside the store app
   // the activity types that belong to this kind of business (a laundromat has no item swaps)
   const businessType = businessTypeOf(user);
   const categories = CATEGORIES.filter((c) => !c.feature || [].concat(c.feature).some((f) => hasFeature(businessType, f)));
@@ -156,13 +158,17 @@ export default function ActivityPage() {
       <>
         <PageHeader title="Activity" subtitle="Who did what in your business, newest first. Only you can see this page." />
         <div className={`${cardClass} p-8 text-center`}>
-          <h2 className="text-base font-semibold text-gray-900">The activity log is part of the Business plan</h2>
+          <h2 className="text-base font-semibold text-gray-900">{inApp ? 'The activity log is not available on your account' : 'The activity log is part of the Business plan'}</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
-            See who sold, returned, adjusted or changed what, and when. Everything is already being recorded, so you can read the history as soon as you upgrade.
+            {inApp
+              ? 'Everything is already being recorded in the background.'
+              : 'See who sold, returned, adjusted or changed what, and when. Everything is already being recorded, so you can read the history as soon as you upgrade.'}
           </p>
-          <Link href="/dashboard/billing" className={`${primaryButtonClass} mt-5`}>
-            See plans
-          </Link>
+          {!inApp && (
+            <Link href="/dashboard/billing" className={`${primaryButtonClass} mt-5`}>
+              See plans
+            </Link>
+          )}
         </div>
       </>
     );

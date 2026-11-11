@@ -6,6 +6,7 @@ import { SettingsCard } from '@/components/SettingsParts';
 import { useAlerts } from '@/lib/alerts';
 import { hasFeature, businessTypeOf } from '@/lib/businessTypes';
 import { anyPolicyOn } from '@/lib/settings';
+import { useNativeApp } from '@/lib/nativeApp';
 
 function Group({ title, children }) {
   return (
@@ -22,6 +23,7 @@ export default function SettingsPage() {
   const { pendingApprovals } = useAlerts();
   const stores = hasFeature(businessTypeOf(user), 'products');
   const rulesOn = anyPolicyOn(settings.approvalPolicies);
+  const inApp = useNativeApp(); // no plans or payments inside the store app
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -51,7 +53,7 @@ export default function SettingsPage() {
 
           <Group title="Data and billing">
             <SettingsCard href="/dashboard/data" icon="data" tone="teal" title="Import & export" description="Bring in your products and customers, or download your records." />
-            <SettingsCard href="/dashboard/billing" icon="billing" tone="green" title="Billing" description="Your plan, payments and renewal." />
+            {!inApp && <SettingsCard href="/dashboard/billing" icon="billing" tone="green" title="Billing" description="Your plan, payments and renewal." />}
             <SettingsCard href="/dashboard/activity" icon="activity" tone="rose" title="Activity" description="Who did what in your business, and when." />
           </Group>
         </>

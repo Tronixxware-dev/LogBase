@@ -4,10 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ALL_PLANS_INCLUDE, PLANS, SITE, naira } from '@/lib/site';
 import { Icon } from '@/components/Icons';
+import { useNativeApp } from '@/lib/nativeApp';
 
 // The three plans with a monthly / yearly switch. The yearly price is two months free.
 export default function PricingSection() {
   const [yearly, setYearly] = useState(false);
+  const inApp = useNativeApp();
+  if (inApp) return null; // plans are not shown inside the store app
 
   return (
     <section id="pricing" className="scroll-mt-20 px-4 py-14 sm:px-6 sm:py-20">

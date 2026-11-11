@@ -1,0 +1,29 @@
+{
+  "name": "logbase-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Android and iPhone store apps for LogBase (a Capacitor wrapper around https://mylogbase.com)",
+  "scripts": {
+    "icons": "capacitor-assets generate --android --ios --assetPath assets",
+    "icons:redraw": "node scripts/make-icons.mjs",
+    "add:android": "cap add android && node scripts/patch-native.mjs && npm run icons",
+    "add:ios": "cap add ios && node scripts/patch-native.mjs && npm run icons",
+    "sync": "cap sync && node scripts/patch-native.mjs",
+    "open:android": "cap open android",
+    "open:ios": "cap open ios",
+    "doctor": "cap doctor"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/keyboard": "^7.0.0",
+    "@capacitor/splash-screen": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0"
+  }
+}

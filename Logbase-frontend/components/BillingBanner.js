@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { getBilling } from '@/lib/api';
 import { bannerFor } from '@/lib/billing';
 import { useUser } from '@/components/UserProvider';
+import { useNativeApp } from '@/lib/nativeApp';
 
 const STYLE = {
   warn: 'border-amber-200 bg-amber-50 text-amber-900',
@@ -16,6 +17,7 @@ const STYLE = {
 // (or has ended). Nothing is shown for anyone else, or when all is well.
 export default function BillingBanner() {
   const { isOwner } = useUser();
+  const inApp = useNativeApp();
   const pathname = usePathname();
   const [sub, setSub] = useState(null);
   const [autoRenew, setAutoRenew] = useState(null);
@@ -32,11 +34,11 @@ export default function BillingBanner() {
   }, []);
 
   useEffect(() => {
-    if (!isOwner) return undefined;
+    if (!isOwner || inApp) return undefined;
     load();
     window.addEventListener('logbase:billing-changed', load);
     return () => window.removeEventListener('logbase:billing-changed', load);
-  }, [isOwner, load]);
+  }, [isOwner, inApp, load]);
 
   // a plan that holds a limited number of units: look again as the person moves around, so what they just added is counted
   const limited = Boolean(sub && sub.limits && sub.limits.stocks != null);
@@ -44,7 +46,7 @@ export default function BillingBanner() {
     if (isOwner && limited) load();
   }, [pathname, isOwner, limited, load]);
 
-  if (!isOwner || pathname.startsWith('/dashboard/billing')) return null;
+  if (!isOwner || inApp || pathname.startsWith('/dashboard/billing')) return null;
   const banner = bannerFor(sub, autoRenew, usage);
   if (!banner) return null;
 

@@ -1,0 +1,8 @@
+node_modules/
+# the Android and iPhone projects are made again by "npm run add:android" / "npm run add:ios"
+# (remove these two lines if you want to keep them in git after you have signed and released)
+android/
+ios/
+*.keystore
+*.jks
+key.properties

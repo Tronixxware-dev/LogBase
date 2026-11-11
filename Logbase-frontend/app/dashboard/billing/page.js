@@ -18,6 +18,7 @@ import {
 } from '@/lib/billing';
 import PageHeader from '@/components/PageHeader';
 import { useUser } from '@/components/UserProvider';
+import { useNativeApp } from '@/lib/nativeApp';
 import { businessTypeOf, isOrderBased } from '@/lib/businessTypes';
 import { ErrorBanner, LoadingState, cardClass, primaryButtonClass } from '@/components/ui';
 
@@ -54,7 +55,7 @@ function Meter({ label, used, limit }) {
 }
 
 // Your plan, what you use, the plans on offer (paid on Paystack) and your payments. Administrator only.
-export default function BillingPage() {
+function BillingScreen() {
   const { user } = useUser();
   const orderBased = isOrderBased(businessTypeOf(user));
   const [data, setData] = useState(null);
@@ -400,6 +401,22 @@ export default function BillingPage() {
           </ul>
         )}
       </section>
+    </>
+  );
+}
+
+// Inside the Android / iPhone store app there are no plans, prices or Pay buttons (the store rules do not allow selling a
+// subscription there), so this page only says so. Anyone who opens it by an old link or bookmark lands here.
+export default function BillingPage() {
+  const inApp = useNativeApp();
+  if (!inApp) return <BillingScreen />;
+  return (
+    <>
+      <PageHeader title="Billing" subtitle="Your plan and payments." />
+      <div className={`${cardClass} p-8 text-center`}>
+        <h2 className="text-base font-semibold text-gray-900">Plans and payments are not available in this app</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">Your records are safe and everything else works as usual.</p>
+      </div>
     </>
   );
 }

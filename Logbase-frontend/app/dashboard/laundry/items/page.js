@@ -11,7 +11,7 @@ import { Icon } from '@/components/Icons';
 import { ErrorBanner, Field, LoadingState, cardClass, inputClass, primaryButtonClass, secondaryButtonClass } from '@/components/ui';
 
 // The clothing types and their prices that the register offers, as a table with a picture for each item.
-// Each item has a price for every service (Wash, Wash & iron, Iron only, Dry clean).
+// Each item has a price for every service (Wash, Wash & iron, Iron only, Dry clean, Starch, Starch & iron).
 // Only the administrator changes them: one row at a time (Edit) or every price at once (Edit all prices).
 export default function LaundryItemsPage() {
   const { isOwner } = useUser();
@@ -20,16 +20,16 @@ export default function LaundryItemsPage() {
   const [notice, setNotice] = useState('');
   const [busyId, setBusyId] = useState('');
   const [newName, setNewName] = useState('');
-  const [newPrices, setNewPrices] = useState({ price: '', wash_iron: '', iron: '', dry_clean: '' });
+  const [newPrices, setNewPrices] = useState(emptyPrices());
   const [adding, setAdding] = useState(false);
   const [search, setSearch] = useState('');
-  // what is being edited: { [itemId]: { name, price, wash_iron, iron, dry_clean } }. Empty means the table is only being read.
+  // what is being edited: { [itemId]: { name, price, wash_iron, iron, dry_clean, starch, starch_iron } }. Empty means the table is only being read.
   const [drafts, setDrafts] = useState({});
   const [savingAll, setSavingAll] = useState(false);
 
   useEffect(() => {
     listLaundryItems()
-      .then((data) => setItems(data.items || []))
+      .then((data) => setItems(sortByName(data.items || [])))
       .catch((err) => {
         setError(err.message);
         setItems([]);
@@ -38,7 +38,7 @@ export default function LaundryItemsPage() {
 
   const shown = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (items || []).filter((i) => !q || i.name.toLowerCase().includes(q));
+    return sortByName(items || []).filter((i) => !q || i.name.toLowerCase().includes(q));
   }, [items, search]);
 
   async function add(e) {
@@ -49,9 +49,9 @@ export default function LaundryItemsPage() {
     setAdding(true);
     try {
       const data = await createLaundryItem({ name: newName.trim(), ...payloadOf(newPrices) });
-      setItems((prev) => [...prev, data.item]);
+      setItems((prev) => sortByName([...prev, data.item]));
       setNewName('');
-      setNewPrices({ price: '', wash_iron: '', iron: '', dry_clean: '' });
+      setNewPrices(emptyPrices());
       setNotice(`${data.item.name} added`);
     } catch (err) {
       setError(err.message);
@@ -84,7 +84,7 @@ export default function LaundryItemsPage() {
     setBusyId(item._id);
     try {
       const data = await updateLaundryItem(item._id, { name: d.name.trim(), ...payloadOf(d) });
-      setItems((prev) => prev.map((i) => (i._id === item._id ? data.item : i)));
+      setItems((prev) => sortByName(prev.map((i) => (i._id === item._id ? data.item : i))));
       stopEdit(item._id);
       setNotice(`${data.item.name} saved`);
     } catch (err) {
@@ -105,7 +105,7 @@ export default function LaundryItemsPage() {
         if (!isChanged(item)) continue;
         const d = drafts[item._id];
         const data = await updateLaundryItem(item._id, { name: d.name.trim(), ...payloadOf(d) });
-        setItems((prev) => prev.map((i) => (i._id === item._id ? data.item : i)));
+        setItems((prev) => sortByName(prev.map((i) => (i._id === item._id ? data.item : i))));
         saved += 1;
       }
       setDrafts({});
@@ -207,17 +207,17 @@ export default function LaundryItemsPage() {
           <p className="p-6 text-sm text-gray-500">No item matches your search.</p>
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead className="border-b-2 border-gray-300 bg-gray-100 text-left">
               <tr className="text-xs font-bold uppercase tracking-wide text-gray-700">
                 <th className="w-12 px-4 py-3">#</th>
                 <th className="px-3 py-3">Item</th>
                 {SERVICES.map((sv) => (
-                  <th key={sv.value} className="px-3 py-3 text-right">
+                  <th key={sv.value} className="px-2 py-3 text-right leading-tight">
                     {sv.label}
                   </th>
                 ))}
-                {isOwner && <th className="w-44 px-3 py-3 text-right">Actions</th>}
+                {isOwner && <th className="sticky right-0 w-32 bg-gray-100 px-3 py-3 text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -258,7 +258,7 @@ export default function LaundryItemsPage() {
               <input type="text" maxLength={60} value={newName} onChange={(e) => setNewName(e.target.value)} className={inputClass} required />
             </Field>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {SERVICES.map((sv) => (
               <Field key={sv.value} label={`${sv.label} (₦)`}>
                 <input
@@ -313,7 +313,7 @@ function ItemRow({ number, item, editable, draft, bulk, changed, busy, onEdit, o
         </div>
       </td>
       {SERVICES.map((sv) => (
-        <td key={sv.value} className="px-3 py-3 text-right align-middle tabular">
+        <td key={sv.value} className="px-2 py-3 text-right align-middle tabular">
           {editing ? (
             <input
               type="number"
@@ -323,7 +323,7 @@ function ItemRow({ number, item, editable, draft, bulk, changed, busy, onEdit, o
               onChange={(e) => onChange({ [draftKey(sv.value)]: e.target.value })}
               aria-label={sv.value === 'wash' ? `Price of ${item.name}` : `${sv.label} price of ${item.name}`}
               placeholder="0"
-              className={`${inputClass} ml-auto !w-24 text-right`}
+              className={`${inputClass} ml-auto !w-20 text-right`}
             />
           ) : priceFor(sv.value) > 0 ? (
             <span className="font-medium text-gray-900">{formatMoney(priceFor(sv.value))}</span>
@@ -335,7 +335,7 @@ function ItemRow({ number, item, editable, draft, bulk, changed, busy, onEdit, o
         </td>
       ))}
       {editable && (
-        <td className="px-3 py-3 text-right align-middle">
+        <td className="sticky right-0 bg-[var(--surface)] px-3 py-3 text-right align-middle shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
           <RowActions editing={editing} bulk={bulk} changed={changed} busy={busy} confirm={confirm} setConfirm={setConfirm} onEdit={onEdit} onCancel={onCancel} onSave={onSave} onRemove={onRemove} align="end" />
         </td>
       )}
@@ -391,6 +391,16 @@ function RowActions({ editing, bulk, changed, busy, confirm, setConfirm, onEdit,
   );
 }
 
+// The empty price boxes of the "Add an item" form
+function emptyPrices() {
+  return { price: '', wash_iron: '', iron: '', dry_clean: '', starch: '', starch_iron: '' };
+}
+
+// The items A to Z (capital letters and accents ignored)
+function sortByName(list) {
+  return [...list].sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base', numeric: true }));
+}
+
 // The values of an item in the boxes of the edit row (text, so a half-typed number stays as typed)
 function draftOf(item) {
   const prices = item.prices || {};
@@ -400,6 +410,8 @@ function draftOf(item) {
     wash_iron: String(prices.wash_iron ?? 0),
     iron: String(prices.iron ?? 0),
     dry_clean: String(prices.dry_clean ?? 0),
+    starch: String(prices.starch ?? 0),
+    starch_iron: String(prices.starch_iron ?? 0),
   };
 }
 
@@ -407,6 +419,12 @@ function draftOf(item) {
 function payloadOf(d) {
   return {
     price: Number(d.price) || 0,
-    prices: { wash_iron: Number(d.wash_iron) || 0, iron: Number(d.iron) || 0, dry_clean: Number(d.dry_clean) || 0 },
+    prices: {
+      wash_iron: Number(d.wash_iron) || 0,
+      iron: Number(d.iron) || 0,
+      dry_clean: Number(d.dry_clean) || 0,
+      starch: Number(d.starch) || 0,
+      starch_iron: Number(d.starch_iron) || 0,
+    },
   };
 }

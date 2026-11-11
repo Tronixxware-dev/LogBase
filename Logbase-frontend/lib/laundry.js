@@ -14,6 +14,8 @@ export const SERVICES = [
   { value: 'wash_iron', label: 'Wash & iron' },
   { value: 'iron', label: 'Iron only' },
   { value: 'dry_clean', label: 'Dry clean' },
+  { value: 'starch', label: 'Starch' },
+  { value: 'starch_iron', label: 'Starch & iron' },
 ];
 
 export function serviceLabel(value) {
