@@ -11,7 +11,7 @@ export const SITE = {
   seoTitle: 'LogBase | Inventory & Sales App for Any Business',
   seoDescription:
     'LogBase helps any business track stock, record sales and see who owes them, even without internet. Free for 14 days, no card needed.',
-  email: 'tronixxware01@gmail.com',
+  email: 'support@mylogbase.com',
   // the public web address, used for the sitemap and link previews (set NEXT_PUBLIC_SITE_URL in the frontend .env when you deploy)
   url: (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/+$/, ''),
   trialDays: 14,
