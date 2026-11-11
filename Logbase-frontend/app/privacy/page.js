@@ -65,7 +65,7 @@ export default function Privacy() {
       </Section>
 
       <Section title="6. How long we keep it">
-        <p>We keep your information while your account is open. You can delete your account yourself at any time in the app: open Profile and choose Delete account. When the owner does this, the whole business is deleted straight away: its records, pictures and every login. A staff member who does it has their own login removed, while the sales and records they made stay in the business&apos;s history. You can also ask us to do it by email. We keep only what we must to meet legal or accounting duties (such as records of plan payments), or to settle a dispute, and then only for as long as needed. Backups are overwritten in the normal course.</p>
+        <p>We keep your information while your account is open. You can delete your account yourself at any time in the app: open Profile and choose Delete account (the steps are also on our <Link href="/delete-account" className="font-medium text-primary hover:underline">delete account page</Link>). When the owner does this, the whole business is deleted straight away: its records, pictures and every login. A staff member who does it has their own login removed, while the sales and records they made stay in the business&apos;s history. You can also ask us to do it by email. We keep only what we must to meet legal or accounting duties (such as records of plan payments), or to settle a dispute, and then only for as long as needed. Backups are overwritten in the normal course.</p>
       </Section>
 
       <Section title="7. Keeping it safe">
