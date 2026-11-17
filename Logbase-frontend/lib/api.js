@@ -750,6 +750,16 @@ export function getMyAgent() {
   return apiRequest('/agent/me', { auth: true });
 }
 
+// Customer service: what the agent has sent to the shops they registered, and how many emails are left today
+export function getAgentMail() {
+  return apiRequest('/agent/mail', { auth: true });
+}
+
+// payload: { shopIds: [businessId], subject, message }. {shop} {owner} {agent} {code} {link} are filled in for each business.
+export function sendAgentMail(payload) {
+  return apiRequest('/agent/mail', { method: 'POST', body: payload, auth: true });
+}
+
 // payload: { day? ('YYYY-MM-DD', today or the last 6 days), visits, demos, notes? }
 export function saveAgentLog(payload) {
   return apiRequest('/agent/log', { method: 'PUT', body: payload, auth: true });

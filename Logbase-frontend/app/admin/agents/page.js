@@ -17,7 +17,7 @@ import { signupLink } from '@/lib/referrals';
 const EMPTY = { name: '', phone: '', email: '', code: '', rank: 'agent', notes: '' };
 const RANKS = [
   { value: 'agent', label: 'Sales Agent (10% of renewals)' },
-  { value: 'senior', label: 'Senior Sales Agent (12%)' },
+  { value: 'senior', label: 'Senior Sales Agent (20%)' },
   { value: 'lead', label: 'Team Lead (15%)' },
 ];
 

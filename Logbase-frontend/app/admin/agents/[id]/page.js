@@ -16,7 +16,7 @@ import { signupLink } from '@/lib/referrals';
 const TYPE_LABEL = { new_shop: 'New Shop Bonus', renewal: 'Renewal Commission', weekly: 'Weekly Activity Bonus', milestone: 'Monthly Milestone', adjustment: 'Correction' };
 const RANKS = [
   { value: 'agent', label: 'Sales Agent (10% of renewals)' },
-  { value: 'senior', label: 'Senior Sales Agent (12%)' },
+  { value: 'senior', label: 'Senior Sales Agent (20%)' },
   { value: 'lead', label: 'Team Lead (15%)' },
 ];
 
