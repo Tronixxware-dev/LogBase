@@ -4,8 +4,9 @@
 # Before the first build, in Codemagic:
 #   1. Teams > Personal account (or your team) > Integrations > App Store Connect: add your API key and name it exactly
 #      "LogBase App Store Connect" (the same name as in `integrations` below).
-#   2. In the app's Environment variables, add APP_STORE_APPLE_ID (the number shown as "Apple ID" in
-#      App Store Connect > your app > App Information). It is used to count the build numbers up.
+#   2. In the app's Environment variables, in the group "logbase", add CERTIFICATE_PRIVATE_KEY (secret): the contents
+#      of an RSA private key file made with: ssh-keygen -t rsa -b 2048 -m PEM -f ~/cm_key -q -N ""
+#      Codemagic uses it to create the Apple distribution certificate and the provisioning profile.
 workflows:
   ios-app-store:
     name: LogBase iPhone (App Store)
@@ -17,9 +18,8 @@ workflows:
       node: 22
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.mylogbase.app
+      groups:
+        - logbase
       vars:
         BUNDLE_ID: com.mylogbase.app
         APP_STORE_APPLE_ID: 6835763613
@@ -32,8 +32,14 @@ workflows:
         script: |
           cd Logbase-mobile
           npm run add:ios
-      - name: Set up code signing on the project
+      - name: Set up code signing (certificate and profile are created automatically)
         script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY
+          keychain add-certificates
           cd Logbase-mobile/ios/App
           xcode-project use-profiles
       - name: Set the build number (counts up from the last one on App Store Connect)
