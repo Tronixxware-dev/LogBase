@@ -755,6 +755,22 @@ export function saveAgentLog(payload) {
   return apiRequest('/agent/log', { method: 'PUT', body: payload, auth: true });
 }
 
+// The page a Sales Agent opens from the "your application was accepted" email. No sign-in: the long code in the link is the key.
+// Answers { name, email, phone }, or an error (404) when the link is wrong, used or expired.
+export function getAgentInvite(token) {
+  return apiRequest(`/agent/invite/${encodeURIComponent(token)}`);
+}
+
+// payload: { password, phone? }. Answers { token, user } (signed in), or { existing: true, message } when the email already has a LogBase account.
+export function acceptAgentInvite(token, payload) {
+  return apiRequest(`/agent/invite/${encodeURIComponent(token)}`, { method: 'POST', body: payload });
+}
+
+// Send the "accepted" email again (a new link; the old one stops working). Answers { invite: { sent, reason, link }, ...the agent }
+export function adminInviteAgent(id) {
+  return apiRequest(`/admin/agents/${id}/invite`, { method: 'POST', auth: true });
+}
+
 // params: { search }
 export function adminAgents(params) {
   return apiRequest(`/admin/agents${query(params)}`, { auth: true });

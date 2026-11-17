@@ -49,6 +49,8 @@ const STATUS_LABELS = {
   delivered: 'Delivered',
 };
 
+const BACK = { laundromat: '/dashboard/laundry', tailor: '/dashboard/tailor', repair: '/dashboard/repairs' };
+
 const SOURCE_LABELS = { laundry: 'Laundry orders', tailor: 'Tailor orders', repair: 'Repair jobs' };
 const SOURCE_PATHS = { laundry: '/dashboard/laundry', tailor: '/dashboard/tailor', repair: '/dashboard/repairs' };
 
@@ -218,6 +220,8 @@ export default function CollectionsPage() {
   return (
     <>
       <PageHeader
+        backHref={BACK[businessType] || '/dashboard'}
+        backLabel="Orders"
         title="All orders"
         subtitle={isOrders ? 'Every order you have taken, for any dates. Orders stay here for good, even after they are collected.' : data && data.seesAll === false ? 'The money you took in on orders, for any dates.' : 'Everything collected on orders, for any dates. Deposits and later payments are counted on the day they were taken.'}
         action={

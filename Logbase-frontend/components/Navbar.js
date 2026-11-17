@@ -150,7 +150,7 @@ function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
       </Link>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-6 pt-1 [mask-image:linear-gradient(to_bottom,#000_calc(100%-22px),transparent)]">
-        {visibleTop.map((link) => {
+        {visibleTop.filter((l) => !l.searchOnly).map((link) => {
           const Item = link.children ? NavGroup : NavItem;
           return (
             <Item

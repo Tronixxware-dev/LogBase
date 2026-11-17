@@ -6,13 +6,15 @@ import { listRepairs } from '@/lib/api';
 import { useShops } from '@/lib/shops';
 import { formatDate, formatMoney } from '@/lib/format';
 import { REPAIR_STATUSES, shortStatus } from '@/lib/jobs';
+import { businessTypeOf, hasFeature } from '@/lib/businessTypes';
 import { useUser } from '@/components/UserProvider';
 import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
 import { Icon } from '@/components/Icons';
 import { JobStatusBadge, StatTile } from '@/components/JobParts';
 import FilterBar, { DateRange, inDateRange, optionsFrom } from '@/components/FilterBar';
-import { ErrorBanner, LoadingState, EmptyState, ListTotal, PrimaryLink } from '@/components/ui';
+import Link from 'next/link';
+import { ErrorBanner, LoadingState, EmptyState, ListTotal, PrimaryLink, secondaryButtonClass } from '@/components/ui';
 
 const columns = [
   {
@@ -49,7 +51,7 @@ const columns = [
 
 export default function RepairsPage() {
   const router = useRouter();
-  const { can } = useUser();
+  const { can, user } = useUser();
   const canRecord = can('recordSales');
   const { scopeShop, scopeReady } = useShops();
   const [data, setData] = useState(null);
@@ -114,12 +116,19 @@ export default function RepairsPage() {
         title="Repairs"
         subtitle="Devices brought in for repair: the fault, the quote, the deposit and where each job is."
         action={
-          canRecord ? (
-            <PrimaryLink href="/dashboard/repairs/new">
-              <Icon name="plus" className="h-4 w-4" />
-              Take in a repair
-            </PrimaryLink>
-          ) : undefined
+          <div className="flex flex-wrap items-center gap-2">
+            {hasFeature(businessTypeOf(user), 'collections') && (
+              <Link href="/dashboard/collections" className={secondaryButtonClass}>
+                All orders
+              </Link>
+            )}
+            {canRecord && (
+              <PrimaryLink href="/dashboard/repairs/new">
+                <Icon name="plus" className="h-4 w-4" />
+                Take in a repair
+              </PrimaryLink>
+            )}
+          </div>
         }
       />
 

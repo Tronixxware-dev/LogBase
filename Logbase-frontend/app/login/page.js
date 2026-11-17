@@ -34,7 +34,7 @@ export default function LoginPage() {
     try {
       const data = await login(form);
       setToken(data.token);
-      router.push('/dashboard');
+      router.push(data.user && data.user.role === 'agent' ? '/agent' : '/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {

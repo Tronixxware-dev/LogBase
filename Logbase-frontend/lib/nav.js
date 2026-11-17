@@ -82,8 +82,9 @@ export const topLinks = [
     excludePaths: ['/dashboard/laundry/overview', '/dashboard/laundry/deliveries'],
   },
   { href: '/dashboard/laundry/deliveries', label: 'Deliveries', icon: 'deliveries', feature: 'laundry', perms: ['recordSales', 'viewAllSales', 'viewInsights'] },
-  // every order ever taken, collected ones included, and the money collected on them, for any dates
-  { href: '/dashboard/collections', label: 'All orders', icon: 'list', feature: 'collections', perms: SALES_PERMS },
+  // every order ever taken, collected ones included, and the money collected on them, for any dates.
+  // (no menu item: it is the "All orders" button on the Orders / Repairs pages, and it is in the quick search)
+  { href: '/dashboard/collections', label: 'All orders', icon: 'list', feature: 'collections', perms: SALES_PERMS, searchOnly: true },
   { href: '/dashboard/customers', label: 'Customers', icon: 'customers', perms: ['viewCustomers', 'manageCustomers', 'addCustomers'] },
   { href: '/dashboard/expenses', label: 'Expenses', icon: 'expenses', ownerOnly: true },
   { href: '/dashboard/activity', label: 'Activity', icon: 'activity', ownerOnly: true },
@@ -133,7 +134,7 @@ export const approvalsLink = { href: '/dashboard/approvals', label: 'Approvals',
 // a referrer (someone the admin linked to a referral code) gets this in their menu
 export const referralsLink = { href: '/dashboard/referrals', label: 'Referrals', icon: 'tag' };
 // a Sales Agent (someone the admin linked to a Sales Agent record) gets this in their menu
-export const agentLink = { href: '/dashboard/agent', label: 'Sales agent', icon: 'tag' };
+export const agentLink = { href: '/agent', label: 'Sales agent', icon: 'tag' };
 export const alertsLink = { href: '/dashboard/notifications', label: 'Alerts', icon: 'bell' };
 
 // `businessType` is optional: leave it out to ignore the business type (the top bar does, so every page has a title).

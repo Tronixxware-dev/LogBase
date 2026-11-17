@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
 import { Badge, ErrorBanner, Field, LoadingState, inputClass, primaryButtonClass, secondaryButtonClass } from '@/components/ui';
-import { adminAdjustAgent, adminAgent, adminPayAgent, adminUpdateAgent } from '@/lib/api';
+import { adminAdjustAgent, adminAgent, adminInviteAgent, adminPayAgent, adminUpdateAgent } from '@/lib/api';
 import { formatDate, formatDateTime, formatMoney } from '@/lib/format';
 import { notifySuccess } from '@/lib/feedback';
 import { Panel, StatCard, useLoad } from '@/components/admin/ui';
@@ -38,6 +38,7 @@ export default function AdminAgentPage() {
   const [form, setForm] = useState(null);
   const [adjust, setAdjust] = useState({ amount: '', note: '' });
   const [adjusting, setAdjusting] = useState(false);
+  const [sent, setSent] = useState(null); // what the last "send the acceptance email" did: { sent, reason, link }
 
   // runs one change and shows the agent as it is afterwards
   async function run(label, task) {
@@ -203,13 +204,68 @@ export default function AdminAgentPage() {
             </button>
           </div>
         ) : (
-          <PersonPicker
+          <div className="space-y-5">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold text-gray-900">Acceptance email</p>
+                <Badge tone={profile.inviteStatus === 'invited' ? 'amber' : profile.inviteStatus === 'expired' ? 'red' : 'gray'}>
+                  {profile.inviteStatus === 'invited' ? 'Sent · waiting for them to set a password' : profile.inviteStatus === 'expired' ? 'Link expired' : 'Not sent yet'}
+                </Badge>
+              </div>
+              <p className="mt-1 text-sm text-gray-600">
+                {profile.email ? (
+                  <>
+                    The email says their application was accepted and has a link where they choose their own password. That opens a Sales Agent page with no business, orders or stock. It goes to <span className="font-medium text-gray-900">{profile.email}</span> and the link works for 7 days.
+                  </>
+                ) : (
+                  'Add their email address (Edit details) to send the acceptance email.'
+                )}
+              </p>
+              {profile.email && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={async () => {
+                      setSent(null);
+                      let result = null;
+                      const ok = await run('Acceptance email', async () => {
+                        const answer = await adminInviteAgent(id);
+                        result = answer.invite;
+                        return answer;
+                      });
+                      if (ok) setSent(result);
+                    }}
+                    className={primaryButtonClass}
+                  >
+                    {profile.inviteStatus === 'none' ? 'Send the acceptance email' : 'Send it again (new link)'}
+                  </button>
+                </div>
+              )}
+              {sent && (
+                <div className={`mt-3 rounded-xl border p-3 text-sm ${sent.sent ? 'border-teal-200 bg-teal-50 text-teal-900' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
+                  {sent.sent ? (
+                    <p>Email sent to {profile.email}.</p>
+                  ) : (
+                    <p>The email was not sent{sent.reason ? ` (${sent.reason})` : ''}. Send this link to them yourself, for example on WhatsApp:</p>
+                  )}
+                  {!sent.sent && sent.link && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="break-all font-mono text-xs">{sent.link}</span>
+                      <CopyButton text={sent.link}>Copy link</CopyButton>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <PersonPicker
             picked={null}
-            label="Link a LogBase account"
+            label="Or link a LogBase account they already have"
             hint="The agent signs up on mylogbase.com like anyone else, then you pick that account here. A Sales agent item then appears in their menu. Until then only you see these numbers."
             onPick={(p) => run('Account linked', () => adminUpdateAgent(id, { userId: p._id }))}
             onClear={() => {}}
-          />
+            />
+          </div>
         )}
       </Panel>
 

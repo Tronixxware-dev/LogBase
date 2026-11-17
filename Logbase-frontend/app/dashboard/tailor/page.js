@@ -13,7 +13,8 @@ import DataTable from '@/components/DataTable';
 import { Icon } from '@/components/Icons';
 import { JobStatusBadge, StatTile } from '@/components/JobParts';
 import FilterBar, { DateRange, inDateRange } from '@/components/FilterBar';
-import { ErrorBanner, LoadingState, EmptyState, ListTotal, PrimaryLink } from '@/components/ui';
+import Link from 'next/link';
+import { ErrorBanner, LoadingState, EmptyState, ListTotal, PrimaryLink, secondaryButtonClass } from '@/components/ui';
 
 function todayKey() {
   const d = new Date();
@@ -133,12 +134,17 @@ export default function TailorOrdersPage() {
         title="Tailoring orders"
         subtitle="Every garment you are sewing: who it is for, the measurements, the deposit and where it is."
         action={
-          canRecord ? (
-            <PrimaryLink href="/dashboard/tailor/new">
-              <Icon name="plus" className="h-4 w-4" />
-              New order
-            </PrimaryLink>
-          ) : undefined
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href="/dashboard/collections" className={secondaryButtonClass}>
+              All orders
+            </Link>
+            {canRecord && (
+              <PrimaryLink href="/dashboard/tailor/new">
+                <Icon name="plus" className="h-4 w-4" />
+                New order
+              </PrimaryLink>
+            )}
+          </div>
         }
       />
 

@@ -7,6 +7,7 @@ import BillingBanner from '@/components/BillingBanner';
 import OfflineStatus from '@/components/OfflineStatus';
 import PageTransition from '@/components/PageTransition';
 import SuccessPopup from '@/components/SuccessPopup';
+import AgentOnlyGuard from '@/components/agent/AgentOnlyGuard';
 
 // Wraps EVERY page under /dashboard: login check + left sidebar + top bar + page container.
 // RoleGuard keeps staffs on the few pages they are allowed to use.
@@ -15,6 +16,7 @@ import SuccessPopup from '@/components/SuccessPopup';
 export default function DashboardLayout({ children }) {
   return (
     <UserProvider>
+      <AgentOnlyGuard>
       <div className="min-h-screen print:bg-white">
         <SuccessPopup />
         <Navbar />
@@ -31,6 +33,7 @@ export default function DashboardLayout({ children }) {
           </main>
         </div>
       </div>
+      </AgentOnlyGuard>
     </UserProvider>
   );
 }

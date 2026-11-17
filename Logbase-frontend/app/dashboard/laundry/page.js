@@ -121,6 +121,9 @@ export default function LaundryPage() {
         subtitle="The register: clothes brought in, what each costs, and when they go back."
         action={
           <div className="flex flex-wrap items-center gap-2">
+            <Link href="/dashboard/collections" className={secondaryButtonClass}>
+              All orders
+            </Link>
             {isOwner && (
               <Link href="/dashboard/laundry/items" className={secondaryButtonClass}>
                 Items &amp; prices

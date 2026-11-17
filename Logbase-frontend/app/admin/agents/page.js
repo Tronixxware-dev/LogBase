@@ -41,7 +41,7 @@ export default function AdminAgentsPage() {
     setSaving(true);
     try {
       const result = await adminCreateAgent({ ...form, userId: picked ? picked._id : undefined });
-      setMade(result.agent);
+      setMade({ ...result.agent, invite: result.invite || null });
       setForm(EMPTY);
       setPicked(null);
       setOpen(false);
@@ -71,7 +71,20 @@ export default function AdminAgentsPage() {
     { key: 'activated', label: 'Activated', align: 'right' },
     { key: 'owed', label: 'Owed now', align: 'right', render: (a) => <span className={a.owed > 0 ? 'font-semibold text-amber-700' : ''}>{formatMoney(a.owed)}</span> },
     { key: 'paid', label: 'Paid out', align: 'right', render: (a) => formatMoney(a.paid) },
-    { key: 'linked', label: 'Login linked', render: (a) => <Badge tone={a.linked ? 'green' : 'gray'}>{a.linked ? 'Linked' : 'Not linked'}</Badge> },
+    {
+      key: 'linked',
+      label: 'Login',
+      render: (a) =>
+        a.linked ? (
+          <Badge tone="green">Active</Badge>
+        ) : a.inviteStatus === 'invited' ? (
+          <Badge tone="amber">Invited</Badge>
+        ) : a.inviteStatus === 'expired' ? (
+          <Badge tone="red">Link expired</Badge>
+        ) : (
+          <Badge tone="gray">No login yet</Badge>
+        ),
+    },
     { key: 'isActive', label: 'Status', render: (a) => <Badge tone={a.isActive ? 'green' : 'gray'}>{a.isActive ? 'Active' : 'Switched off'}</Badge> },
   ];
 
@@ -108,7 +121,18 @@ export default function AdminAgentsPage() {
           </p>
           <p className="mt-2 font-mono text-2xl font-bold tracking-widest text-teal-900">{made.code}</p>
           <p className="mt-2 break-all text-sm text-teal-800">{signupLink(made.code)}</p>
-          <p className="mt-2 text-xs text-teal-800">Write the ID number and code on their ID card. Link their LogBase login so they see their dashboard.</p>
+          {made.invite && (
+            <p className="mt-3 text-sm text-teal-900">
+              {made.invite.sent ? `The acceptance email was sent to ${made.email}. They choose their password from the link in it.` : `The email could not be sent${made.invite.reason ? ` (${made.invite.reason})` : ''}. Send them this link yourself:`}
+            </p>
+          )}
+          {made.invite && !made.invite.sent && made.invite.link && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="break-all font-mono text-xs text-teal-900">{made.invite.link}</span>
+              <CopyButton text={made.invite.link}>Copy link</CopyButton>
+            </div>
+          )}
+          <p className="mt-2 text-xs text-teal-800">Write the ID number and code on their ID card.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <CopyButton text={made.code}>Copy code</CopyButton>
             <CopyButton text={signupLink(made.code)}>Copy sign-up link</CopyButton>
@@ -140,8 +164,8 @@ export default function AdminAgentsPage() {
             <Field label="Phone">
               <input value={form.phone} onChange={set('phone')} maxLength={30} className={inputClass} placeholder="0803 000 0000" />
             </Field>
-            <Field label="Email" hint="If they sign up on LogBase with this email, their account is linked on its own.">
-              <input type="email" value={form.email} onChange={set('email')} maxLength={120} className={inputClass} />
+            <Field label="Email" hint={picked ? 'Their account is linked, so no email is sent.' : 'The "your application was accepted" email goes here, with a link where they choose their own password.'}>
+              <input type="email" value={form.email} onChange={set('email')} required={!picked} maxLength={120} className={inputClass} />
             </Field>
             <Field label="Rank" hint="Everyone starts as a Sales Agent. The share applies to renewal payments from now on.">
               <select value={form.rank} onChange={set('rank')} className={inputClass}>
