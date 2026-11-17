@@ -10,7 +10,7 @@ import OfflineStatus from '@/components/OfflineStatus';
 import { LogoLoader } from '@/components/LogoLoader';
 
 const LINKS = [
-  { href: '/agent', label: 'My dashboard', exact: true },
+  { href: '/agent', label: 'Home', exact: true },
   { href: '/agent/account', label: 'Account' },
 ];
 
@@ -32,7 +32,7 @@ export default function AgentShell({ children }) {
   return (
     <div className="min-h-screen print:bg-white">
       <header className="glass sticky top-0 z-30 border-b border-gray-200 print:hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-        <div className="mx-auto flex h-16 w-full max-w-5xl items-center gap-3 px-4 sm:px-6">
+        <div className="mx-auto flex h-16 w-full max-w-3xl items-center gap-3 px-4 sm:px-6">
           <Link href="/agent" className="flex items-center gap-2.5">
             <BrandMark className="h-9 w-9" />
             <span className="hidden text-sm font-semibold text-gray-900 sm:block">
@@ -46,7 +46,7 @@ export default function AgentShell({ children }) {
                 <Link
                   key={l.href}
                   href={l.href}
-                  className={`rounded-lg px-3 py-2 text-sm font-medium transition ${active ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
+                  className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${active ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
                 >
                   {l.label}
                 </Link>
@@ -60,13 +60,13 @@ export default function AgentShell({ children }) {
               </Link>
             )}
             <ThemeIconButton />
-            <button type="button" onClick={logout} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900">
+            <button type="button" onClick={logout} className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900">
               Log out
             </button>
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
         <OfflineStatus />
         {children}
       </main>
