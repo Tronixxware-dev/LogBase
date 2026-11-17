@@ -18,6 +18,8 @@ const RULES = [
   [/^\/dashboard\/settings\/notifications\/?$/, null],
   [/^\/dashboard\/notifications\/?$/, null],
   [/^\/dashboard\/approvals\/?$/, null],
+  // a Sales Agent's own page (the server only returns something to a person the admin linked to a Sales Agent record)
+  [/^\/dashboard\/agent\/?$/, null],
   // the old Stock page now redirects to Products; Products (the list) is open to anyone who may see stock
   [/^\/dashboard\/stock\/?$/, ['viewStock', 'manageProducts']],
   [/^\/dashboard\/products\/?$/, ['viewStock', 'manageProducts']],
@@ -36,6 +38,8 @@ const RULES = [
   // item swaps (a customer hands in an old item and takes a new one), under Sales
   [/^\/dashboard\/sales\/swaps\/new\/?$/, ['recordSales']],
   [/^\/dashboard\/sales\/swaps(\/[^/]+)?\/?$/, ['recordSales', 'viewAllSales', 'viewInsights']],
+  // money collected on orders, for any dates (a worker sees only what they took themselves)
+  [/^\/dashboard\/collections\/?$/, ['recordSales', 'viewAllSales', 'viewInsights']],
   // repair jobs (taking one in needs "Record sales")
   [/^\/dashboard\/repairs\/new\/?$/, ['recordSales']],
   [/^\/dashboard\/repairs(\/.*)?$/, ['recordSales', 'viewAllSales', 'viewInsights']],

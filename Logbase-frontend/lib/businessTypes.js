@@ -16,10 +16,10 @@ export const DEFAULT_BUSINESS_TYPE = 'phone_shop';
 const FEATURES = {
   phone_shop: ['overview', 'sales', 'swaps', 'repairs', 'products', 'imei', 'deliveries'],
   retail: ['overview', 'sales', 'products', 'deliveries'],
-  laundromat: ['laundry'],
-  repair: ['repairs', 'products'],
+  laundromat: ['laundry', 'collections'],
+  repair: ['repairs', 'products', 'collections'],
   // a tailor also sells ready-made clothes and fabric (sales and products)
-  tailor: ['tailor', 'sales', 'products'],
+  tailor: ['tailor', 'sales', 'products', 'collections'],
 };
 
 // The first page a type opens on (the Overview shows sales, which a laundromat or a workshop does not have).

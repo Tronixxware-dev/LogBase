@@ -46,7 +46,7 @@ export default function CommandPalette() {
   }, [open]);
 
   const items = useMemo(() => {
-    const { top, products, owner, account } = visibleLinks({ can, isOwner, businessType, approvalsOn: true, isReferrer: Boolean(user && user.isReferrer) });
+    const { top, products, owner, account } = visibleLinks({ can, isOwner, businessType, approvalsOn: true, isReferrer: Boolean(user && user.isReferrer), isAgent: Boolean(user && user.isAgent) });
     const has = (feature) => hasFeature(businessType, feature);
     const actions = [
       has('sales') && can('recordSales') && { id: 'a-sale', label: 'Record a sale', icon: 'record', href: '/dashboard/sales/new', group: 'Quick actions' },

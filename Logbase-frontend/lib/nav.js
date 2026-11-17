@@ -82,6 +82,8 @@ export const topLinks = [
     excludePaths: ['/dashboard/laundry/overview', '/dashboard/laundry/deliveries'],
   },
   { href: '/dashboard/laundry/deliveries', label: 'Deliveries', icon: 'deliveries', feature: 'laundry', perms: ['recordSales', 'viewAllSales', 'viewInsights'] },
+  // every order ever taken, collected ones included, and the money collected on them, for any dates
+  { href: '/dashboard/collections', label: 'All orders', icon: 'list', feature: 'collections', perms: SALES_PERMS },
   { href: '/dashboard/customers', label: 'Customers', icon: 'customers', perms: ['viewCustomers', 'manageCustomers', 'addCustomers'] },
   { href: '/dashboard/expenses', label: 'Expenses', icon: 'expenses', ownerOnly: true },
   { href: '/dashboard/activity', label: 'Activity', icon: 'activity', ownerOnly: true },
@@ -130,6 +132,8 @@ export const approvalsLink = { href: '/dashboard/approvals', label: 'Approvals',
 // alerts page (the bell opens a short list; this is the full one)
 // a referrer (someone the admin linked to a referral code) gets this in their menu
 export const referralsLink = { href: '/dashboard/referrals', label: 'Referrals', icon: 'tag' };
+// a Sales Agent (someone the admin linked to a Sales Agent record) gets this in their menu
+export const agentLink = { href: '/dashboard/agent', label: 'Sales agent', icon: 'tag' };
 export const alertsLink = { href: '/dashboard/notifications', label: 'Alerts', icon: 'bell' };
 
 // `businessType` is optional: leave it out to ignore the business type (the top bar does, so every page has a title).
@@ -176,7 +180,7 @@ function hasMenuItems(link) {
 
 // Every page this person may open, in menu order, with the name to show for it.
 // `approvalsOn`: some approval rule is switched on (a staff then gets "My requests" in the menu)
-export function visibleLinks({ can, isOwner, businessType = DEFAULT_BUSINESS_TYPE, approvalsOn = false, isReferrer = false }) {
+export function visibleLinks({ can, isOwner, businessType = DEFAULT_BUSINESS_TYPE, approvalsOn = false, isReferrer = false, isAgent = false }) {
   const access = { can, isOwner, businessType };
   const top = topLinks
     .filter((l) => isShown(l, access))
@@ -184,7 +188,7 @@ export function visibleLinks({ can, isOwner, businessType = DEFAULT_BUSINESS_TYP
     .filter(hasMenuItems);
   const products = productLinks.filter((l) => isShown(l, access));
   // Settings is always the last item of the menu
-  const referrals = isReferrer ? [referralsLink] : [];
+  const referrals = [...(isReferrer ? [referralsLink] : []), ...(isAgent ? [agentLink] : [])];
   // (no Billing item inside the store app: plans are not sold there)
   const owner = isOwner ? [approvalsLink, teamLink, storesLink, dataLink, ...(isNativeApp() ? [] : [billingLink]), ...referrals, settingsLink].filter((l) => isShown(l, access)) : [];
   // a staff has Settings too (their profile and alerts), and "My requests" once the administrator has switched a rule on
@@ -202,7 +206,7 @@ export function pageTitleFor(pathname, { can, isOwner }) {
   const { top, products, owner } = visibleLinks({ can, isOwner, businessType: null });
   const showsRecordItem = top.some((l) => l.label === 'Record sale');
   // (Purchases is also Sales > Buy: the page keeps the name Purchases)
-  const all = [...products, ...flattenLinks(top), ...owner, profileLink, settingsLink, approvalsLink, alertsLink, referralsLink];
+  const all = [...products, ...flattenLinks(top), ...owner, profileLink, settingsLink, approvalsLink, alertsLink, referralsLink, agentLink];
   // the longest matching address wins, so /dashboard/sales/new beats /dashboard/sales
   const match = all
     .filter((l) => isActive(pathname, l, showsRecordItem))

@@ -61,3 +61,12 @@ export const ALL_PLANS_INCLUDE = [
 export function naira(amount) {
   return `₦${Number(amount).toLocaleString('en-NG')}`;
 }
+
+// Where the LogBase app can be downloaded. The /get page sends each phone to the right store:
+// Android phones to Google Play, iPhones to the App Store. Print the web address mylogbase.com/get on QR codes
+// (not a store link), so the codes keep working when these links change.
+// Once the iPhone app is live, set NEXT_PUBLIC_IOS_APP_URL in the frontend .env (the App Store address of the app).
+export const APP_LINKS = {
+  android: 'https://play.google.com/store/apps/details?id=com.mylogbase.app',
+  ios: process.env.NEXT_PUBLIC_IOS_APP_URL || '',
+};

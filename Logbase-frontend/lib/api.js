@@ -731,6 +731,69 @@ export function adminPayReferrer(id, note = '') {
   return apiRequest(`/admin/referrers/${id}/payout`, { method: 'POST', body: { note }, auth: true });
 }
 
+/* ------------------------------------------------------------------ */
+/* Sales Agents: field people paid by the plan in the Sales Agent handbook */
+/* ------------------------------------------------------------------ */
+
+// Money collected on laundry, tailor and repair orders for any dates (from, to, source, method, search)
+export function getCollections(params) {
+  return apiRequest(`/collections${query(params)}`, { auth: true });
+}
+
+// Every laundry, tailor and repair order for any dates, collected ones included (from, to, source, status, basis, search)
+export function getOrderHistory(params) {
+  return apiRequest(`/collections/orders${query(params)}`, { auth: true });
+}
+
+// A Sales Agent's own dashboard: { agent: null } for everyone else
+export function getMyAgent() {
+  return apiRequest('/agent/me', { auth: true });
+}
+
+// payload: { day? ('YYYY-MM-DD', today or the last 6 days), visits, demos, notes? }
+export function saveAgentLog(payload) {
+  return apiRequest('/agent/log', { method: 'PUT', body: payload, auth: true });
+}
+
+// params: { search }
+export function adminAgents(params) {
+  return apiRequest(`/admin/agents${query(params)}`, { auth: true });
+}
+
+// payload: { name, phone?, email?, code? (empty = one is made), rank? ('agent' | 'senior' | 'lead'), notes?, userId? }
+export function adminCreateAgent(payload) {
+  return apiRequest('/admin/agents', { method: 'POST', body: payload, auth: true });
+}
+
+export function adminAgent(id) {
+  return apiRequest(`/admin/agents/${id}`, { auth: true });
+}
+
+// payload: any of { name, phone, email, rank, isActive, notes, userId (null = unlink the LogBase account) }
+export function adminUpdateAgent(id, payload) {
+  return apiRequest(`/admin/agents/${id}`, { method: 'PATCH', body: payload, auth: true });
+}
+
+// Records that everything the agent is owed has been paid to them
+export function adminPayAgent(id, note = '') {
+  return apiRequest(`/admin/agents/${id}/payout`, { method: 'POST', body: { note }, auth: true });
+}
+
+// payload: { amount (naira; negative takes money back), note }
+export function adminAdjustAgent(id, payload) {
+  return apiRequest(`/admin/agents/${id}/adjust`, { method: 'POST', body: payload, auth: true });
+}
+
+// How every agent did in one week (week = any day of it; empty = the last finished week)
+export function adminAgentsWeekly(week) {
+  return apiRequest(`/admin/agents/weekly${query({ week })}`, { auth: true });
+}
+
+// Credits the weekly bonus to the ticked agents (ids) who reached all three targets that week
+export function adminCreditWeekly(week, agents) {
+  return apiRequest('/admin/agents/weekly', { method: 'POST', body: { week, agents }, auth: true });
+}
+
 export function adminPayments(params) {
   return apiRequest(`/admin/payments${query(params)}`, { auth: true });
 }
