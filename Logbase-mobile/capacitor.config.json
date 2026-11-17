@@ -16,7 +16,7 @@
     "webContentsDebuggingEnabled": false
   },
   "ios": {
-    "contentInset": "automatic",
+    "contentInset": "never",
     "limitsNavigationsToAppBoundDomains": false
   },
   "plugins": {

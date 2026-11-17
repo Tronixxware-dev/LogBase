@@ -131,7 +131,7 @@ function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
   const businessType = businessTypeOf(user);
   const approvalsOn = anyPolicyOn(settingsOf(user).approvalPolicies);
   const { pendingApprovals } = useAlerts();
-  const { top: visibleTop, products: visibleProducts, owner: visibleOwner, account: visibleAccount } = visibleLinks({ can, isOwner, businessType, approvalsOn, isReferrer: Boolean(user && user.isReferrer) });
+  const { top: visibleTop, products: visibleProducts, owner: visibleOwner, account: visibleAccount } = visibleLinks({ can, isOwner, businessType, approvalsOn, isReferrer: Boolean(user && user.isReferrer), isAgent: Boolean(user && user.isAgent) });
   const showsRecordItem = visibleTop.some((l) => l.label === 'Record sale');
 
   // (the pages that are only in the quick search, like Inventory, have no menu item)
@@ -287,12 +287,16 @@ export default function Navbar() {
             className="animate-fade-in absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setDrawerOpen(false)}
           />
-          <aside className="animate-slide-in-left absolute inset-y-0 left-0 w-72 max-w-[85%] border-r border-gray-200 bg-white shadow-xl">
+          <aside
+            className="animate-slide-in-left absolute inset-y-0 left-0 w-72 max-w-[85%] border-r border-gray-200 bg-white shadow-xl"
+            style={{ paddingTop: "env(safe-area-inset-top)" }}
+          >
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
               aria-label="Close menu"
-              className="absolute right-3 top-4 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+              className="absolute right-3 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+              style={{ top: "calc(1rem + env(safe-area-inset-top))" }}
             >
               <Icon name="close" />
             </button>

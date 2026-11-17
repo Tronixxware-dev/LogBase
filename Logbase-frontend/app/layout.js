@@ -43,6 +43,7 @@ export const metadata = {
 // the colour of the phone's top bar
 export const viewport = {
   themeColor: "#0d9488",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }) {

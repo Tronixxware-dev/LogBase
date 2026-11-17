@@ -30,7 +30,10 @@ export default function TopBar() {
   return (
     <>
     {/* Pinned to the top of the screen on every size (on large screens it starts after the side menu). The spacer below keeps the page from sliding under it. */}
-    <header className="glass fixed inset-x-0 top-0 z-30 border-b border-gray-200 print:hidden lg:left-64">
+    <header
+      className="glass fixed inset-x-0 top-0 z-30 border-b border-gray-200 print:hidden lg:left-64"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
         <button
           type="button"
@@ -80,7 +83,7 @@ export default function TopBar() {
       </div>
       <CommandPalette />
     </header>
-    <div className="h-[65px] print:hidden" aria-hidden="true" />
+    <div className="print:hidden" style={{ height: "calc(65px + env(safe-area-inset-top))" }} aria-hidden="true" />
     </>
   );
 }
