@@ -42,17 +42,23 @@ workflows:
           keychain add-certificates
           cd Logbase-mobile/ios/App
           xcode-project use-profiles
-      - name: Set the build number (counts up from the last one on App Store Connect)
+      - name: Set the build number (always higher than the last one on App Store Connect)
         script: |
           cd Logbase-mobile/ios/App
+          TF=0
+          AS=0
           if [ -n "$APP_STORE_APPLE_ID" ]; then
-            LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
-            LATEST=${LATEST:-0}
-            NEXT=$((LATEST + 1))
-          else
-            NEXT=$BUILD_NUMBER
+            TF=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null | tail -n 1 | tr -dc '0-9')
+            AS=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null | tail -n 1 | tr -dc '0-9')
           fi
-          echo "Build number: $NEXT"
+          TF=${TF:-0}
+          AS=${AS:-0}
+          LATEST=$TF
+          if [ "$AS" -gt "$LATEST" ]; then LATEST=$AS; fi
+          NEXT=$((LATEST + 1))
+          # never go below Codemagic's own build counter either
+          if [ "$BUILD_NUMBER" -gt "$NEXT" ]; then NEXT=$BUILD_NUMBER; fi
+          echo "TestFlight latest: $TF, App Store latest: $AS, using build number: $NEXT"
           sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $NEXT;/g" App.xcodeproj/project.pbxproj
       - name: Build the .ipa file
         script: |
