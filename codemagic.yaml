@@ -1,0 +1,67 @@
+# Builds the LogBase iPhone app on Codemagic's Macs and sends it to TestFlight.
+# The app code lives in the Logbase-mobile folder of this repository (the app only wraps https://mylogbase.com/dashboard).
+#
+# Before the first build, in Codemagic:
+#   1. Teams > Personal account (or your team) > Integrations > App Store Connect: add your API key and name it exactly
+#      "LogBase App Store Connect" (the same name as in `integrations` below).
+#   2. In the app's Environment variables, add APP_STORE_APPLE_ID (the number shown as "Apple ID" in
+#      App Store Connect > your app > App Information). It is used to count the build numbers up.
+workflows:
+  ios-app-store:
+    name: LogBase iPhone (App Store)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: LogBase App Store Connect
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.mylogbase.app
+      vars:
+        BUNDLE_ID: com.mylogbase.app
+    scripts:
+      - name: Install the app's packages
+        script: |
+          cd Logbase-mobile
+          npm install
+      - name: Create the iPhone project (icons, camera text, iPhone-only)
+        script: |
+          cd Logbase-mobile
+          npm run add:ios
+      - name: Set up code signing on the project
+        script: |
+          cd Logbase-mobile/ios/App
+          xcode-project use-profiles
+      - name: Set the build number (counts up from the last one on App Store Connect)
+        script: |
+          cd Logbase-mobile/ios/App
+          if [ -n "$APP_STORE_APPLE_ID" ]; then
+            LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+            LATEST=${LATEST:-0}
+            NEXT=$((LATEST + 1))
+          else
+            NEXT=$BUILD_NUMBER
+          fi
+          echo "Build number: $NEXT"
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $NEXT;/g" App.xcodeproj/project.pbxproj
+      - name: Build the .ipa file
+        script: |
+          cd Logbase-mobile/ios/App
+          if [ -d App.xcworkspace ]; then
+            xcode-project build-ipa --workspace "App.xcworkspace" --scheme "App"
+          else
+            xcode-project build-ipa --project "App.xcodeproj" --scheme "App"
+          fi
+    artifacts:
+      - Logbase-mobile/ios/App/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        # sends the build to TestFlight so you can try it on a real iPhone first
+        submit_to_testflight: true
+        # you press "Submit for review" yourself in App Store Connect once the listing is complete
+        submit_to_app_store: false

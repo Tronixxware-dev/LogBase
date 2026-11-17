@@ -48,6 +48,27 @@ if (existsSync(plistPath)) {
   }
 }
 
+// iPhone AND iPad (and Macs with Apple chips, which run iPad apps). The website inside the app is responsive, so it uses the
+// wider layout on an iPad and on a Mac window. Two things must stay true for that to work well:
+//  - the project targets both iPhone and iPad (TARGETED_DEVICE_FAMILY = "1,2", Capacitor's default), and
+//  - the app is NOT set to "Requires full screen", so an iPad can use Split View and a Mac window can be resized.
+const pbxPath = join(root, 'ios', 'App', 'App.xcodeproj', 'project.pbxproj');
+if (existsSync(pbxPath)) {
+  const pbx = readFileSync(pbxPath, 'utf8');
+  if (/TARGETED_DEVICE_FAMILY = 1;/.test(pbx)) {
+    writeFileSync(pbxPath, pbx.replace(/TARGETED_DEVICE_FAMILY = 1;/g, 'TARGETED_DEVICE_FAMILY = "1,2";'));
+    console.log('iPhone: set the app to iPhone and iPad');
+  } else {
+    console.log('iPhone: the app is set to iPhone and iPad');
+  }
+}
+if (existsSync(plistPath)) {
+  const plist = readFileSync(plistPath, 'utf8');
+  if (plist.includes('<key>UIRequiresFullScreen</key>')) {
+    console.log('WARNING: Info.plist has UIRequiresFullScreen. Remove it, or the Mac window cannot be resized.');
+  }
+}
+
 if (!existsSync(manifestPath) && !existsSync(plistPath)) {
   console.log('Nothing to patch yet: run "npm run add:android" (or add:ios) first.');
 }
