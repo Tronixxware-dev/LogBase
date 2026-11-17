@@ -68,7 +68,7 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        # sends the build to TestFlight so you can try it on a real iPhone first
-        submit_to_testflight: true
+        # the build still uploads to App Store Connect and shows in TestFlight for internal testers; no external beta review
+        submit_to_testflight: false
         # you press "Submit for review" yourself in App Store Connect once the listing is complete
         submit_to_app_store: false
