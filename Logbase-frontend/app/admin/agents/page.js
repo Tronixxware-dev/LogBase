@@ -18,7 +18,7 @@ const EMPTY = { name: '', phone: '', email: '', code: '', rank: 'agent', notes: 
 const RANKS = [
   { value: 'agent', label: 'Sales Agent (10% of renewals)' },
   { value: 'senior', label: 'Senior Sales Agent (20%)' },
-  { value: 'lead', label: 'Team Lead (15%)' },
+  { value: 'lead', label: 'Team Lead (30%)' },
 ];
 
 // The LogBase super admin's list of Sales Agents (the field people paid by the plan in the Sales Agent handbook).

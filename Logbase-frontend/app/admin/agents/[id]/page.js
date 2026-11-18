@@ -17,7 +17,7 @@ const TYPE_LABEL = { new_shop: 'New Shop Bonus', renewal: 'Renewal Commission', 
 const RANKS = [
   { value: 'agent', label: 'Sales Agent (10% of renewals)' },
   { value: 'senior', label: 'Senior Sales Agent (20%)' },
-  { value: 'lead', label: 'Team Lead (15%)' },
+  { value: 'lead', label: 'Team Lead (30%)' },
 ];
 
 function shopStatus(s) {
