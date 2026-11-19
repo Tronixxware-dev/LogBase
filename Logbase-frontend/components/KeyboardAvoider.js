@@ -39,6 +39,7 @@ export default function KeyboardAvoider() {
     let focused = null;
     let settleUntil = 0;
     let keyboardHeight = 0; // told by the store app; 0 = not known
+    let baseline = window.innerHeight; // the screen height with no keyboard open (the app may shrink the page itself when the keyboard opens)
     let roomBox = null; // a scrolling box we added bottom padding to: { node, original }
     let spacer = null; // blank block added at the end of the page
     let timer = null;
@@ -46,10 +47,12 @@ export default function KeyboardAvoider() {
 
     function keyboard() {
       const vv = window.visualViewport;
-      const shrunk = Boolean(vv) && window.innerHeight - vv.height > 120; // the browser already made room for the keyboard
-      const height = keyboardHeight || (shrunk ? Math.round(window.innerHeight - vv.height) : Math.round(window.innerHeight * 0.42));
-      const visibleBottom = shrunk ? vv.height : window.innerHeight - height;
-      return { height, visibleBottom };
+      const viewHeight = vv ? vv.height : window.innerHeight;
+      // the browser or the app already made room for the keyboard when the visible page got shorter than the screen was
+      const shrunk = baseline - viewHeight > 120;
+      const height = shrunk ? Math.round(baseline - viewHeight) : keyboardHeight || Math.round(baseline * 0.42);
+      const visibleBottom = shrunk ? viewHeight : baseline - height;
+      return { height, visibleBottom, shrunk };
     }
 
     function removeRoom() {
@@ -90,8 +93,8 @@ export default function KeyboardAvoider() {
     function reveal(el) {
       if (!el || !el.isConnected) return;
       const box = scrollBox(el);
-      const { height, visibleBottom } = keyboard();
-      makeRoom(box, height);
+      const { height, visibleBottom, shrunk } = keyboard();
+      if (!shrunk) makeRoom(box, height); // when the page was already made shorter, the keyboard takes no room from it
 
       const rect = el.getBoundingClientRect();
       if (rect.bottom <= visibleBottom - 16 && rect.top >= 72) return; // already in the free part of the screen
@@ -152,6 +155,11 @@ export default function KeyboardAvoider() {
       keyboardHeight = 0;
     }
 
+    function onResize() {
+      if (!focused) baseline = Math.max(window.innerHeight, window.visualViewport ? window.visualViewport.height : 0);
+    }
+
+    window.addEventListener('resize', onResize);
     document.addEventListener('focusin', onFocusIn);
     document.addEventListener('focusout', onFocusOut);
     document.addEventListener('scroll', onScroll, { capture: true, passive: true });
@@ -159,6 +167,7 @@ export default function KeyboardAvoider() {
     window.addEventListener('keyboardDidShow', onKeyboardShow);
     window.addEventListener('keyboardDidHide', onKeyboardHide);
     return () => {
+      window.removeEventListener('resize', onResize);
       document.removeEventListener('focusin', onFocusIn);
       document.removeEventListener('focusout', onFocusOut);
       document.removeEventListener('scroll', onScroll, { capture: true });
