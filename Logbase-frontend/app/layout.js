@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import PwaRegister from "@/components/PwaRegister";
+import KeyboardAvoider from "@/components/KeyboardAvoider";
 import { themeInitScript } from "@/lib/theme";
 import { SITE } from "@/lib/site";
 
@@ -59,6 +60,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="min-h-full flex flex-col">
         <PwaRegister />
+        <KeyboardAvoider />
         {children}
       </body>
     </html>
