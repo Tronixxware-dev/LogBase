@@ -10,12 +10,16 @@
 
 import { useEffect } from 'react';
 
-const SKIP_TYPES = ['checkbox', 'radio', 'button', 'submit', 'reset', 'file', 'range', 'color', 'image', 'hidden'];
+// fields that do not open the keyboard (a list, a date wheel, a switch...) are left alone: the phone shows its own picker for them
+const SKIP_TYPES = ['checkbox', 'radio', 'button', 'submit', 'reset', 'file', 'range', 'color', 'image', 'hidden', 'date', 'time', 'datetime-local', 'month', 'week'];
 const SETTLE_MS = 2500; // after a field gets the cursor, the page is corrected again if it slips back during this time
 
 function isTextField(el) {
   if (!el || !el.tagName) return false;
-  if (el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') return true;
+  // a box that cannot be typed in (greyed out, read-only, or one that opens its own list) never raises the keyboard
+  if (el.disabled || el.readOnly || el.getAttribute('inputmode') === 'none') return false;
+  if (el.closest && el.closest('[data-no-keyboard-avoid]')) return false;
+  if (el.tagName === 'TEXTAREA') return true;
   if (el.tagName === 'INPUT') return !SKIP_TYPES.includes((el.type || 'text').toLowerCase());
   return el.isContentEditable === true;
 }
