@@ -42,7 +42,7 @@ export default function AdminOverviewPage() {
   const alerts = [];
   if (data.flaggedPayments > 0) alerts.push({ tone: 'red', text: `${data.flaggedPayments} payment${data.flaggedPayments === 1 ? '' : 's'} flagged (amount did not match)`, href: '/admin/payments' });
   if (data.failedRenewals.length > 0) alerts.push({ tone: 'amber', text: `${data.failedRenewals.length} automatic renewal${data.failedRenewals.length === 1 ? '' : 's'} failing`, href: null });
-  if (data.trialsEnding.length > 0) alerts.push({ tone: 'amber', text: `${data.trialsEnding.length} trial${data.trialsEnding.length === 1 ? '' : 's'} ending within 3 days`, href: null });
+  if (data.trialsEnding.length > 0) alerts.push({ tone: 'amber', text: `${data.trialsEnding.length} trial${data.trialsEnding.length === 1 ? '' : 's'} ending within 3 days`, href: '/admin/businesses?state=trialing' });
 
   return (
     <>
@@ -69,14 +69,14 @@ export default function AdminOverviewPage() {
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Businesses" value={totals.businesses.toLocaleString()} sub={`${totals.newThisMonth} new in 30 days`} />
-        <StatCard label="Paying now" value={states.active.toLocaleString()} sub={`≈ ${formatMoney(data.mrr)} a month`} tone="green" />
-        <StatCard label="On free trial" value={states.trialing.toLocaleString()} sub={`${states.trial_ended + states.expired} ended or expired`} />
-        <StatCard label="Revenue this month" value={formatMoney(revenue.thisMonth)} sub={`${formatMoney(revenue.total)} all time`} />
-        <StatCard label="People with logins" value={totals.users.toLocaleString()} />
-        <StatCard label="Active this week" value={totals.activeThisWeek.toLocaleString()} sub="businesses that did something" />
-        <StatCard label="Sales, last 30 days" value={data.sales30.count.toLocaleString()} sub={`${formatMoney(data.sales30.total)} sold through LogBase`} />
-        <StatCard label="Products stored" value={totals.products.toLocaleString()} sub={`${totals.sales.toLocaleString()} sales recorded in total`} />
+        <StatCard label="Businesses" value={totals.businesses.toLocaleString()} sub={`${totals.newThisMonth} new in 30 days`} href="/admin/businesses" />
+        <StatCard label="Paying now" value={states.active.toLocaleString()} sub={`≈ ${formatMoney(data.mrr)} a month`} tone="green" href="/admin/businesses?state=active" />
+        <StatCard label="On free trial" value={states.trialing.toLocaleString()} sub={`${states.trial_ended + states.expired} ended or expired`} href="/admin/businesses?state=trialing" />
+        <StatCard label="Revenue this month" value={formatMoney(revenue.thisMonth)} sub={`${formatMoney(revenue.total)} all time`} href="/admin/payments" />
+        <StatCard label="People with logins" value={totals.users.toLocaleString()} href="/admin/people" />
+        <StatCard label="Active this week" value={totals.activeThisWeek.toLocaleString()} sub="businesses that did something" href="/admin/businesses?active=week" />
+        <StatCard label="Sales, last 30 days" value={data.sales30.count.toLocaleString()} sub={`${formatMoney(data.sales30.total)} sold through LogBase`} href="/admin/businesses?sort=sales" />
+        <StatCard label="Products stored" value={totals.products.toLocaleString()} sub={`${totals.sales.toLocaleString()} sales recorded in total`} href="/admin/businesses?sort=products" />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">

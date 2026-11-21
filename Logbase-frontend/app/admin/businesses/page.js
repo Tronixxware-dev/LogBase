@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
 import { EmptyState, ErrorBanner, ListTotal, LoadingState, inputClass } from '@/components/ui';
@@ -9,12 +9,25 @@ import { adminBusinesses } from '@/lib/api';
 import { formatDate, formatMoney } from '@/lib/format';
 import { Pager, STATE_OPTIONS, StateBadge, endsText, timeAgo, useLoad } from '@/components/admin/ui';
 
+const SORTS = ['newest', 'oldest', 'name', 'sales', 'products'];
+
+// (the page reads ?state=, ?sort= and ?active=week from the address, so the Overview cards can open it already filtered)
 export default function AdminBusinessesPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <BusinessesList />
+    </Suspense>
+  );
+}
+
+function BusinessesList() {
   const router = useRouter();
+  const params = useSearchParams();
   const [search, setSearch] = useState('');
   const [typed, setTyped] = useState('');
-  const [state, setState] = useState('');
-  const [sort, setSort] = useState('newest');
+  const [state, setState] = useState(() => (STATE_OPTIONS.some((o) => o.value && o.value === params.get('state')) ? params.get('state') : ''));
+  const [sort, setSort] = useState(() => (SORTS.includes(params.get('sort')) ? params.get('sort') : 'newest'));
+  const [activeWeek, setActiveWeek] = useState(() => params.get('active') === 'week');
   const [page, setPage] = useState(1);
 
   // wait a moment after typing before asking the server
@@ -26,7 +39,7 @@ export default function AdminBusinessesPage() {
     return () => clearTimeout(t);
   }, [typed]);
 
-  const { data, error, loading } = useLoad(() => adminBusinesses({ search, state, sort, page }), [search, state, sort, page]);
+  const { data, error, loading } = useLoad(() => adminBusinesses({ search, state, sort, page, active: activeWeek ? 'week' : '' }), [search, state, sort, page, activeWeek]);
 
   const columns = [
     {
@@ -53,6 +66,7 @@ export default function AdminBusinessesPage() {
         </span>
       ),
     },
+    { key: 'products', label: 'Products', align: 'right', render: (b) => b.products.toLocaleString() },
     { key: 'sales', label: 'Sales', align: 'right', render: (b) => `${b.sales.toLocaleString()} · ${formatMoney(b.salesTotal)}` },
     { key: 'users', label: 'People', align: 'right', render: (b) => b.users },
     { key: 'last', label: 'Last active', render: (b) => timeAgo(b.lastActive) },
@@ -84,8 +98,27 @@ export default function AdminBusinessesPage() {
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
           <option value="name">Name A to Z</option>
+          <option value="sales">Most sales</option>
+          <option value="products">Most products</option>
         </select>
       </div>
+
+      {activeWeek && (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveWeek(false);
+              setPage(1);
+            }}
+            className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3.5 py-1.5 text-sm font-medium text-teal-700"
+          >
+            Active in the last 7 days
+            <span aria-hidden="true">&times;</span>
+            <span className="sr-only">Show every business</span>
+          </button>
+        </div>
+      )}
 
       <ErrorBanner message={error} />
       {loading && !data ? (

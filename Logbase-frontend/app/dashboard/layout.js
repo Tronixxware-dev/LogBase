@@ -8,6 +8,7 @@ import OfflineStatus from '@/components/OfflineStatus';
 import PageTransition from '@/components/PageTransition';
 import SuccessPopup from '@/components/SuccessPopup';
 import AgentOnlyGuard from '@/components/agent/AgentOnlyGuard';
+import LayoutDebug from '@/components/LayoutDebug';
 
 // Wraps EVERY page under /dashboard: login check + left sidebar + top bar + page container.
 // RoleGuard keeps staffs on the few pages they are allowed to use.
@@ -19,6 +20,7 @@ export default function DashboardLayout({ children }) {
       <AgentOnlyGuard>
       <div className="min-h-screen print:bg-white">
         <SuccessPopup />
+        <LayoutDebug />
         <Navbar />
         <div className="lg:pl-64 print:pl-0">
           <TopBar />

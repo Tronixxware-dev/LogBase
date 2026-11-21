@@ -653,9 +653,14 @@ export function adminOverview() {
   return apiRequest('/admin/overview', { auth: true });
 }
 
-// params: { search, state, sort, page }
+// params: { search, state, sort, page, active }   (active: 'week' = only businesses that did something in the last 7 days)
 export function adminBusinesses(params) {
   return apiRequest(`/admin/businesses${query(params)}`, { auth: true });
+}
+
+// params: { search, role, page }   everyone with a login
+export function adminUsers(params) {
+  return apiRequest(`/admin/users${query(params)}`, { auth: true });
 }
 
 export function adminBusiness(id) {

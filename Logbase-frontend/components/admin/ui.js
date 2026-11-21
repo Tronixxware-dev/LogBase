@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Badge, cardClass, secondaryButtonClass } from '@/components/ui';
 import { compactMoney } from '@/components/charts';
 
@@ -38,15 +39,31 @@ export function useLoad(fetcher, deps = []) {
   return { data, setData, error, loading, reload };
 }
 
-export function StatCard({ label, value, sub, tone = 'gray' }) {
+// With an `href` the whole card is a link: tap it to see what is inside the number.
+export function StatCard({ label, value, sub, tone = 'gray', href }) {
   const ring = { gray: '', red: 'ring-1 ring-red-200', amber: 'ring-1 ring-amber-200', green: '', teal: '' }[tone] || '';
-  return (
-    <div className={`${cardClass} p-4 sm:p-5 ${ring}`}>
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
+  const body = (
+    <>
+      <p className="flex items-center justify-between gap-2 text-xs font-medium uppercase tracking-wide text-gray-400">
+        <span>{label}</span>
+        {href && (
+          <span aria-hidden="true" className="text-base leading-none text-gray-300 transition group-hover:translate-x-0.5 group-hover:text-primary">
+            &rarr;
+          </span>
+        )}
+      </p>
       <p className="tabular mt-1.5 text-2xl font-semibold tracking-tight text-gray-900 sm:text-[1.7rem]">{value}</p>
       {sub && <p className="mt-1 text-xs text-gray-500">{sub}</p>}
-    </div>
+    </>
   );
+  if (href) {
+    return (
+      <Link href={href} className={`${cardClass} group block p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:p-5 ${ring}`}>
+        {body}
+      </Link>
+    );
+  }
+  return <div className={`${cardClass} p-4 sm:p-5 ${ring}`}>{body}</div>;
 }
 
 export function Panel({ title, action, children, className = '' }) {
