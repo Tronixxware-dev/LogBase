@@ -18,6 +18,8 @@ const RULES = [
   [/^\/dashboard\/settings\/notifications\/?$/, null],
   [/^\/dashboard\/notifications\/?$/, null],
   [/^\/dashboard\/approvals\/?$/, null],
+  // the video tutorials are for everyone
+  [/^\/dashboard\/tutorials\/?$/, null],
   // a Sales Agent's own page (the server only returns something to a person the admin linked to a Sales Agent record)
   [/^\/dashboard\/agent\/?$/, null], // (redirects to /agent)
   // the old Stock page now redirects to Products; Products (the list) is open to anyone who may see stock

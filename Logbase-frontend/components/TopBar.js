@@ -10,6 +10,7 @@ import CommandPalette from '@/components/CommandPalette';
 import InstallButton from '@/components/InstallButton';
 import StoreSwitcher from '@/components/StoreSwitcher';
 import NotificationBell from '@/components/NotificationBell';
+import WatchHowButton from '@/components/WatchHowButton';
 import { useShops } from '@/lib/shops';
 import { businessTypeOf, hasFeature } from '@/lib/businessTypes';
 import { pageTitleFor } from '@/lib/nav';
@@ -77,6 +78,7 @@ export default function TopBar() {
             <Icon name="search" className="h-5 w-5" />
           </button>
           <InstallButton variant="pill" className="hidden sm:inline-flex" />
+          <WatchHowButton />
           <NotificationBell />
           <ThemeIconButton />
         </div>
