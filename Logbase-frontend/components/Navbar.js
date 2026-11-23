@@ -289,14 +289,14 @@ export default function Navbar() {
           />
           <aside
             className="animate-slide-in-left absolute inset-y-0 left-0 w-72 max-w-[85%] border-r border-gray-200 bg-white shadow-xl"
-            style={{ paddingTop: "env(safe-area-inset-top)" }}
+            style={{ paddingTop: "var(--safe-top)" }}
           >
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
               aria-label="Close menu"
               className="absolute right-3 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-              style={{ top: "calc(1rem + env(safe-area-inset-top))" }}
+              style={{ top: "calc(1rem + var(--safe-top))" }}
             >
               <Icon name="close" />
             </button>

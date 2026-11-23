@@ -3,7 +3,7 @@
 export const THEME_KEY = 'logbase_theme';
 
 // Runs in the page <head> before anything is drawn, so a dark screen never flashes white first.
-export const themeInitScript = `(function(){try{var t=localStorage.getItem('${THEME_KEY}');if(t!=='light'&&t!=='dark'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}if(t==='dark'){document.documentElement.classList.add('dark')}}catch(e){}})();`;
+export const themeInitScript = `(function(){try{if(navigator.userAgent.indexOf('LogBaseApp')>-1){document.documentElement.classList.add('native-app')}}catch(e){}try{var t=localStorage.getItem('${THEME_KEY}');if(t!=='light'&&t!=='dark'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}if(t==='dark'){document.documentElement.classList.add('dark')}}catch(e){}})();`;
 
 export function readStoredTheme() {
   try {

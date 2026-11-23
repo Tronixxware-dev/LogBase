@@ -43,7 +43,7 @@ export default function AgentShell({ children }) {
 
   return (
     <div className="min-h-screen print:bg-white">
-      <header className="glass sticky top-0 z-30 border-b border-gray-200 print:hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <header className="glass sticky top-0 z-30 border-b border-gray-200 print:hidden" style={{ paddingTop: 'var(--safe-top)' }}>
         <div className="mx-auto flex h-16 w-full max-w-5xl items-center gap-3 px-4 sm:px-6">
           <Link href="/agent" className="flex shrink-0 items-center gap-2.5">
             <BrandMark className="h-9 w-9" />

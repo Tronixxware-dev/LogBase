@@ -1,0 +1,316 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useUser } from '@/components/UserProvider';
+import Avatar from '@/components/Avatar';
+import { Icon } from '@/components/Icons';
+import { ThemeSwitchRow } from '@/components/ThemeToggle';
+import { isActive, labelFor, productsSectionLabel, visibleLinks } from '@/lib/nav';
+import { businessTypeOf } from '@/lib/businessTypes';
+import { useAlerts } from '@/lib/alerts';
+import { anyPolicyOn, settingsOf } from '@/lib/settings';
+
+// The LogBase mark: three stacked teal layers on a deep green tile.
+// The size comes from className (for example "h-9 w-9").
+export function BrandMark({ className = 'h-9 w-9' }) {
+  return (
+    <svg viewBox="4 4 56 56" className={`shrink-0 ${className}`} role="img" aria-label="LogBase logo">
+      <rect x="4" y="4" width="56" height="56" rx="14" fill="#134e4a" />
+      <g transform="translate(32 33) scale(1.15) translate(-32 -33)" strokeWidth="2.5" strokeLinejoin="round">
+        <path d="M32 33 51 42 32 51 13 42Z" fill="#0d9488" stroke="#0d9488" />
+        <path d="M32 24 51 33 32 42 13 33Z" fill="#14b8a6" stroke="#14b8a6" />
+        <path d="M32 15 51 24 32 33 13 24Z" fill="#2dd4bf" stroke="#2dd4bf" />
+      </g>
+    </svg>
+  );
+}
+
+function NavItem({ link, pathname, showsRecordItem, label, onNavigate, nested = false, className = '', badge = 0 }) {
+  const active = isActive(pathname, link, showsRecordItem);
+  return (
+    <Link
+      href={link.href}
+      onClick={onNavigate}
+      aria-current={active ? 'page' : undefined}
+      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200 active:scale-[0.97] active:bg-primary/15 ${
+        active
+          ? 'animate-nav-pop bg-primary/10 font-medium text-primary'
+          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+      } ${className}`}
+    >
+      {active && !nested && (
+        <span
+          className="absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-linear-to-b from-teal-300 to-primary"
+          aria-hidden="true"
+        />
+      )}
+      <Icon
+        name={link.icon}
+        className={`${nested ? 'h-4 w-4' : 'h-5 w-5'} shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+          active ? 'text-primary' : 'text-gray-400 group-hover:text-gray-600'
+        }`}
+      />
+      <span className="truncate">{label || link.label}</span>
+      {badge > 0 && (
+        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-semibold text-white" aria-label={`${badge} waiting`}>
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+// A menu item with a sub-menu under it (Sales > Swaps). A heading (`group`, like Sales) only opens and folds its sub-menu;
+// any other item opens its own page too, and the arrow folds the sub-menu away.
+function NavGroup({ link, pathname, showsRecordItem, label, onNavigate }) {
+  const items = link.children.filter((c) => !c.searchOnly);
+  const childActive = items.some((c) => isActive(pathname, c, showsRecordItem));
+  // sub-menus start folded; the arrow opens them (the one holding the page you are on stays open)
+  const [open, setOpen] = useState(false);
+  const showChildren = open || childActive;
+  const toggleLabel = `${showChildren ? 'Hide' : 'Show'} ${label || link.label} sub-menu`;
+  return (
+    <div>
+      {link.group ? (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={showChildren}
+          aria-label={toggleLabel}
+          className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-all duration-200 hover:bg-gray-100 hover:text-gray-900 active:scale-[0.97] active:bg-primary/15 ${
+            childActive ? 'font-medium text-gray-900' : 'text-gray-600'
+          }`}
+        >
+          <Icon
+            name={link.icon}
+            className={`h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 ${childActive ? 'text-primary' : 'text-gray-400 group-hover:text-gray-600'}`}
+          />
+          <span className="flex-1 truncate">{label || link.label}</span>
+          <Icon name="chevron" className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${showChildren ? '' : '-rotate-90'}`} />
+        </button>
+      ) : (
+        <div className="relative">
+          <NavItem link={link} label={label} pathname={pathname} showsRecordItem={showsRecordItem} onNavigate={onNavigate} className="pr-10" />
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={showChildren}
+            aria-label={toggleLabel}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-200/60 hover:text-gray-700 active:scale-90"
+          >
+            <Icon name="chevron" className={`h-4 w-4 transition-transform duration-200 ${showChildren ? '' : '-rotate-90'}`} />
+          </button>
+        </div>
+      )}
+      {showChildren && (
+        <div className="animate-fade-in ml-7 mt-0.5 space-y-0.5 border-l border-gray-200 pl-3">
+          {items.map((child) => (
+            <NavItem
+              key={child.href}
+              link={child}
+              pathname={pathname}
+              showsRecordItem={showsRecordItem}
+              onNavigate={onNavigate}
+              nested
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function businessNameOf(user) {
+  const b = user?.business;
+  return user?.businessName || (b && typeof b === 'object' && b.name) || 'LogBase';
+}
+
+function SidebarContent({ pathname, user, isOwner, can, logout, onNavigate }) {
+  const businessType = businessTypeOf(user);
+  const approvalsOn = anyPolicyOn(settingsOf(user).approvalPolicies);
+  const { pendingApprovals } = useAlerts();
+  const { top: visibleTop, products: visibleProducts, owner: visibleOwner, account: visibleAccount } = visibleLinks({ can, isOwner, businessType, approvalsOn, isReferrer: Boolean(user && user.isReferrer), isAgent: Boolean(user && user.isAgent) });
+  const showsRecordItem = visibleTop.some((l) => l.label === 'Record sale');
+
+  // (the pages that are only in the quick search, like Inventory, have no menu item)
+  const menuProducts = visibleProducts.filter((l) => !l.searchOnly);
+  const businessName = businessNameOf(user);
+
+  return (
+    <div className="flex h-full flex-col">
+      {/* business / workspace block */}
+      <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-3 px-5 pb-4 pt-5">
+        <BrandMark />
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-semibold text-gray-900">{businessName}</span>
+          <span className="block text-xs font-medium text-primary">LogBase</span>
+        </span>
+      </Link>
+
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-6 pt-1 [mask-image:linear-gradient(to_bottom,#000_calc(100%-22px),transparent)]">
+        {visibleTop.filter((l) => !l.searchOnly).map((link) => {
+          const Item = link.children ? NavGroup : NavItem;
+          return (
+            <Item
+              key={`${link.href}-${link.label}`}
+              link={link}
+              label={labelFor(link, can, businessType)}
+              pathname={pathname}
+              showsRecordItem={showsRecordItem}
+              onNavigate={onNavigate}
+            />
+          );
+        })}
+
+        {menuProducts.length > 0 && (
+          <div className="space-y-0.5 pt-4">
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{productsSectionLabel(businessType)}</p>
+            {menuProducts.map((link) => (
+              <NavItem
+                key={link.href}
+                link={link}
+                label={labelFor(link, can, businessType)}
+                pathname={pathname}
+                showsRecordItem={showsRecordItem}
+                onNavigate={onNavigate}
+              />
+            ))}
+          </div>
+        )}
+
+        {user?.isSuperAdmin && (
+          <div className="space-y-0.5 pt-4">
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">LogBase owner</p>
+            <NavItem link={{ href: '/admin', label: 'Admin panel', icon: 'shield' }} pathname={pathname} onNavigate={onNavigate} />
+          </div>
+        )}
+
+        {isOwner && (
+          <div className="space-y-0.5 pt-4">
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Business</p>
+            {visibleOwner.map((link) => (
+              <NavItem key={link.href} link={link} pathname={pathname} onNavigate={onNavigate} badge={link.href === '/dashboard/approvals' ? pendingApprovals : 0} />
+            ))}
+          </div>
+        )}
+
+        {!isOwner && visibleAccount.length > 0 && (
+          <div className="space-y-0.5 pt-4">
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Account</p>
+            {visibleAccount.map((link) => (
+              <NavItem key={link.href} link={link} label={link.label} pathname={pathname} onNavigate={onNavigate} badge={link.href === '/dashboard/approvals' ? pendingApprovals : 0} />
+            ))}
+          </div>
+        )}
+      </nav>
+
+      {/* signed-in user, theme and log out */}
+      <div className="border-t border-gray-200 p-3">
+        <Link
+          href="/dashboard/profile"
+          onClick={onNavigate}
+          aria-current={pathname === '/dashboard/profile' ? 'page' : undefined}
+          title="Your profile"
+          className={`brand-gradient group relative mb-1.5 flex items-center gap-3 overflow-hidden rounded-2xl px-3 py-2.5 shadow-md transition hover:shadow-lg ${
+            pathname === '/dashboard/profile' ? 'ring-2 ring-teal-300' : ''
+          }`}
+        >
+          <span
+            className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full bg-white/10 transition-transform duration-500 group-hover:scale-125"
+            aria-hidden="true"
+          />
+          <Avatar name={user?.name} photoUrl={user?.photoUrl} tone="light" />
+          <span className="relative min-w-0">
+            <span className="block truncate text-sm font-medium text-white">{user?.name}</span>
+            <span className="block truncate text-xs text-teal-50/90">
+              {isOwner ? 'Administrator' : user?.jobTitle || 'Staff'}
+            </span>
+          </span>
+        </Link>
+        <div className="flex items-center gap-1">
+          <div className="min-w-0 flex-1">
+            <ThemeSwitchRow />
+          </div>
+          <button
+            onClick={logout}
+            aria-label="Log out"
+            title="Log out"
+            className="flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm text-gray-500 transition hover:bg-red-50 hover:text-red-600"
+          >
+            <Icon name="logout" className="h-5 w-5" />
+            <span className="sr-only">Log out</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Left sidebar on large screens; on phones the top bar opens the same menu as a drawer.
+// (The top bar itself is in TopBar.js; it asks for the drawer with the "logbase:open-menu" event.)
+export default function Navbar() {
+  const pathname = usePathname();
+  const { user, logout, isOwner, can } = useUser();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // close the drawer whenever the page changes
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const open = () => setDrawerOpen(true);
+    window.addEventListener('logbase:open-menu', open);
+    return () => window.removeEventListener('logbase:open-menu', open);
+  }, []);
+
+  useEffect(() => {
+    if (!drawerOpen) return undefined;
+    const onKey = (e) => e.key === 'Escape' && setDrawerOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [drawerOpen]);
+
+  return (
+    <>
+      {/* desktop sidebar */}
+      <aside className="glass fixed inset-y-0 left-0 z-20 hidden w-64 border-r border-gray-200 lg:block print:hidden">
+        <SidebarContent pathname={pathname} user={user} isOwner={isOwner} can={can} logout={logout} />
+      </aside>
+
+      {/* mobile drawer */}
+      {drawerOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div
+            className="animate-fade-in absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setDrawerOpen(false)}
+          />
+          <aside
+            className="animate-slide-in-left absolute inset-y-0 left-0 w-72 max-w-[85%] border-r border-gray-200 bg-white shadow-xl"
+            style={{ paddingTop: "env(safe-area-inset-top)" }}
+          >
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(false)}
+              aria-label="Close menu"
+              className="absolute right-3 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+              style={{ top: "calc(1rem + env(safe-area-inset-top))" }}
+            >
+              <Icon name="close" />
+            </button>
+            <SidebarContent
+              pathname={pathname}
+              user={user}
+              isOwner={isOwner}
+              can={can}
+              logout={logout}
+              onNavigate={() => setDrawerOpen(false)}
+            />
+          </aside>
+        </div>
+      )}
+    </>
+  );
+}

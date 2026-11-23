@@ -7,6 +7,12 @@
 /* Design tokens                                                       */
 /* ------------------------------------------------------------------ */
 
+/* Space for the phone's notch / clock at the top. Only the store app and a home-screen app draw under it;
+   in a normal Safari or Chrome tab the browser already keeps clear of it, so adding more leaves a blank band. */
+:root { --safe-top: 0px; }
+@media (display-mode: standalone) { :root { --safe-top: env(safe-area-inset-top); } }
+html.native-app { --safe-top: env(safe-area-inset-top); }
+
 :root {
   --background: #f4f6fa;
   --foreground: #0f172a;
