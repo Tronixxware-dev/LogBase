@@ -6,16 +6,17 @@ export const SITE = {
   company: 'Tronixxware',
   tagline: 'Inventory and sales management for any business',
   description:
-    'LogBase helps any business track stock, record sales and know who owes them, even without internet. Free 14-day trial.',
+    'LogBase helps any business track stock, record sales and know who owes them, even without internet. Free to start.',
   // what Google shows in search results for the home page (the title stays under about 60 characters and the description under about 155)
   seoTitle: 'LogBase | Inventory & Sales App for Any Business',
   seoDescription:
-    'LogBase helps any business track stock, record sales and see who owes them, even without internet. Free for 14 days, no card needed.',
+    'LogBase helps any business track stock, record sales and see who owes them, even without internet. Free to start, no card needed.',
   email: 'support@mylogbase.com',
   // the public web address, used for the sitemap and link previews (set NEXT_PUBLIC_SITE_URL in the frontend .env when you deploy)
   url: (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/+$/, ''),
-  trialDays: 14,
-  updated: '9 November 2026', // when the Terms, Privacy and Refund pages were last reviewed
+  // the orders a laundromat or tailor may take each month on the Free plan (keep the same as FREE_MONTHLY_ORDERS in the backend's config/plans.js)
+  freeOrdersPerMonth: 30,
+  updated: '23 November 2026', // when the Terms, Privacy and Refund pages were last reviewed
 };
 
 // What the plans cost, in naira. Keep this the same as the backend's config/plans.js
@@ -27,7 +28,7 @@ export const PLANS = [
     tagline: 'To try LogBase for yourself',
     monthly: 0,
     yearly: 0,
-    features: ['Up to 50 units in stock', 'Owner account only (no staff accounts)'],
+    features: ['Up to 30 units in stock', 'Owner account only (no staff accounts)', 'Laundromats and tailors: up to 30 orders a month'],
   },
   {
     key: 'starter',

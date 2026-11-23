@@ -13,7 +13,7 @@ const STYLE = {
   bad: 'border-red-200 bg-red-50 text-red-800',
 };
 
-// A strip at the top of the dashboard for the administrator when the trial or plan is about to end
+// A strip at the top of the dashboard for the administrator when the plan is about to end or a limit is close
 // (or has ended). Nothing is shown for anyone else, or when all is well.
 export default function BillingBanner() {
   const { isOwner } = useUser();

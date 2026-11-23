@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Get the LogBase app',
-  description: `Download ${SITE.name} for Android, or use it in your browser. Free for ${SITE.trialDays} days.`,
+  description: `Download ${SITE.name} for Android, or use it in your browser. Free to start.`,
   alternates: { canonical: '/get' },
 };
 
@@ -32,7 +32,7 @@ export default async function GetApp({ searchParams }) {
       <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-14 text-center sm:px-6 sm:pt-20">
         <h1 className="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl">Get the {SITE.name} app</h1>
         <p className="mt-4 text-lg leading-relaxed text-gray-600">
-          Track your stock, record sales and see who owes you, even without internet. Free for {SITE.trialDays} days, no card needed.
+          Track your stock, record sales and see who owes you, even without internet. Free to start, no card needed.
         </p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">

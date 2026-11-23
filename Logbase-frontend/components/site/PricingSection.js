@@ -19,7 +19,7 @@ export default function PricingSection() {
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">Pricing</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl">Simple prices, in naira</h2>
           <p className="mt-4 text-gray-500">
-            Every new business gets a free {SITE.trialDays}-day trial of the Business plan. No card needed to start.
+            Start free and upgrade only when you need more. No card needed to start.
           </p>
 
           <div className="mt-8 inline-flex rounded-xl bg-gray-100 p-1" role="group" aria-label="Billing period">
@@ -79,7 +79,7 @@ export default function PricingSection() {
                       : 'mt-8 inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-800 shadow-xs transition hover:bg-gray-50'
                   }
                 >
-                  {plan.key === 'free' ? 'Start free' : `Try ${plan.name} free for ${SITE.trialDays} days`}
+                  {plan.key === 'free' ? 'Start free' : `Get ${plan.name}`}
                 </Link>
               </div>
             );

@@ -83,7 +83,7 @@ export function Panel({ title, action, children, className = '' }) {
 const STATE_VIEW = {
   active: { tone: 'green', label: 'Paid' },
   trialing: { tone: 'teal', label: 'On trial' },
-  trial_ended: { tone: 'gray', label: 'Trial ended' },
+  trial_ended: { tone: 'gray', label: 'Free plan' },
   expired: { tone: 'amber', label: 'Plan expired' },
   suspended: { tone: 'red', label: 'Suspended' },
 };
@@ -97,7 +97,7 @@ export const STATE_OPTIONS = [
   { value: '', label: 'Every business' },
   { value: 'active', label: 'Paid' },
   { value: 'trialing', label: 'On trial' },
-  { value: 'trial_ended', label: 'Trial ended' },
+  { value: 'trial_ended', label: 'Free plan' },
   { value: 'expired', label: 'Plan expired' },
   { value: 'suspended', label: 'Suspended' },
 ];

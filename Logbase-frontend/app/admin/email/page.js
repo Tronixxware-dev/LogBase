@@ -11,7 +11,7 @@ const AUDIENCES = [
   { key: 'business', label: 'One business', hint: 'The owner of the business you pick.' },
   { key: 'trialing', label: 'Everyone on a free trial', hint: 'Owners whose trial is still running.' },
   { key: 'paid', label: 'Everyone with a paid plan', hint: 'Owners whose Starter or Business plan is running.' },
-  { key: 'ended', label: 'Trial or plan has ended', hint: 'Owners who are now on the Free plan. A good place for a "come back" offer.' },
+  { key: 'ended', label: 'On the Free plan or plan has ended', hint: 'Owners who are on the Free plan, including everyone who has not paid yet. A good place for an "upgrade" offer.' },
   { key: 'everyone', label: 'Every business owner', hint: 'Everyone, except suspended businesses.' },
 ];
 

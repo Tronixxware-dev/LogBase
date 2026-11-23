@@ -76,7 +76,7 @@ export default function NewLaundryOrderPage() {
   const [depositMethod, setDepositMethod] = useState(settings.preferences.defaultPaymentMethod);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
-  const [planBlocked, setPlanBlocked] = useState(false); // the plan (free trial or paid) does not allow new orders
+  const [planBlocked, setPlanBlocked] = useState(false); // the plan (Free plan's monthly orders used up, or the plan has ended) does not allow new orders
   const [saving, setSaving] = useState(false);
   // this order's own id: kept while the form is filled in and retried, so one that reached the server is not saved twice
   const orderId = useRef(null);

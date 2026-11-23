@@ -45,7 +45,7 @@ export default function MyReferralsPage() {
   const referredColumns = [
     { key: 'name', label: 'Business', render: (b) => <span className="font-medium text-gray-900">{b.name}</span> },
     { key: 'signedUpAt', label: 'Signed up', render: (b) => formatDate(b.signedUpAt) },
-    { key: 'plan', label: 'Plan now', render: (b) => <Badge tone={b.plan === 'Free trial' || b.plan === 'Expired' ? 'gray' : 'green'}>{b.plan}</Badge> },
+    { key: 'plan', label: 'Plan now', render: (b) => <Badge tone={b.plan === 'Free trial' || b.plan === 'Free' || b.plan === 'Expired' ? 'gray' : 'green'}>{b.plan}</Badge> },
     { key: 'earned', label: 'You earned', align: 'right', render: (b) => formatMoney(b.earned) },
   ];
   const earningColumns = [

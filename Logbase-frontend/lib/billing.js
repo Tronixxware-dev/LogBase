@@ -20,16 +20,18 @@ export function daysText(days) {
   return `${days} day${days === 1 ? '' : 's'}`;
 }
 
-// Why a laundry or tailoring business's free trial or plan ended (the server says: sub.trialEndedBy is 'orders' or 'days'; an ended paid plan has neither)
 // What the orders are called for this business ("laundry orders", "tailoring orders")
 export function orderNounOf(sub) {
   return (sub && sub.orderNoun) || 'orders';
 }
 
+// Why a laundry or tailoring business cannot take new orders: the Free plan allows a number of orders each month (sub.freeOrders)
 function ordersEndedText(sub) {
-  if (sub.state === 'expired') return `Your ${sub.lastPaidPlan ? `${sub.lastPaidPlan.charAt(0).toUpperCase()}${sub.lastPaidPlan.slice(1)} ` : ''}plan has ended.`;
-  if (sub.trialEndedBy === 'orders' && sub.trialOrders) return `Your free trial has ended: you have taken ${sub.trialOrders.limit} ${orderNounOf(sub)}.`;
-  return 'Your free trial has ended.';
+  const planName = sub.lastPaidPlan ? `${sub.lastPaidPlan.charAt(0).toUpperCase()}${sub.lastPaidPlan.slice(1)} ` : '';
+  const ended = sub.state === 'expired' ? `Your ${planName}plan has ended, so you are on the Free plan. ` : '';
+  const free = sub.freeOrders;
+  if (free) return `${ended}The Free plan allows ${free.limit} ${orderNounOf(sub)} a month and you have taken ${free.used}.`;
+  return `${ended}You have used all the orders the Free plan allows this month.`;
 }
 
 // The line at the top of the Billing page.
@@ -62,8 +64,8 @@ export function statusOf(sub) {
   if (sub.ordersBlocked) {
     return {
       tone: 'bad',
-      label: 'Ended',
-      detail: `${ordersEndedText(sub)} You cannot take new ${orderNounOf(sub)} until you choose a plan. What you already have is all still here.`,
+      label: 'Limit reached',
+      detail: `${ordersEndedText(sub)} You cannot take new ${orderNounOf(sub)} until you choose a plan or next month starts. What you already have is all still here.`,
     };
   }
   if (sub.state === 'expired') {
@@ -73,10 +75,13 @@ export function statusOf(sub) {
       detail: `Your ${sub.lastPaidPlan ? `${sub.lastPaidPlan.charAt(0).toUpperCase()}${sub.lastPaidPlan.slice(1)} ` : ''}plan ended, so you are back on the Free plan. Nothing was deleted.`,
     };
   }
+  const free = sub.freeOrders;
   return {
-    tone: 'warn',
+    tone: 'good',
     label: 'Free',
-    detail: 'Your free trial has ended, so you are on the Free plan. Nothing was deleted.',
+    detail: free
+      ? `You are on the Free plan. You have taken ${free.used} of ${free.limit} ${orderNounOf(sub)} this month. Choose a plan any time to take more.`
+      : 'You are on the Free plan. Choose a plan any time for more stock and staff.',
   };
 }
 
@@ -96,9 +101,19 @@ export function bannerFor(sub, autoRenew, usage) {
   if (sub.state !== 'active' && autoRenew && !autoRenew.enabled && autoRenew.failedAttempts >= 3) {
     return { tone: 'bad', text: 'Automatic renewal was switched off after your card was declined three times, so your plan was not renewed.', cta: 'Renew' };
   }
-  // laundry and tailoring: the free trial is counted in orders, and when it is over no new orders can be taken
+  // laundry and tailoring: the Free plan allows a number of orders each month, and when they are used up no new orders can be taken
   if (sub.ordersBlocked) {
-    return { tone: 'bad', text: `${ordersEndedText(sub)} Choose a plan to take new ${orderNounOf(sub)}. What you already have stays here.`, cta: 'Choose a plan' };
+    return { tone: 'bad', text: `${ordersEndedText(sub)} Choose a plan to take more ${orderNounOf(sub)} now, or wait for next month. What you already have stays here.`, cta: 'Choose a plan' };
+  }
+  if (sub.freeOrders) {
+    const left = Math.max(0, sub.freeOrders.limit - sub.freeOrders.used);
+    if (left <= 5) {
+      return {
+        tone: 'warn',
+        text: `You have taken ${sub.freeOrders.used} of the ${sub.freeOrders.limit} ${orderNounOf(sub)} the Free plan allows this month, so ${left} ${left === 1 ? 'is' : 'are'} left.`,
+        cta: 'Choose a plan',
+      };
+    }
   }
   if (sub.state === 'trialing' && sub.trialOrders) {
     const left = Math.max(0, sub.trialOrders.limit - sub.trialOrders.used);
@@ -149,7 +164,7 @@ export function bannerFor(sub, autoRenew, usage) {
       cta: 'Renew',
     };
   }
-  if (sub.state === 'expired' || sub.state === 'trial_ended') {
+  if (sub.state === 'expired') {
     const staff = sub.limits.staff === 0 ? 'no staff accounts' : `${limitText(sub.limits.staff)} staff`;
     return {
       tone: 'bad',
@@ -164,7 +179,10 @@ export function bannerFor(sub, autoRenew, usage) {
 // For a business that counts orders (opts.orderNoun, e.g. 'laundry orders') the stock line is about orders instead, since it holds no stock.
 export function planLines(plan, opts = {}) {
   if (opts.orderNoun) {
-    const orders = plan.key === 'free' ? `Free trial: 50 ${opts.orderNoun} or 14 days, then upgrade` : `Unlimited ${opts.orderNoun}`;
+    let orders;
+    if (plan.key !== 'free') orders = `Unlimited ${opts.orderNoun}`;
+    else if (plan.limits.orders != null) orders = `Up to ${plan.limits.orders} ${opts.orderNoun} a month`;
+    else orders = `A limited number of ${opts.orderNoun} each month`;
     let staffLine;
     if (plan.limits.staff === 0) staffLine = 'No staff accounts (just you)';
     else if (plan.limits.staff == null) staffLine = 'Unlimited staff accounts';

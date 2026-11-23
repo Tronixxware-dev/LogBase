@@ -84,12 +84,12 @@ export default async function GuidePage({ params }) {
         </article>
 
         <div className="mt-14 rounded-2xl border border-primary/20 bg-primary/5 p-6">
-          <h2 className="text-lg font-semibold tracking-tight text-gray-900">Try LogBase free for {SITE.trialDays} days</h2>
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900">Start using LogBase free</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-gray-600">
             Track stock, record sales and see who owes you, even without internet. No card needed to start.
           </p>
           <Link href="/signup" className="mt-4 inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark">
-            Start free trial
+            Get started free
           </Link>
         </div>
 

@@ -37,7 +37,7 @@ export default function Privacy() {
           items={[
             'To provide and secure the service: signing you in, saving your records, syncing offline sales and showing your reports.',
             'To take payment and manage your subscription, including renewals.',
-            'To send you messages about your account, such as password resets, receipts and billing or trial notices.',
+            'To send you messages about your account, such as password resets, receipts and billing notices.',
             'To answer your questions and fix problems.',
             'To meet our legal obligations and to protect against fraud and misuse.',
           ]}

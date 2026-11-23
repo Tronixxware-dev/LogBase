@@ -12,17 +12,17 @@ export default function RefundPolicy() {
   return (
     <LegalPage
       title="Refund Policy"
-      intro={`We want you to be sure ${SITE.name} suits your business before you pay anything, which is why every new business gets a free trial with no card needed.`}
+      intro={`We want you to be sure ${SITE.name} suits your business before you pay anything, which is why every new business starts on a Free plan with no card needed and no time limit.`}
     >
       <Section title="Try it first">
         <p>
-          Every new business has a {SITE.trialDays}-day free trial of the Business plan. You do not need to enter a card. Use that time to check that {SITE.name} works for your business. You are only charged if you choose a paid plan and pay for it.
+          Every new business starts on the Free plan. You do not need to enter a card, and there is no time limit. Use it to check that {SITE.name} works for your business. You are only charged if you choose a paid plan and pay for it.
         </p>
       </Section>
 
       <Section title="Payments are not refundable">
         <p>
-          Because of the free trial, subscription payments are not refunded once made. This applies to monthly and yearly payments, and we do not give part refunds for the unused part of a period.
+          Because you can try {SITE.name} on the Free plan first, subscription payments are not refunded once made. This applies to monthly and yearly payments, and we do not give part refunds for the unused part of a period.
         </p>
       </Section>
 

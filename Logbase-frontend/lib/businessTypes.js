@@ -34,7 +34,7 @@ export function businessTypeOf(user) {
   return BUSINESS_TYPES.some((t) => t.key === type) ? type : DEFAULT_BUSINESS_TYPE;
 }
 
-// These kinds of business hold no stock, so their free trial is counted in orders (laundry orders, tailoring orders)
+// These kinds of business hold no stock, so their Free plan is counted in orders each month (laundry orders, tailoring orders)
 export function isOrderBased(type) {
   return type === 'laundromat' || type === 'tailor';
 }

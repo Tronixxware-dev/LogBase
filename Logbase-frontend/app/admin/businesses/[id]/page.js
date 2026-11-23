@@ -250,7 +250,7 @@ function Actions({ business, plan, run, id }) {
       {mode === 'end' && (
         <div className="mt-4 max-w-lg space-y-3">
           <p className="text-sm text-gray-600">
-            This moves {business.name} to the Free plan right now (50 units in stock, no staff accounts) and switches automatic renewal off. Nothing is deleted, and you can give a plan again later.
+            This moves {business.name} to the Free plan right now (30 units in stock, no staff accounts) and switches automatic renewal off. Nothing is deleted, and you can give a plan again later.
           </p>
           <button
             type="button"
@@ -307,7 +307,7 @@ function OverviewTab({ data, run }) {
             )}
             {(plan.planState === 'expired' || plan.planState === 'trial_ended') && (
               <Line label="History" icon="clock" color="amber">
-                {plan.planState === 'expired' ? `Was on ${plan.lastPaidPlan || 'a paid plan'}, ended ${formatDate(plan.currentPeriodEnd)}` : plan.trialEndedBy === 'orders' && plan.trialOrders ? `Trial ended after ${plan.trialOrders.limit} ${plan.orderNoun || 'orders'} (days were left until ${formatDate(plan.trialEndsAt)})` : `Trial ended ${formatDate(plan.trialEndsAt)}`}
+                {plan.planState === 'expired' ? `Was on ${plan.lastPaidPlan || 'a paid plan'}, ended ${formatDate(plan.currentPeriodEnd)}` : plan.startedFree ? 'Started on the Free plan (no trial)' : plan.trialEndedBy === 'orders' && plan.trialOrders ? `Trial ended after ${plan.trialOrders.limit} ${plan.orderNoun || 'orders'} (days were left until ${formatDate(plan.trialEndsAt)})` : `Trial ended ${formatDate(plan.trialEndsAt)}`}
               </Line>
             )}
             <Line label="Last payment" icon="wallet" color="teal">{plan.lastPaymentAt ? formatDateTime(plan.lastPaymentAt) : 'none'}</Line>

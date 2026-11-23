@@ -85,7 +85,7 @@ const PAINS = [
 ];
 
 const STEPS = [
-  { n: '1', title: 'Create your account', text: 'Sign up with your email. No card is needed to start your free trial.' },
+  { n: '1', title: 'Create your account', text: 'Sign up with your email. It is free to start and no card is needed.' },
   { n: '2', title: 'Add your products', text: 'Type them in or import them from a spreadsheet, with your prices and opening stock.' },
   { n: '3', title: 'Start selling', text: 'Record sales, purchases and payments every day, and watch your dashboard tell you how the business is doing.' },
 ];
@@ -93,11 +93,11 @@ const STEPS = [
 const FAQ = [
   {
     q: 'Do I need a card to start?',
-    a: `No. Your ${SITE.trialDays}-day free trial starts when you sign up and needs no card. You only pay if you decide to continue.`,
+    a: 'No. You start on the Free plan, which needs no card and has no time limit. You only pay if you decide to upgrade for more stock and staff.',
   },
   {
-    q: 'What happens when my trial or subscription ends?',
-    a: 'Your business moves to the Free plan. Nothing is deleted or hidden; the Free plan only limits how many new products you can add and does not include staff accounts. Subscribe again at any time to lift the limits.',
+    q: 'What happens when my subscription ends?',
+    a: 'Your business moves to the Free plan. Nothing is deleted or hidden; the Free plan only limits how many units you can hold in stock and does not include staff accounts. Subscribe again at any time to lift the limits.',
   },
   {
     q: 'Does it really work without internet?',
@@ -164,7 +164,7 @@ function Hero() {
                 href="/signup"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#ffffff] px-6 py-3.5 text-base font-semibold text-[#0f766e] shadow-lg shadow-black/20 transition hover:-translate-y-0.5 sm:w-auto"
               >
-                Start free trial
+                Get started free
                 <Icon name="arrowRight" className="h-4 w-4" />
               </Link>
               <div className="flex gap-3 sm:contents">
@@ -179,7 +179,7 @@ function Hero() {
             </div>
 
             <p className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-[#8dbab3]">
-              <span className="inline-flex items-center gap-1.5"><Icon name="check" className="h-4 w-4 text-[#5eead4]" />{SITE.trialDays}-day free trial</span>
+              <span className="inline-flex items-center gap-1.5"><Icon name="check" className="h-4 w-4 text-[#5eead4]" />Free to start</span>
               <span className="inline-flex items-center gap-1.5"><Icon name="check" className="h-4 w-4 text-[#5eead4]" />No card needed</span>
               <span className="inline-flex items-center gap-1.5"><Icon name="check" className="h-4 w-4 text-[#5eead4]" />Cancel anytime</span>
             </p>
@@ -499,12 +499,12 @@ function ClosingCta() {
             }}
           />
           <h2 className="mx-auto max-w-2xl text-balance text-[1.8rem] font-semibold leading-tight tracking-tight text-white sm:text-5xl">Give your business a proper record</h2>
-          <p className="mx-auto mt-4 max-w-xl text-[#a9cdc7]">Try LogBase free for {SITE.trialDays} days. No card, no commitment.</p>
+          <p className="mx-auto mt-4 max-w-xl text-[#a9cdc7]">Start free today. No card, no commitment.</p>
           <Link
             href="/signup"
             className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#ffffff] px-7 py-3.5 text-base font-semibold text-[#0f766e] shadow-lg shadow-black/20 transition hover:-translate-y-0.5 sm:w-auto"
           >
-            Start free trial
+            Get started free
             <Icon name="arrowRight" className="h-4 w-4" />
           </Link>
         </div>

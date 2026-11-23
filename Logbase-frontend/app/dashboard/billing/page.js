@@ -149,13 +149,14 @@ function BillingScreen() {
   if (loading) return <LoadingState label="Loading billing…" />;
 
   const sub = data && data.subscription;
-  const noun = (sub && sub.orderNoun) || 'orders'; // what a trial counts: laundry orders or tailoring orders
+  const noun = (sub && sub.orderNoun) || 'orders'; // what the orders are called: laundry orders or tailoring orders
   const renew = data && data.autoRenew; // missing on an older server: then there is simply no automatic renewal to show
   // the box starts ticked (with the wording next to the plans); once a card is saved it follows the saved setting
   const renewOn = !renew ? false : renewChoice !== null ? renewChoice : renew.card ? renew.enabled : true;
   const renewNotice = autoRenewNotice(renew);
   const status = statusOf(sub);
   const plans = (data && data.plans) || [];
+  const freeOrderLimit = (plans.find((p) => p.key === 'free') || { limits: {} }).limits.orders; // the Free plan's orders a month (laundry and tailoring)
   const runningPaid = sub && sub.state === 'active' ? PLAN_ORDER.indexOf(sub.plan) : -1;
 
   return (
@@ -195,7 +196,11 @@ function BillingScreen() {
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {orderBased ? (
-              sub.trialOrders && <Meter label={`${noun.charAt(0).toUpperCase()}${noun.slice(1)} in your free trial`} used={sub.trialOrders.used} limit={sub.trialOrders.limit} />
+              sub.trialOrders ? (
+                <Meter label={`${noun.charAt(0).toUpperCase()}${noun.slice(1)} in your free trial`} used={sub.trialOrders.used} limit={sub.trialOrders.limit} />
+              ) : (
+                sub.freeOrders && <Meter label={`${noun.charAt(0).toUpperCase()}${noun.slice(1)} this month`} used={sub.freeOrders.used} limit={sub.freeOrders.limit} />
+              )
             ) : (
               <Meter label="Units in stock" used={data.usage.stocks} limit={sub.limits.stocks} />
             )}
@@ -203,7 +208,7 @@ function BillingScreen() {
           </div>
           <p className="mt-3 text-xs text-gray-400">
             {orderBased
-              ? `When the free trial ends (after 50 ${noun} or 14 days, whichever comes first) you need a plan to take new ones. Starter and Business have no limit. What you already took stays here, and you can keep working on it.`
+              ? `${freeOrderLimit ? `The Free plan lets you take ${freeOrderLimit} ${noun} each month.` : 'The Free plan limits how many orders you can take each month.'} Starter and Business have no limit. What you already took stays here, and you can keep working on it.`
               : 'If you go over a limit, you can still sell and use everything you already have. You just cannot add more stock or staff until you upgrade. Selling stock makes room again.'}
           </p>
 

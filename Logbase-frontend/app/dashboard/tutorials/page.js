@@ -5,9 +5,36 @@ import PageHeader from '@/components/PageHeader';
 import { useUser } from '@/components/UserProvider';
 import { TutorialModal, useTutorialSet } from '@/components/WatchHowButton';
 import { businessTypeOf } from '@/lib/businessTypes';
-import { SETS, posterUrl } from '@/lib/tutorialVideos';
+import { SETS, extraVideosForType, posterUrl } from '@/lib/tutorialVideos';
 
-// Every video tutorial for this kind of business, in the order to learn them.
+// One small card for a video: its picture, a play button and its title.
+function VideoCard({ setId, video, label, onPlay }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onPlay({ ...video, set: setId })}
+      className="group overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-xs transition hover:shadow-md active:scale-[0.99]"
+    >
+      <div className="relative aspect-video bg-gray-100">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={posterUrl(setId, video.key, 'wide')} alt="" loading="lazy" className="h-full w-full object-cover" />
+        <span className="absolute inset-0 flex items-center justify-center bg-black/10 transition group-hover:bg-black/20">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-primary shadow">
+            <svg viewBox="0 0 24 24" className="ml-0.5 h-6 w-6" fill="currentColor" aria-hidden="true">
+              <path d="M8 5.5v13l11-6.5-11-6.5Z" />
+            </svg>
+          </span>
+        </span>
+      </div>
+      <div className="p-3.5">
+        <p className="text-xs font-medium text-gray-400">{label}</p>
+        <p className="mt-0.5 text-sm font-semibold text-gray-900">{video.title}</p>
+      </div>
+    </button>
+  );
+}
+
+// Every video tutorial for this kind of business, in the order to learn them, then the videos for features every business has.
 export default function TutorialsPage() {
   const { user } = useUser();
   const { ids, setId, choose } = useTutorialSet(businessTypeOf(user));
@@ -25,6 +52,7 @@ export default function TutorialsPage() {
   }
 
   const set = SETS[setId];
+  const more = extraVideosForType(businessTypeOf(user));
 
   return (
     <div>
@@ -49,30 +77,20 @@ export default function TutorialsPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {set.videos.map((video, index) => (
-          <button
-            key={video.key}
-            type="button"
-            onClick={() => setPlaying(video)}
-            className="group overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-xs transition hover:shadow-md active:scale-[0.99]"
-          >
-            <div className="relative aspect-video bg-gray-100">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={posterUrl(setId, video.key, 'wide')} alt="" loading="lazy" className="h-full w-full object-cover" />
-              <span className="absolute inset-0 flex items-center justify-center bg-black/10 transition group-hover:bg-black/20">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-primary shadow">
-                  <svg viewBox="0 0 24 24" className="ml-0.5 h-6 w-6" fill="currentColor" aria-hidden="true">
-                    <path d="M8 5.5v13l11-6.5-11-6.5Z" />
-                  </svg>
-                </span>
-              </span>
-            </div>
-            <div className="p-3.5">
-              <p className="text-xs font-medium text-gray-400">Video {index + 1}</p>
-              <p className="mt-0.5 text-sm font-semibold text-gray-900">{video.title}</p>
-            </div>
-          </button>
+          <VideoCard key={video.key} setId={setId} video={video} label={`Video ${index + 1}`} onPlay={setPlaying} />
         ))}
       </div>
+
+      {more.length > 0 && (
+        <>
+          <h2 className="mb-3 mt-8 text-base font-semibold text-gray-900">More features</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {more.map((video) => (
+              <VideoCard key={`${video.set}/${video.key}`} setId={video.set} video={video} label="Feature" onPlay={setPlaying} />
+            ))}
+          </div>
+        </>
+      )}
 
       {playing && <TutorialModal setId={setId} videos={[playing]} onClose={() => setPlaying(null)} />}
     </div>

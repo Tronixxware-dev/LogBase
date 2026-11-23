@@ -37,9 +37,9 @@ export default function Terms() {
         />
       </Section>
 
-      <Section title="4. Free trial, plans and limits">
+      <Section title="4. Free plan, paid plans and limits">
         <p>
-          New businesses get a {SITE.trialDays}-day free trial of the Business plan, with no card needed. When the trial or a paid period ends, the business moves to the Free plan. For a laundromat or a tailor the free trial ends after 50 orders (laundry orders or tailoring orders) or {SITE.trialDays} days, whichever comes first; after that, new orders need a Starter or Business plan, and orders already taken stay available.
+          New businesses start on the Free plan, with no card needed and no time limit. A business that was already on a free trial when trials were removed keeps it until it ends, then moves to the Free plan. When a paid period ends, the business also moves to the Free plan. For a laundromat or a tailor the Free plan allows {SITE.freeOrdersPerMonth} orders (laundry orders or tailoring orders) in each calendar month; after that, new orders need a Starter or Business plan or must wait for the next month, and orders already taken stay available.
         </p>
         <p>
           The plans are Free, Starter ({naira(starter.monthly)} a month or {naira(starter.yearly)} a year) and Business ({naira(business.monthly)} a month or {naira(business.yearly)} a year). Each plan has limits, for example on the number of units you hold in stock and the number of staff accounts, which are shown on our <Link href="/#pricing" className="font-medium text-primary hover:underline">pricing section</Link> and in the app. Limits only stop you adding more stock or staff beyond the allowance; you can keep selling and using what you already have. We do not delete or hide data you have already entered because of a plan change.

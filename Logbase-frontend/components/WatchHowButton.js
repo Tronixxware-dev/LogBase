@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createPortal } from 'react-dom';
@@ -19,49 +19,72 @@ function PlayIcon({ className = 'h-5 w-5' }) {
 
 // Which set of videos this business watches. A general shop can be a supermarket or a pharmacy, so it can switch;
 // the choice is remembered on this device.
+const SET_KEY = 'logbase:tutorial-set';
+const setListeners = new Set();
+let memoryChoice = '';
+
+function subscribeToSet(callback) {
+  setListeners.add(callback);
+  window.addEventListener('storage', callback);
+  return () => {
+    setListeners.delete(callback);
+    window.removeEventListener('storage', callback);
+  };
+}
+
+function readSetChoice() {
+  try {
+    return localStorage.getItem(SET_KEY) || memoryChoice;
+  } catch {
+    // storage is not available: use what was chosen since the page opened
+    return memoryChoice;
+  }
+}
+
 export function useTutorialSet(type) {
   const ids = setsForType(type);
-  const [chosen, setChosen] = useState('');
-  useEffect(() => {
-    try {
-      setChosen(localStorage.getItem('logbase:tutorial-set') || '');
-    } catch {
-      // storage is not available: keep the default
-    }
-  }, []);
+  const chosen = useSyncExternalStore(subscribeToSet, readSetChoice, () => '');
   const setId = ids.includes(chosen) ? chosen : ids[0] || '';
   const choose = (id) => {
-    setChosen(id);
+    memoryChoice = id;
     try {
-      localStorage.setItem('logbase:tutorial-set', id);
+      localStorage.setItem(SET_KEY, id);
     } catch {
       // storage is not available: the choice just is not remembered
     }
+    setListeners.forEach((callback) => callback());
   };
   return { ids, setId, choose };
+}
+
+function subscribeToScreen(callback) {
+  const query = window.matchMedia('(min-width: 768px)');
+  query.addEventListener('change', callback);
+  return () => query.removeEventListener('change', callback);
+}
+
+function subscribeToNetwork(callback) {
+  window.addEventListener('online', callback);
+  window.addEventListener('offline', callback);
+  return () => {
+    window.removeEventListener('online', callback);
+    window.removeEventListener('offline', callback);
+  };
 }
 
 // The pop-up that plays a video. `videos` is one or more videos for the page; with more than one, buttons switch between them.
 export function TutorialModal({ setId, videos, startKey, onClose }) {
   const [key, setKey] = useState(startKey || (videos[0] && videos[0].key));
-  const [wide, setWide] = useState(false);
-  const [online, setOnline] = useState(true);
+  const wide = useSyncExternalStore(subscribeToScreen, () => window.matchMedia('(min-width: 768px)').matches, () => false);
+  const online = useSyncExternalStore(subscribeToNetwork, () => navigator.onLine, () => true);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    setWide(window.matchMedia('(min-width: 768px)').matches);
-    setOnline(navigator.onLine);
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
     const esc = (e) => e.key === 'Escape' && onClose();
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
     window.addEventListener('keydown', esc);
     const before = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
-      window.removeEventListener('online', on);
-      window.removeEventListener('offline', off);
       window.removeEventListener('keydown', esc);
       document.body.style.overflow = before;
     };
@@ -69,8 +92,10 @@ export function TutorialModal({ setId, videos, startKey, onClose }) {
 
   const video = videos.find((v) => v.key === key) || videos[0];
   if (!video) return null;
+  // a video from the "More features" set carries its own set; the others belong to the business's set
+  const videoSet = video.set || setId;
   const shape = wide ? 'wide' : 'vertical';
-  const youtube = youtubeIdFor(setId, video.key);
+  const youtube = youtubeIdFor(videoSet, video.key);
   const frame = { aspectRatio: wide ? '16 / 9' : '9 / 16', width: wide ? '100%' : 'min(100%, calc(70vh * 9 / 16))' };
 
   // drawn on the page itself (not inside the top bar, whose frosted glass would squeeze a pop-up into the bar)
@@ -118,8 +143,8 @@ export function TutorialModal({ setId, videos, startKey, onClose }) {
             <video
               key={video.key + shape}
               className="h-full w-full"
-              src={videoUrl(setId, video.key, shape)}
-              poster={posterUrl(setId, video.key, shape)}
+              src={videoUrl(videoSet, video.key, shape)}
+              poster={posterUrl(videoSet, video.key, shape)}
               controls
               autoPlay
               playsInline
@@ -166,15 +191,13 @@ export default function WatchHowButton() {
   const pathname = usePathname();
   const { user } = useUser();
   const { setId } = useTutorialSet(businessTypeOf(user));
-  const [open, setOpen] = useState(false);
+  // the page the pop-up was opened on: going to another page closes it
+  const [openOn, setOpenOn] = useState(null);
+  const open = openOn === pathname;
 
-  // close the pop-up when you go to another page
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
-  if (!setId) return null;
-  const videos = videosForPath(setId, pathname);
+  // no videos for this kind of business, and no need for a button on the tutorials page itself
+  if (!setId || pathname.startsWith('/dashboard/tutorials')) return null;
+  const videos = videosForPath(setId, pathname, businessTypeOf(user));
 
   if (videos.length === 0) {
     return (
@@ -193,14 +216,14 @@ export default function WatchHowButton() {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpenOn(pathname)}
         aria-label="Watch how"
         className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-2.5 text-sm font-medium text-primary shadow-xs transition active:scale-95 sm:px-3"
       >
         <PlayIcon />
         <span className="hidden sm:inline">Watch how</span>
       </button>
-      {open && <TutorialModal setId={setId} videos={videos} onClose={() => setOpen(false)} />}
+      {open && <TutorialModal setId={setId} videos={videos} onClose={() => setOpenOn(null)} />}
     </>
   );
 }

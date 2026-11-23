@@ -71,7 +71,7 @@ export default function AdminOverviewPage() {
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Businesses" value={totals.businesses.toLocaleString()} sub={`${totals.newThisMonth} new in 30 days`} href="/admin/businesses" />
         <StatCard label="Paying now" value={states.active.toLocaleString()} sub={`≈ ${formatMoney(data.mrr)} a month`} tone="green" href="/admin/businesses?state=active" />
-        <StatCard label="On free trial" value={states.trialing.toLocaleString()} sub={`${states.trial_ended + states.expired} ended or expired`} href="/admin/businesses?state=trialing" />
+        <StatCard label="On free trial" value={states.trialing.toLocaleString()} sub={`${states.trial_ended} on the Free plan, ${states.expired} expired`} href="/admin/businesses?state=trialing" />
         <StatCard label="Revenue this month" value={formatMoney(revenue.thisMonth)} sub={`${formatMoney(revenue.total)} all time`} href="/admin/payments" />
         <StatCard label="People with logins" value={totals.users.toLocaleString()} href="/admin/people" />
         <StatCard label="Active this week" value={totals.activeThisWeek.toLocaleString()} sub="businesses that did something" href="/admin/businesses?active=week" />
@@ -96,7 +96,7 @@ export default function AdminOverviewPage() {
             segments={[
               { label: 'Paid', value: states.active, color: '#16a34a', display: states.active },
               { label: 'On free trial', value: states.trialing, color: '#0d9488', display: states.trialing },
-              { label: 'Trial ended (Free plan)', value: states.trial_ended, color: '#94a3b8', display: states.trial_ended },
+              { label: 'Free plan', value: states.trial_ended, color: '#94a3b8', display: states.trial_ended },
               { label: 'Paid plan expired (Free plan)', value: states.expired, color: '#d97706', display: states.expired },
             ]}
           />

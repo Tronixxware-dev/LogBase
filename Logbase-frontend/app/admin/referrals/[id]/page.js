@@ -69,7 +69,7 @@ export default function AdminReferrerPage() {
   const referredColumns = [
     { key: 'name', label: 'Business', render: (b) => <span className="font-medium text-gray-900">{b.name}</span> },
     { key: 'signedUpAt', label: 'Signed up', render: (b) => formatDate(b.signedUpAt) },
-    { key: 'plan', label: 'Plan now', render: (b) => <Badge tone={b.plan === 'Free trial' || b.plan === 'Expired' ? 'gray' : 'green'}>{b.plan}</Badge> },
+    { key: 'plan', label: 'Plan now', render: (b) => <Badge tone={b.plan === 'Free trial' || b.plan === 'Free' || b.plan === 'Expired' ? 'gray' : 'green'}>{b.plan}</Badge> },
     { key: 'earned', label: 'Earned from it', align: 'right', render: (b) => formatMoney(b.earned) },
   ];
   const commissionColumns = [
