@@ -279,7 +279,7 @@ function BillingScreen() {
         <section className={`${cardClass} mb-6 p-4 sm:p-5`}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-gray-900">{sub.planName} plan</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{preview ? preview.planName : sub.planName} plan</h2>
               <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${status.tone === 'good' ? 'bg-green-100 text-green-700' : status.tone === 'warn' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                 {status.label}
               </span>
@@ -405,12 +405,12 @@ function BillingScreen() {
       <div className="mb-3 grid gap-4 md:grid-cols-3">
         {plans.map((plan) => {
           const index = PLAN_ORDER.indexOf(plan.key);
-          const isCurrent = sub && sub.plan === plan.key;
+          const isCurrent = preview ? preview.plan === plan.key : sub && sub.plan === plan.key; // while trying a plan out, the plan they picked is the highlighted one
           const paid = plan.key !== 'free';
           const blocked = paid && index < runningPaid; // a lower plan while a higher one is still running
           const saving = yearlySaving(plan);
           let label = `Choose ${plan.name}`;
-          if (preview && preview.plan === plan.key) label = `Pay for ${plan.name}`;
+          if (preview && paid) label = `Pay for ${plan.name}`;
           else if (isCurrent && sub.state === 'active') label = `Renew ${plan.name}`;
           else if (sub && PLAN_ORDER.indexOf(sub.plan) < index && sub.state !== 'trialing') label = `Upgrade to ${plan.name}`;
           return (
@@ -421,7 +421,7 @@ function BillingScreen() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-gray-900">{plan.name}</h3>
-                {isCurrent && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Your plan now</span>}
+                {isCurrent && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{preview ? 'Your pick' : 'Your plan now'}</span>}
               </div>
               <p className="mt-1 text-sm text-gray-500">{plan.tagline}</p>
               <p className="mt-4 text-2xl font-semibold text-gray-900">
@@ -456,7 +456,7 @@ function BillingScreen() {
                   </>
                 ) : (
                   <p className="rounded-lg bg-gray-50 px-3 py-2 text-center text-sm text-gray-500">
-                    {isCurrent ? 'You are on this plan' : 'What you get after a plan ends'}
+                    {preview ? 'Free is chosen when you sign up' : isCurrent ? 'You are on this plan' : 'What you get after a plan ends'}
                   </p>
                 )}
               </div>

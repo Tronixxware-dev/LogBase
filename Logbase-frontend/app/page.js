@@ -93,7 +93,7 @@ const STEPS = [
 const FAQ = [
   {
     q: 'Do I need a card to start?',
-    a: 'No. You pick a plan when you sign up. Free needs no card and has no time limit. Starter and Business let you try the app with 5 products first, and you only pay when you want to add more.',
+    a: 'No. You pick a plan when you sign up. Free needs no card and has no time limit. Starter and Business let you try the app with 7 products first, and you only pay when you want to add more.',
   },
   {
     q: 'What happens when my subscription ends?',

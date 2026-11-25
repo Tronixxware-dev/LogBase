@@ -19,7 +19,7 @@ export default function PricingSection() {
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">Pricing</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl">Simple prices, in naira</h2>
           <p className="mt-4 text-gray-500">
-            Pick a plan and sign up. Starter and Business let you try the app with 5 products before you pay. Free needs no payment at all.
+            Pick a plan and sign up. Starter and Business let you try the app with 7 products before you pay. Free needs no payment at all.
           </p>
 
           <div className="mt-8 inline-flex rounded-xl bg-gray-100 p-1" role="group" aria-label="Billing period">
