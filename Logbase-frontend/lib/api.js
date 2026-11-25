@@ -491,6 +491,11 @@ export function verifyPayment(reference) {
   return apiRequest('/billing/verify', { method: 'POST', body: { reference }, auth: true });
 }
 
+// Android app: tells our server about a plan just bought with Google Play. The server checks the purchase with Google itself.
+export function verifyGooglePurchase(purchaseToken) {
+  return apiRequest('/billing/google/verify', { method: 'POST', body: { purchaseToken }, auth: true });
+}
+
 /* ------------------------------------------------------------------ */
 /* Expenses (administrator only)                                      */
 /* ------------------------------------------------------------------ */

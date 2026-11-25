@@ -61,6 +61,20 @@ export function statusOf(sub) {
       detail: `Paid until ${formatDate(sub.endsAt)} (${daysText(sub.daysLeft)} left).`,
     };
   }
+  // picked a paid plan at sign-up and has not paid yet: trying the app first
+  if (sub.preview) {
+    const p = sub.preview;
+    const orders = sub.freeOrders;
+    const used = orders ? orders.used : null;
+    const full = Boolean(sub.ordersBlocked);
+    return {
+      tone: full ? 'bad' : 'good',
+      label: 'Try it first',
+      detail: orders
+        ? `You picked the ${p.planName} plan. Try LogBase with up to ${p.orders} ${orderNounOf(sub)} (you have taken ${used}), then pay for ${p.planName} to take more.${full ? ' Your test is used up. What you already have stays here.' : ''}`
+        : `You picked the ${p.planName} plan. Try LogBase with up to ${p.units} units in stock, then pay for ${p.planName} to add more.${sub.limits && sub.limits.stocks != null ? ' Selling stock makes room again.' : ''}`,
+    };
+  }
   if (sub.ordersBlocked) {
     return {
       tone: 'bad',
@@ -100,6 +114,31 @@ export function bannerFor(sub, autoRenew, usage) {
   }
   if (sub.state !== 'active' && autoRenew && !autoRenew.enabled && autoRenew.failedAttempts >= 3) {
     return { tone: 'bad', text: 'Automatic renewal was switched off after your card was declined three times, so your plan was not renewed.', cta: 'Renew' };
+  }
+  // picked a paid plan at sign-up and has not paid: a short test, then the picked plan has to be paid for
+  if (sub.preview && sub.state !== 'active') {
+    const p = sub.preview;
+    if (sub.freeOrders) {
+      const used = sub.freeOrders.used;
+      const full = used >= p.orders;
+      return {
+        tone: full ? 'bad' : 'warn',
+        text: full
+          ? `You have used your ${p.orders}-order test. Pay for the ${p.planName} plan to take more ${orderNounOf(sub)}. What you already have stays here.`
+          : `You are trying LogBase: ${used} of ${p.orders} test ${orderNounOf(sub)} taken. Pay for the ${p.planName} plan you chose to take more.`,
+        cta: `Pay for ${p.planName}`,
+      };
+    }
+    const units = usage ? Number(usage.stocks) : NaN;
+    const used = Number.isFinite(units) ? units : 0;
+    const full = used >= p.units;
+    return {
+      tone: full ? 'bad' : 'warn',
+      text: full
+        ? `You have used your ${p.units}-unit test. Pay for the ${p.planName} plan you chose to add more stock. You can keep selling what you have.`
+        : `You are trying LogBase: ${limitText(used)} of ${p.units} test units in stock. Pay for the ${p.planName} plan you chose to add more.`,
+      cta: `Pay for ${p.planName}`,
+    };
   }
   // laundry and tailoring: the Free plan allows a number of orders each month, and when they are used up no new orders can be taken
   if (sub.ordersBlocked) {

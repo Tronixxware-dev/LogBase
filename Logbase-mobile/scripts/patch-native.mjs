@@ -20,9 +20,9 @@ if (existsSync(manifestPath)) {
   if (missing.length > 0) {
     xml = xml.replace('</manifest>', `${missing.join('\n')}\n</manifest>`);
     writeFileSync(manifestPath, xml);
-    console.log(`Android: added ${missing.length} camera line(s) to AndroidManifest.xml`);
+    console.log(`Android: added ${missing.length} line(s) to AndroidManifest.xml`);
   } else {
-    console.log('Android: AndroidManifest.xml already has the camera lines');
+    console.log('Android: AndroidManifest.xml already has the lines it needs');
   }
 }
 

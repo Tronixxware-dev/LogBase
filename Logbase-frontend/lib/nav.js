@@ -122,7 +122,7 @@ export const productLinks = [
 
 export const teamLink = { href: '/dashboard/staffs', label: 'Staffs', icon: 'team' };
 export const storesLink = { href: '/dashboard/stores', label: 'Stores', icon: 'store', feature: 'products' };
-import { isNativeApp } from '@/lib/nativeApp';
+import { isPlansHidden } from '@/lib/nativeApp';
 
 export const billingLink = { href: '/dashboard/billing', label: 'Billing', icon: 'billing' };
 export const dataLink = { href: '/dashboard/data', label: 'Import & export', icon: 'data' };
@@ -191,7 +191,7 @@ export function visibleLinks({ can, isOwner, businessType = DEFAULT_BUSINESS_TYP
   // Settings is always the last item of the menu
   const referrals = [...(isReferrer ? [referralsLink] : []), ...(isAgent ? [agentLink] : [])];
   // (no Billing item inside the store app: plans are not sold there)
-  const owner = isOwner ? [approvalsLink, teamLink, storesLink, dataLink, ...(isNativeApp() ? [] : [billingLink]), ...referrals, settingsLink].filter((l) => isShown(l, access)) : [];
+  const owner = isOwner ? [approvalsLink, teamLink, storesLink, dataLink, ...(isPlansHidden() ? [] : [billingLink]), ...referrals, settingsLink].filter((l) => isShown(l, access)) : [];
   // a staff has Settings too (their profile and alerts), and "My requests" once the administrator has switched a rule on
   const account = isOwner ? [] : [...(approvalsOn ? [{ ...approvalsLink, label: 'My requests' }] : []), ...referrals, settingsLink];
   return { top, products, owner, account };

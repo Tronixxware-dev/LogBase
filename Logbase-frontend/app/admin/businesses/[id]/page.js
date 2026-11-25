@@ -250,7 +250,7 @@ function Actions({ business, plan, run, id }) {
       {mode === 'end' && (
         <div className="mt-4 max-w-lg space-y-3">
           <p className="text-sm text-gray-600">
-            This moves {business.name} to the Free plan right now (30 units in stock, no staff accounts) and switches automatic renewal off. Nothing is deleted, and you can give a plan again later.
+            This moves {business.name} to the Free plan right now (10 units in stock, no staff accounts) and switches automatic renewal off. Nothing is deleted, and you can give a plan again later.
           </p>
           <button
             type="button"

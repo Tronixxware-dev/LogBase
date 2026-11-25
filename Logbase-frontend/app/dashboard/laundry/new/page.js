@@ -11,7 +11,7 @@ import { newClientId } from '@/lib/outbox';
 import { dayInputValue, saveErrorMessage } from '@/lib/jobs';
 import { SERVICES, laundryTotals, servicePrice } from '@/lib/laundry';
 import { useUser } from '@/components/UserProvider';
-import { useNativeApp } from '@/lib/nativeApp';
+import { usePlansHidden } from '@/lib/nativeApp';
 import PageHeader from '@/components/PageHeader';
 import CustomerPicker, { useCustomerPicker } from '@/components/CustomerPicker';
 import { PaymentMethodSelect } from '@/components/JobParts';
@@ -58,7 +58,7 @@ function amountOf(row) {
 export default function NewLaundryOrderPage() {
   const router = useRouter();
   const { user, isOwner, settings } = useUser();
-  const inApp = useNativeApp(); // no plans or Pay buttons inside the store app
+  const inApp = usePlansHidden(); // no plans or Pay buttons inside the store app
   const picker = useCustomerPicker();
 
   const [rows, setRows] = useState(null);

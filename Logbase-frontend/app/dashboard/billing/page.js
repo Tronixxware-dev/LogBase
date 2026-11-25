@@ -18,7 +18,8 @@ import {
 } from '@/lib/billing';
 import PageHeader from '@/components/PageHeader';
 import { useUser } from '@/components/UserProvider';
-import { useNativeApp } from '@/lib/nativeApp';
+import { useAndroidApp, usePlansHidden } from '@/lib/nativeApp';
+import { buyPlan, googleBillingAvailable, manageInGooglePlay, restorePlan } from '@/lib/googleBilling';
 import { businessTypeOf, isOrderBased } from '@/lib/businessTypes';
 import { ErrorBanner, LoadingState, cardClass, primaryButtonClass } from '@/components/ui';
 
@@ -54,9 +55,12 @@ function Meter({ label, used, limit }) {
   );
 }
 
-// Your plan, what you use, the plans on offer (paid on Paystack) and your payments. Administrator only.
+// Your plan, what you use, the plans on offer and your payments. Administrator only.
+// On the website plans are paid on Paystack; inside the Android app they are bought with Google Play Billing.
 function BillingScreen() {
   const { user } = useUser();
+  const android = useAndroidApp();
+  const [googleReady, setGoogleReady] = useState(null); // is Google Play usable on this phone (Android app only)
   const orderBased = isOrderBased(businessTypeOf(user));
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -68,11 +72,24 @@ function BillingScreen() {
   const [lastReference, setLastReference] = useState('');
   const [renewChoice, setRenewChoice] = useState(null); // the "Renew automatically" box; null = not touched yet
   const [renewBusy, setRenewBusy] = useState(false);
+  const previewSet = useRef(false);
+  const [googleBusy, setGoogleBusy] = useState(false); // restoring or opening Google Play
   const handled = useRef(false);
+
+  useEffect(() => {
+    if (!android) return;
+    googleBillingAvailable().then(setGoogleReady);
+  }, [android]);
 
   const load = useCallback(async () => {
     const fresh = await getBilling();
     setData(fresh);
+    // a business that picked a yearly plan when signing up sees yearly prices first
+    const pick = fresh.subscription && fresh.subscription.preview;
+    if (pick && !previewSet.current) {
+      previewSet.current = true;
+      setPeriod(pick.interval === 'yearly' ? 'yearly' : 'monthly');
+    }
     return fresh;
   }, []);
 
@@ -116,7 +133,52 @@ function BillingScreen() {
     }
   }, [load, checkPayment]);
 
+  // Android app: Google Play takes the payment, our server checks it with Google and gives the plan
+  async function chooseOnGoogle(planKey) {
+    setError('');
+    setNotice(null);
+    setBuying(planKey);
+    try {
+      const productId = `${planKey}_${period}`;
+      const result = await buyPlan(productId, data.google.accountToken);
+      if (result.cancelled) return;
+      if (result.pending) {
+        setNotice({ tone: 'warn', text: result.message || 'Your payment is still being processed by Google Play. Your plan starts as soon as it is confirmed.' });
+      } else {
+        const name = result.subscription ? result.subscription.planName : '';
+        setNotice({ tone: 'good', text: name ? `Thank you! Your ${name} plan is now active.` : 'Thank you! Your plan is now active.' });
+      }
+      await load();
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('logbase:billing-changed'));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBuying('');
+    }
+  }
+
+  async function restoreOnGoogle() {
+    setError('');
+    setNotice(null);
+    setGoogleBusy(true);
+    try {
+      const result = await restorePlan(data.google.accountToken);
+      if (result.none) {
+        setNotice({ tone: 'warn', text: 'No plan was found on this Google Play account.' });
+      } else {
+        setNotice({ tone: 'good', text: 'Your plan was found and restored.' });
+        await load();
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('logbase:billing-changed'));
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGoogleBusy(false);
+    }
+  }
+
   async function choose(planKey) {
+    if (android) return chooseOnGoogle(planKey);
     setError('');
     setNotice(null);
     setBuying(planKey);
@@ -149,8 +211,9 @@ function BillingScreen() {
   if (loading) return <LoadingState label="Loading billing…" />;
 
   const sub = data && data.subscription;
+  const preview = sub && sub.preview; // picked a paid plan at sign-up and has not paid yet
   const noun = (sub && sub.orderNoun) || 'orders'; // what the orders are called: laundry orders or tailoring orders
-  const renew = data && data.autoRenew; // missing on an older server: then there is simply no automatic renewal to show
+  const renew = !android && data && data.autoRenew; // (the Android app has no card renewal: Google Play renews) missing on an older server: then there is simply no automatic renewal to show
   // the box starts ticked (with the wording next to the plans); once a card is saved it follows the saved setting
   const renewOn = !renew ? false : renewChoice !== null ? renewChoice : renew.card ? renew.enabled : true;
   const renewNotice = autoRenewNotice(renew);
@@ -158,6 +221,9 @@ function BillingScreen() {
   const plans = (data && data.plans) || [];
   const freeOrderLimit = (plans.find((p) => p.key === 'free') || { limits: {} }).limits.orders; // the Free plan's orders a month (laundry and tailoring)
   const runningPaid = sub && sub.state === 'active' ? PLAN_ORDER.indexOf(sub.plan) : -1;
+  const google = (data && data.google) || null;
+  const canPay = android ? Boolean(google && google.configured && googleReady) : Boolean(data && data.configured);
+  const googleManaged = android && Boolean(google && google.managed); // bought on Android and renewed by Google: changed in Google Play
 
   return (
     <>
@@ -176,8 +242,35 @@ function BillingScreen() {
         </button>
       )}
 
-      {data && !data.configured && (
-        <Notice tone="warn">Online payments are not switched on yet, so plans cannot be bought for now. Your account works as normal.</Notice>
+      {data && !canPay && !(android && googleReady === null) && (
+        <Notice tone="warn">
+          {android && google && google.configured
+            ? 'Google Play payments are not available on this phone right now. Make sure Google Play is installed and you are signed in, then try again. Your account works as normal.'
+            : 'Online payments are not switched on yet, so plans cannot be bought for now. Your account works as normal.'}
+        </Notice>
+      )}
+
+      {googleManaged && (
+        <Notice tone="good">
+          Your plan was bought with Google Play and renews there{google.expiresAt ? ` (next on ${formatDate(google.expiresAt)})` : ''}. To change or cancel it, open Google Play.
+          <button
+            type="button"
+            onClick={() => {
+              setGoogleBusy(true);
+              manageInGooglePlay().finally(() => setGoogleBusy(false));
+            }}
+            disabled={googleBusy}
+            className="mt-2 block rounded-lg border border-green-300 bg-white px-3 py-1.5 text-sm font-medium text-green-800 hover:bg-green-50 disabled:opacity-50"
+          >
+            Manage in Google Play
+          </button>
+        </Notice>
+      )}
+
+      {preview && (
+        <Notice tone="good">
+          You picked the {preview.planName} plan when you signed up. Try LogBase with {sub.freeOrders ? `up to ${preview.orders} ${noun}` : `up to ${preview.units} units in stock`}, then pay for {preview.planName} below to keep going.
+        </Notice>
       )}
 
       {renewNotice && <Notice tone={renewNotice.tone}>{renewNotice.text}</Notice>}
@@ -199,7 +292,7 @@ function BillingScreen() {
               sub.trialOrders ? (
                 <Meter label={`${noun.charAt(0).toUpperCase()}${noun.slice(1)} in your free trial`} used={sub.trialOrders.used} limit={sub.trialOrders.limit} />
               ) : (
-                sub.freeOrders && <Meter label={`${noun.charAt(0).toUpperCase()}${noun.slice(1)} this month`} used={sub.freeOrders.used} limit={sub.freeOrders.limit} />
+                sub.freeOrders && <Meter label={`${noun.charAt(0).toUpperCase()}${noun.slice(1)} ${preview ? 'in your test' : 'this month'}`} used={sub.freeOrders.used} limit={sub.freeOrders.limit} />
               )
             ) : (
               <Meter label="Units in stock" used={data.usage.stocks} limit={sub.limits.stocks} />
@@ -292,7 +385,7 @@ function BillingScreen() {
         </div>
       </div>
 
-      {data && data.configured && renew && (
+      {data && data.configured && renew && !android && (
         <label className="mb-4 flex items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-700" data-section="renew-choice">
           <input
             type="checkbox"
@@ -317,7 +410,8 @@ function BillingScreen() {
           const blocked = paid && index < runningPaid; // a lower plan while a higher one is still running
           const saving = yearlySaving(plan);
           let label = `Choose ${plan.name}`;
-          if (isCurrent && sub.state === 'active') label = `Renew ${plan.name}`;
+          if (preview && preview.plan === plan.key) label = `Pay for ${plan.name}`;
+          else if (isCurrent && sub.state === 'active') label = `Renew ${plan.name}`;
           else if (sub && PLAN_ORDER.indexOf(sub.plan) < index && sub.state !== 'trialing') label = `Upgrade to ${plan.name}`;
           return (
             <section
@@ -353,10 +447,10 @@ function BillingScreen() {
                     <button
                       type="button"
                       onClick={() => choose(plan.key)}
-                      disabled={Boolean(buying) || blocked || !data.configured}
+                      disabled={Boolean(buying) || blocked || !canPay || googleManaged}
                       className={`${primaryButtonClass} w-full`}
                     >
-                      {buying === plan.key ? 'Taking you to Paystack…' : label}
+                      {buying === plan.key ? (android ? 'Opening Google Play…' : 'Taking you to Paystack…') : label}
                     </button>
                     {blocked && <p className="mt-2 text-xs text-gray-500">You can switch to this plan after your current plan ends.</p>}
                   </>
@@ -371,8 +465,24 @@ function BillingScreen() {
         })}
       </div>
 
+      {android && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={restoreOnGoogle}
+            disabled={googleBusy || Boolean(buying) || !canPay}
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {googleBusy ? 'Checking…' : 'Restore purchase'}
+          </button>
+          <span className="text-xs text-gray-500">Already paid on this Google account? Tap to bring your plan back.</span>
+        </div>
+      )}
+
       <p className="mb-8 text-xs text-gray-500">
-        You pay for the period you choose on Paystack. Nothing renews by itself unless “Renew automatically” is ticked when you pay. Renewing the same plan adds the time to the end of what you have. Changing to a different plan starts a new period today, and unused days on the old plan are not carried over.
+        {android
+          ? 'You pay for the period you choose with Google Play, and Google renews it each period until you cancel it in Google Play. Changing to a different plan starts a new period today, and unused days on the old plan are not carried over.'
+          : 'You pay for the period you choose on Paystack.'}{android ? '' : ' Nothing renews by itself unless “Renew automatically” is ticked when you pay. Renewing the same plan adds the time to the end of what you have. Changing to a different plan starts a new period today, and unused days on the old plan are not carried over.'}
       </p>
 
       <section>
@@ -410,10 +520,11 @@ function BillingScreen() {
   );
 }
 
-// Inside the Android / iPhone store app there are no plans, prices or Pay buttons (the store rules do not allow selling a
+// Inside the iPhone store app there are no plans, prices or Pay buttons (the store rules do not allow selling a
 // subscription there), so this page only says so. Anyone who opens it by an old link or bookmark lands here.
+// The Android app sells plans with Google Play Billing, so it shows the full page.
 export default function BillingPage() {
-  const inApp = useNativeApp();
+  const inApp = usePlansHidden();
   if (!inApp) return <BillingScreen />;
   return (
     <>

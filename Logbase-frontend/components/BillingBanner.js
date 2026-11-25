@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { getBilling } from '@/lib/api';
 import { bannerFor } from '@/lib/billing';
 import { useUser } from '@/components/UserProvider';
-import { useNativeApp } from '@/lib/nativeApp';
+import { usePlansHidden } from '@/lib/nativeApp';
 
 const STYLE = {
   warn: 'border-amber-200 bg-amber-50 text-amber-900',
@@ -17,7 +17,7 @@ const STYLE = {
 // (or has ended). Nothing is shown for anyone else, or when all is well.
 export default function BillingBanner() {
   const { isOwner } = useUser();
-  const inApp = useNativeApp();
+  const inApp = usePlansHidden();
   const pathname = usePathname();
   const [sub, setSub] = useState(null);
   const [autoRenew, setAutoRenew] = useState(null);

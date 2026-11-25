@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login, setToken } from '@/lib/api';
 import AuthShell, { AuthButton, AuthError, AuthField } from '@/components/AuthShell';
+import { useNativeApp } from '@/lib/nativeApp';
 
 export default function LoginPage() {
   const router = useRouter();
+  const inApp = useNativeApp(); // the store apps have no sign-up: accounts are created on the website
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,12 +49,16 @@ export default function LoginPage() {
       title="Log in to LogBase"
       subtitle="Welcome back — enter your details to continue."
       footer={
-        <>
-          Don&apos;t have an account?{' '}
-          <a href="/signup" className="font-medium text-primary hover:underline">
-            Sign up
-          </a>
-        </>
+        inApp ? (
+          'New to LogBase? Accounts are created at mylogbase.com.'
+        ) : (
+          <>
+            Don&apos;t have an account?{' '}
+            <a href="/signup" className="font-medium text-primary hover:underline">
+              Sign up
+            </a>
+          </>
+        )
       }
     >
       {deleted && (

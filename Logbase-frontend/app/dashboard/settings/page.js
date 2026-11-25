@@ -6,7 +6,7 @@ import { SettingsCard } from '@/components/SettingsParts';
 import { useAlerts } from '@/lib/alerts';
 import { hasFeature, businessTypeOf } from '@/lib/businessTypes';
 import { anyPolicyOn } from '@/lib/settings';
-import { useNativeApp } from '@/lib/nativeApp';
+import { usePlansHidden } from '@/lib/nativeApp';
 
 function Group({ title, children }) {
   return (
@@ -23,7 +23,7 @@ export default function SettingsPage() {
   const { pendingApprovals } = useAlerts();
   const stores = hasFeature(businessTypeOf(user), 'products');
   const rulesOn = anyPolicyOn(settings.approvalPolicies);
-  const inApp = useNativeApp(); // no plans or payments inside the store app
+  const inApp = usePlansHidden(); // no plans or payments inside the store app
 
   return (
     <div className="mx-auto max-w-6xl">

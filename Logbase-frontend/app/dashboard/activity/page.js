@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { listActivity } from '@/lib/api';
 import { useUser } from '@/components/UserProvider';
-import { useNativeApp } from '@/lib/nativeApp';
+import { usePlansHidden } from '@/lib/nativeApp';
 import { businessTypeOf, hasFeature } from '@/lib/businessTypes';
 import PageHeader from '@/components/PageHeader';
 import { PersonChip } from '@/components/Avatar';
@@ -77,7 +77,7 @@ function timeLabel(value) {
 // Who did what, newest first. Administrator only.
 export default function ActivityPage() {
   const { user } = useUser();
-  const inApp = useNativeApp(); // no plans or Pay buttons inside the store app
+  const inApp = usePlansHidden(); // no plans or Pay buttons inside the store app
   // the activity types that belong to this kind of business (a laundromat has no item swaps)
   const businessType = businessTypeOf(user);
   const categories = CATEGORIES.filter((c) => !c.feature || [].concat(c.feature).some((f) => hasFeature(businessType, f)));

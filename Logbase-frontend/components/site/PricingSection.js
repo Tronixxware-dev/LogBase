@@ -19,7 +19,7 @@ export default function PricingSection() {
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">Pricing</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl">Simple prices, in naira</h2>
           <p className="mt-4 text-gray-500">
-            Start free and upgrade only when you need more. No card needed to start.
+            Pick a plan and sign up. Starter and Business let you try the app with 5 products before you pay. Free needs no payment at all.
           </p>
 
           <div className="mt-8 inline-flex rounded-xl bg-gray-100 p-1" role="group" aria-label="Billing period">
@@ -72,7 +72,7 @@ export default function PricingSection() {
                   ))}
                 </ul>
                 <Link
-                  href="/signup"
+                  href={`/signup?plan=${plan.key}${yearly && plan.key !== 'free' ? '&interval=yearly' : ''}`}
                   className={
                     plan.popular
                       ? 'mt-8 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-dark'

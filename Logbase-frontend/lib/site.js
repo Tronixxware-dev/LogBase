@@ -21,6 +21,9 @@ export const SITE = {
 
 // What the plans cost, in naira. Keep this the same as the backend's config/plans.js
 // (that file is what actually charges people; this one only shows the prices on the home page).
+// A business that picks Starter or Business at sign-up may put this many units in stock before it pays (keep the same as PREVIEW_UNITS in the backend's config/plans.js).
+export const PREVIEW_UNITS = 5;
+
 export const PLANS = [
   {
     key: 'free',
@@ -28,7 +31,7 @@ export const PLANS = [
     tagline: 'To try LogBase for yourself',
     monthly: 0,
     yearly: 0,
-    features: ['Up to 30 units in stock', 'Owner account only (no staff accounts)', 'Laundromats and tailors: up to 30 orders a month'],
+    features: ['Up to 10 units in stock', 'Owner account only (no staff accounts)', 'Laundromats and tailors: up to 30 orders a month'],
   },
   {
     key: 'starter',
