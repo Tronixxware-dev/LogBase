@@ -1,7 +1,7 @@
 // The columns of every file the Import & export page can download. The product and customer columns use the same
 // names the importer understands, so an exported file can be imported again (colours / sizes are not imported).
 
-import { categoryLabel, dayInput, methodLabel } from '@/lib/expenses';
+import { categoryLabel, dayInput, methodLabel, saleMethodLabel } from '@/lib/expenses';
 import { variantLabel } from '@/lib/format';
 
 const day = (value) => (value ? dayInput(value) : '');
@@ -47,7 +47,7 @@ export const SALE_COLUMNS = [
   { label: 'Total', get: (s) => s.totalAmount },
   { label: 'Paid', get: (s) => s.amountPaid },
   { label: 'Status', get: (s) => s.paymentStatus },
-  { label: 'Paid by', get: (s) => methodLabel(s.paymentMethod) },
+  { label: 'Paid by', get: (s) => saleMethodLabel(s) },
   { label: 'Sold by', get: (s) => s.sellerName },
   { label: 'Delivery paid by us', get: (s) => (s.deliveryPaidByUs ? s.deliveryCost : 0) },
 ];

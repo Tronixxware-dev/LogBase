@@ -30,6 +30,14 @@ export function methodLabel(key) {
   return found ? found.label : key;
 }
 
+// How a sale was paid, in words: "Transfer", or "Cash + Transfer" when the customer paid with more than one method.
+export function saleMethodLabel(sale) {
+  if (!sale) return '';
+  if (Array.isArray(sale.payments) && sale.payments.length > 1) return sale.payments.map((p) => methodLabel(p.method)).join(' + ');
+  if (sale.paymentMethod === 'split') return 'Split payment';
+  return methodLabel(sale.paymentMethod);
+}
+
 function pad(n) {
   return String(n).padStart(2, '0');
 }

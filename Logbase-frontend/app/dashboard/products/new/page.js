@@ -1,7 +1,7 @@
 'use client';
 
 import { notifySuccess } from '@/lib/feedback';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createProduct, uploadProductImages } from '@/lib/api';
@@ -15,11 +15,13 @@ import SerialsInput from '@/components/SerialsInput';
 import VariantsEditor, { newVariantRow } from '@/components/VariantsEditor';
 import { Suggestions, useHints } from '@/components/HintLists';
 import { brandForName } from '@/lib/productHints';
-import { ErrorBanner, Field, cardClass, inputClass, primaryButtonClass } from '@/components/ui';
+import { ErrorBanner, Field, cardClass, inputClass, primaryButtonClass, secondaryButtonClass } from '@/components/ui';
 
 export default function NewProductPage() {
   const router = useRouter();
-  const { isOwner } = useUser(); // only the owner sets the cost price
+  const { isOwner, can } = useUser(); // only the owner sets the cost price
+  const canSell = can('recordSales');
+  const goSale = useRef(false); // true when the person pressed "Save and record a sale"
   const { type, hints } = useHints();
   const nameListId = useId();
   const [form, setForm] = useState({
@@ -118,7 +120,7 @@ export default function NewProductPage() {
         }
       }
       notifySuccess('Product added', form.name.trim() || 'Your product is saved');
-      router.push('/dashboard/products');
+      router.push(goSale.current ? `/dashboard/sales/new?product=${productId}` : '/dashboard/products');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -288,12 +290,24 @@ export default function NewProductPage() {
           />
         </Field>
 
+        {canSell && (
+          <button
+            type="submit"
+            onClick={() => { goSale.current = true; }}
+            disabled={saving || Boolean(savedProductId)}
+            className={`${primaryButtonClass} w-full py-2.5`}
+          >
+            {saving && goSale.current ? 'Saving…' : 'Save and record a sale'}
+          </button>
+        )}
+
         <button
           type="submit"
+          onClick={() => { goSale.current = false; }}
           disabled={saving || Boolean(savedProductId)}
-          className={`${primaryButtonClass} w-full py-2.5`}
+          className={`${canSell ? secondaryButtonClass : primaryButtonClass} w-full py-2.5`}
         >
-          {saving ? 'Saving…' : 'Save product'}
+          {saving && !goSale.current ? 'Saving…' : 'Save product'}
         </button>
 
         {savedProductId && (

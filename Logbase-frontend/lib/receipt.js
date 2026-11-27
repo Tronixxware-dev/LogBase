@@ -54,6 +54,8 @@ export function buildReceipt({ sale, lines }) {
     customerPhone: (first.customer && first.customer.phone) || (sale.customer && sale.customer.phone) || '',
     servedBy: first.sellerName || '',
     paymentMethod: first.paymentMethod || '',
+    // set when the customer paid with more than one method: [{ method, amount }]
+    payments: Array.isArray(first.payments) && first.payments.length > 1 ? first.payments.map((p) => ({ method: p.method, amount: round2(p.amount) })) : [],
     items,
     subtotal,
     returned,
@@ -74,6 +76,10 @@ export function buildReceipt({ sale, lines }) {
           }
         : null,
   };
+}
+
+function paymentWord(method) {
+  return { cash: 'Cash', transfer: 'Transfer', card: 'Card', other: 'Other' }[method] || method;
 }
 
 // The same receipt as plain text, for WhatsApp or SMS.
@@ -100,7 +106,12 @@ export function receiptText(receipt, businessName, org) {
     lines.push(`Customer added: ${formatMoney(receipt.tradeIn.cashTopUp)}${receipt.paymentMethod ? ` (${receipt.paymentMethod})` : ''}`);
     if (receipt.tradeIn.refund > 0) lines.push(`Given back to the customer: ${formatMoney(receipt.tradeIn.refund)}`);
   } else {
-    lines.push(`Paid: ${formatMoney(receipt.paid)}${receipt.paymentMethod ? ` (${receipt.paymentMethod})` : ''}`);
+    if (receipt.payments && receipt.payments.length > 1) {
+      lines.push(`Paid: ${formatMoney(receipt.paid)}`);
+      for (const part of receipt.payments) lines.push(`   ${paymentWord(part.method)}: ${formatMoney(part.amount)}`);
+    } else {
+      lines.push(`Paid: ${formatMoney(receipt.paid)}${receipt.paymentMethod ? ` (${receipt.paymentMethod})` : ''}`);
+    }
   }
   if (receipt.balance > 0) lines.push(`*Still owed: ${formatMoney(receipt.balance)}*`);
   lines.push('');

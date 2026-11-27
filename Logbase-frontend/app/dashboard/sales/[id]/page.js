@@ -144,7 +144,16 @@ export default function SaleDetailPage() {
             )}
           </Detail>
           <Detail label="Unit price" icon="naira" color="green">{formatMoney(sale.unitPrice)}</Detail>
-          <Detail label="Payment method" icon="wallet" color="teal">{sale.paymentMethod}</Detail>
+          <Detail label="Payment method" icon="wallet" color="teal">
+            {sale.paymentMethod === 'split'
+              ? (() => {
+                  const first = (group.find((l) => Array.isArray(l.payments) && l.payments.length > 0) || sale);
+                  return Array.isArray(first.payments) && first.payments.length > 0
+                    ? first.payments.map((p) => `${p.method} ${formatMoney(p.amount)}`).join(' + ')
+                    : 'split payment';
+                })()
+              : sale.paymentMethod}
+          </Detail>
           {returnedUnits > 0 && (
             <Detail label="Returned" icon="returns" color="amber">
               {returnedUnits} {returnedUnits === 1 ? 'unit' : 'units'} · {formatMoney(returnedValue)}

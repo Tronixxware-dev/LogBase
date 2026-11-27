@@ -37,7 +37,8 @@ export function saleDoc(receipt) {
   if (receipt.servedBy) info.push(['Cashier', receipt.servedBy]);
   info.push(['Customer', receipt.customerName || 'Walk-in']);
   if (phone) info.push(['Phone', phone]);
-  if (receipt.paymentMethod) info.push(['Payment', receipt.paymentMethod]);
+  if (receipt.payments && receipt.payments.length > 1) info.push(['Payment', 'Split']);
+  else if (receipt.paymentMethod) info.push(['Payment', receipt.paymentMethod]);
 
   const items = receipt.items.map((item) => {
     const notes = [];
@@ -61,6 +62,10 @@ export function saleDoc(receipt) {
     if (t.refund > 0) totals.push({ label: 'Given back', value: formatMoney(t.refund) });
   } else {
     totals.push({ label: 'Amount paid', value: formatMoney(receipt.paid) });
+    if (receipt.payments && receipt.payments.length > 1) {
+      const word = { cash: 'Cash', transfer: 'Transfer', card: 'Card', other: 'Other' };
+      for (const part of receipt.payments) totals.push({ label: `  ${word[part.method] || part.method}`, value: formatMoney(part.amount) });
+    }
   }
   if (receipt.balance > 0) totals.push({ label: 'Balance due', value: formatMoney(receipt.balance), tone: 'danger' });
 

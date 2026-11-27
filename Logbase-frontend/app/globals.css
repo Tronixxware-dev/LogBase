@@ -412,7 +412,7 @@ button.bg-primary:disabled {
 .lbr::after { bottom: -11px; }
 .lbr * { margin: 0; }
 .lbr-c { text-align: center; }
-.lbr-logo { display: block; height: 64px; max-width: 11rem; margin: 0 auto 10px; object-fit: contain; }
+.lbr-logo { display: block; height: 88px; max-width: 14rem; margin: 0 auto 12px; object-fit: contain; }
 .lbr-name { font-size: 20px; line-height: 1.15; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; overflow-wrap: anywhere; }
 .lbr-id { margin-top: 2px; font-size: 11.5px; line-height: 1.35; color: #555; overflow-wrap: anywhere; }
 .lbr-title { margin-top: 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; }
@@ -457,6 +457,22 @@ button.bg-primary:disabled {
   body { background: #fff !important; }
   .lbr { max-width: 80mm; padding: 0; box-shadow: none; }
   .lbr::before, .lbr::after { display: none; }
+
+  /* Thermal printers only burn black dots: every grey is dithered into sparse dots and looks faded.
+     So on paper everything is pure black, and the small grey text is made heavier. */
+  .lbr, .lbr * { color: #000 !important; }
+  .lbr { font-weight: 600; line-height: 1.4; }
+  .lbr-id, .lbr-footer, .lbr-powered, .lbr-sub, .lbr-note,
+  .lbr-keep > span:first-child, .lbr-text.lbr-muted, .lbr-totals .lbr-muted, .lbr-code p { font-weight: 700; }
+  .lbr-id, .lbr-footer, .lbr-text.lbr-muted, .lbr-sub { font-size: 12.5px; }
+  .lbr-note, .lbr-powered { font-size: 12px; }
+  .lbr-bold, .lbr-name, .lbr-title, .lbr-closing, .lbr-totals .lbr-strong,
+  .lbr-totals .lbr-big, .lbr-totals .lbr-danger { font-weight: 800; }
+  .lbr-rule { border-top: 1.5px dashed #000; }
+  .lbr-rule.lbr-solid { border-top: 2px solid #000; }
+  .lbr-stamp { border-color: #000; }
+  /* the logo: pure black and white (no greys), so the printer draws it solid instead of as speckles */
+  .lbr-logo { filter: grayscale(1) contrast(20) brightness(1.08); image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; height: 96px; max-width: 15rem; margin-bottom: 14px; }
 }
 
 /* bars that grow in from the left, and a soft pulse for "live" dots */

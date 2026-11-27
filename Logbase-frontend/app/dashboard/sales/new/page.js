@@ -42,6 +42,9 @@ export default function NewSalePage() {
   const [fullPayment, setFullPayment] = useState(true);
   const [amountPaid, setAmountPaid] = useState('');
   const [paymentMethod, setPaymentMethod] = useState(usualMethod);
+  // Paid with more than one method (cash + transfer ...): each part has its own method and amount
+  const [splitPay, setSplitPay] = useState(false);
+  const [parts, setParts] = useState([]);
   // Does the business pay for the delivery? "No" means the customer pays and there is nothing to record.
   const [deliveryPaidByUs, setDeliveryPaidByUs] = useState(false);
   const [deliveryCost, setDeliveryCost] = useState('');
@@ -68,6 +71,21 @@ export default function NewSalePage() {
       })
       .catch((err) => setError(err.message));
   }, []);
+
+  // Coming from "Save and record a sale" on the Add product page: that product is already chosen on the first line.
+  const preselected = useRef(false);
+  useEffect(() => {
+    if (preselected.current || products.length === 0) return;
+    preselected.current = true;
+    let wanted = '';
+    try {
+      wanted = new URLSearchParams(window.location.search).get('product') || '';
+    } catch {}
+    if (wanted && products.some((p) => p._id === wanted)) {
+      handleProductChange(lines[0].key, wanted);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products]);
 
   // The phone number finds the customer: a known number picks the saved customer,
   // an unknown number means a new customer, who is saved automatically with the sale.
@@ -190,7 +208,26 @@ export default function NewSalePage() {
       items.push(...lineItems);
     }
 
-    const paid = fullPayment ? grandTotal : Number(amountPaid) || 0;
+    let paid = fullPayment ? grandTotal : Number(amountPaid) || 0;
+    let sentMethod = paymentMethod;
+    let sentParts = null;
+    if (splitPay) {
+      const filled = parts
+        .map((p) => ({ method: p.method, amount: Math.round((Number(p.amount) || 0) * 100) / 100 }))
+        .filter((p) => p.amount > 0);
+      if (filled.length === 0) {
+        setError('Enter how much was paid with each method, or turn off "more than one method"');
+        return;
+      }
+      const sum = Math.round(filled.reduce((n, p) => n + p.amount, 0) * 100) / 100;
+      if (sum > grandTotal + 0.005) {
+        setError(`The parts add up to ${formatMoney(sum)}, which is more than the sale total of ${formatMoney(grandTotal)}`);
+        return;
+      }
+      paid = sum;
+      sentMethod = filled[0].method;
+      if (filled.length > 1) sentParts = filled;
+    }
 
     if (deliveryPaidByUs && !(Number(deliveryCost) > 0)) {
       setError('Enter how much you paid for the delivery, or choose No if the customer pays for it');
@@ -214,7 +251,8 @@ export default function NewSalePage() {
       // the store this sale is made from: kept in the payload so a sale saved offline is sent to the same store later
       shop: getActiveShopId() || undefined,
       amountPaid: paid,
-      paymentMethod,
+      paymentMethod: sentMethod,
+      ...(sentParts ? { payments: sentParts } : {}),
       deliveryPaidByUs,
       deliveryCost: deliveryPaidByUs ? Number(deliveryCost) : 0,
     };
@@ -600,42 +638,153 @@ export default function NewSalePage() {
           </Field>
         )}
 
-        <Field label="Payment method">
-          <select
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-            className={inputClass}
-          >
-            <option value="cash">Cash</option>
-            <option value="transfer">Bank transfer</option>
-            <option value="card">Card</option>
-            <option value="other">Other</option>
-          </select>
-        </Field>
+        {!splitPay && (
+          <>
+            <Field label="Payment method">
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className={inputClass}
+              >
+                <option value="cash">Cash</option>
+                <option value="transfer">Bank transfer</option>
+                <option value="card">Card</option>
+                <option value="other">Other</option>
+              </select>
+            </Field>
+
+            <div className="flex items-center gap-2">
+              <input
+                id="fullPayment"
+                type="checkbox"
+                checked={fullPayment}
+                onChange={(e) => setFullPayment(e.target.checked)}
+              />
+              <label htmlFor="fullPayment" className="text-sm text-gray-700">
+                Paid in full
+              </label>
+            </div>
+
+            {!fullPayment && (
+              <Field label="Amount paid now (₦)">
+                <input
+                  type="number"
+                  min="0"
+                  value={amountPaid}
+                  onChange={(e) => setAmountPaid(e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+            )}
+          </>
+        )}
+
+        {splitPay && (
+          <div className="space-y-3 rounded-xl border border-gray-200 p-4">
+            <p className="text-sm font-semibold text-gray-900">Paid with more than one method</p>
+            <p className="text-xs text-gray-500">
+              For example part cash and part transfer. Enter how much came in with each method. Anything left over is
+              recorded as owed by the customer.
+            </p>
+            {parts.map((part, i) => {
+              const others = parts.reduce((n, p, j) => (j === i ? n : n + (Number(p.amount) || 0)), 0);
+              const rest = Math.max(Math.round((grandTotal - others) * 100) / 100, 0);
+              return (
+                <div key={part.key} className="flex items-end gap-2">
+                  <div className="w-36 shrink-0">
+                    <select
+                      value={part.method}
+                      onChange={(e) => setParts((prev) => prev.map((p, j) => (j === i ? { ...p, method: e.target.value } : p)))}
+                      className={inputClass}
+                      aria-label={`Method ${i + 1}`}
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="transfer">Bank transfer</option>
+                      <option value="card">Card</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <input
+                      type="number"
+                      min="0"
+                      inputMode="decimal"
+                      placeholder="Amount (₦)"
+                      value={part.amount}
+                      onChange={(e) => setParts((prev) => prev.map((p, j) => (j === i ? { ...p, amount: e.target.value } : p)))}
+                      className={inputClass}
+                      aria-label={`Amount ${i + 1}`}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setParts((prev) => prev.map((p, j) => (j === i ? { ...p, amount: String(rest) } : p)))}
+                    className="shrink-0 rounded-lg border border-gray-300 px-2.5 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                    title="Fill in what is left to pay"
+                  >
+                    Rest
+                  </button>
+                  {parts.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => setParts((prev) => prev.filter((_, j) => j !== i))}
+                      className="shrink-0 px-1 py-2 text-lg leading-none text-gray-400 hover:text-red-600"
+                      aria-label="Remove this part"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            {parts.length < 4 && (
+              <button
+                type="button"
+                onClick={() => setParts((prev) => [...prev, { key: Date.now() + prev.length, method: 'other', amount: '' }])}
+                className="text-sm font-medium text-teal-700 hover:underline"
+              >
+                + Add another method
+              </button>
+            )}
+            {(() => {
+              const sum = parts.reduce((n, p) => n + (Number(p.amount) || 0), 0);
+              const left = Math.round((grandTotal - sum) * 100) / 100;
+              return (
+                <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-600">Paid so far</span><span className="tabular font-semibold">{formatMoney(sum)}</span></div>
+                  {left > 0 ? (
+                    <div className="flex justify-between text-amber-700"><span>Still owed by the customer</span><span className="tabular font-semibold">{formatMoney(left)}</span></div>
+                  ) : left < 0 ? (
+                    <div className="flex justify-between text-red-600"><span>More than the sale total by</span><span className="tabular font-semibold">{formatMoney(-left)}</span></div>
+                  ) : (
+                    <div className="text-green-700">Paid in full</div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           <input
-            id="fullPayment"
+            id="splitPay"
             type="checkbox"
-            checked={fullPayment}
-            onChange={(e) => setFullPayment(e.target.checked)}
+            checked={splitPay}
+            onChange={(e) => {
+              if (e.target.checked) {
+                const second = paymentMethod === 'cash' ? 'transfer' : 'cash';
+                setParts([
+                  { key: 1, method: paymentMethod, amount: fullPayment ? '' : amountPaid },
+                  { key: 2, method: second, amount: '' },
+                ]);
+              }
+              setSplitPay(e.target.checked);
+            }}
           />
-          <label htmlFor="fullPayment" className="text-sm text-gray-700">
-            Paid in full
+          <label htmlFor="splitPay" className="text-sm text-gray-700">
+            Paid with more than one method (cash + transfer…)
           </label>
         </div>
-
-        {!fullPayment && (
-          <Field label="Amount paid now (₦)">
-            <input
-              type="number"
-              min="0"
-              value={amountPaid}
-              onChange={(e) => setAmountPaid(e.target.value)}
-              className={inputClass}
-            />
-          </Field>
-        )}
 
         <Field
           label="Sale photos"

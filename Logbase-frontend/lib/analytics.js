@@ -195,8 +195,15 @@ export function buildAnalytics({ products = [], sales = [], purchases = [], loss
     top.revenue += total;
     topMap.set(pid, top);
 
-    const method = s.paymentMethod || 'other';
-    methodMap.set(method, (methodMap.get(method) || 0) + total - credit);
+    if (s.paymentMethod === 'split') {
+      // paid with more than one method: the parts are kept on the first line of the sale, the other lines add nothing here
+      for (const part of Array.isArray(s.payments) ? s.payments : []) {
+        methodMap.set(part.method, (methodMap.get(part.method) || 0) + num(part.amount));
+      }
+    } else {
+      const method = s.paymentMethod || 'other';
+      methodMap.set(method, (methodMap.get(method) || 0) + total - credit);
+    }
   }
 
   /* ---- purchases ---- */

@@ -9,7 +9,7 @@ import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
 import { Icon } from '@/components/Icons';
 import FilterBar, { DateRange, inDateRange, optionsFrom } from '@/components/FilterBar';
-import { ErrorBanner, LoadingState, EmptyState, ListTotal, PrimaryLink, StatusBadge } from '@/components/ui';
+import { ErrorBanner, LoadingState, EmptyState, ListTotal, PrimaryLink, SecondaryLink, StatusBadge } from '@/components/ui';
 import { PersonChip } from '@/components/Avatar';
 import { useShops } from '@/lib/shops';
 
@@ -66,6 +66,7 @@ export default function SalesPage() {
   // everyone with "See all sales" / "See insights" gets the full list, anyone else just their own sales
   const seesAll = can('viewAllSales', 'viewInsights');
   const canRecord = can('recordSales');
+  const canAddProduct = can('manageProducts');
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -112,11 +113,21 @@ export default function SalesPage() {
         title={seesAll ? 'Sales' : 'My sales'}
         subtitle={seesAll ? undefined : 'The sales you have recorded'}
         action={
-          canRecord ? (
-            <PrimaryLink href="/dashboard/sales/new">
-              <Icon name="plus" className="h-4 w-4" />
-              Record sale
-            </PrimaryLink>
+          canRecord || canAddProduct ? (
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {canAddProduct && (
+                <SecondaryLink href="/dashboard/products/new">
+                  <Icon name="plus" className="h-4 w-4" />
+                  Add product
+                </SecondaryLink>
+              )}
+              {canRecord && (
+                <PrimaryLink href="/dashboard/sales/new">
+                  <Icon name="plus" className="h-4 w-4" />
+                  Record sale
+                </PrimaryLink>
+              )}
+            </div>
           ) : undefined
         }
       />
